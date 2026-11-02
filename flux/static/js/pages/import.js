@@ -9,7 +9,7 @@
     function showUpload() {
       const input = el("input", { type: "file", accept: ".csv,.txt,text/csv", class: "sr-only", id: "file" });
       const drop = el("label", { for: "file", class: "card", style: { display: "block", border: "2px dashed var(--line-2)", background: "transparent", textAlign: "center", padding: "48px 20px", cursor: "pointer" } },
-        el("div", { style: { fontSize: "40px" } }, "📄"),
+        el("div", { class: "feature", style: { display: "flex", justifyContent: "center" } }, el("div", { class: "ico" }, icon("file"))),
         el("h2", { style: { margin: "10px 0 6px" } }, "Drop your statement CSV here"),
         el("p", { class: "muted small" }, "or click to choose a file · max 2 MB"), input);
       ["dragover", "dragenter"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.style.borderColor = "var(--brand)"; }));
@@ -17,7 +17,7 @@
       drop.addEventListener("drop", (e) => { e.preventDefault(); if (e.dataTransfer.files[0]) upload(e.dataTransfer.files[0]); });
       input.onchange = () => input.files[0] && upload(input.files[0]);
       area.replaceChildren(drop,
-        el("a", { href: "/app/share", class: "card tap row", style: { gap: "14px" } }, el("div", { style: { fontSize: "26px" } }, "💬"),
+        el("a", { href: "/app/share", class: "card tap row", style: { gap: "14px" } }, el("div", { class: "feature" }, el("div", { class: "ico", style: { margin: 0 } }, icon("chat"))),
           el("div", { style: { flex: 1 } }, el("h3", null, "Got bank SMS instead?"), el("div", { class: "small muted" }, "Paste or share your debit/credit alerts and Flux adds them.")),
           el("span", { class: "link" }, "Track from SMS →")),
         el("div", { class: "grid g-2" },
@@ -53,7 +53,7 @@
         const cb = el("input", { type: "checkbox", checked: row.include ? true : null, "aria-label": "Include" });
         cb.onchange = () => { row.include = cb.checked; updateCount(); };
         const cats = row.kind === "income" ? r.categories.income : r.categories.expense;
-        const sel = el("select", { class: "input", style: { padding: "6px 30px 6px 8px", fontSize: "13px" } }, cats.map((c) => el("option", { value: c, selected: c === row.category ? true : null }, (CAT_EMOJI[c] || "") + " " + c)));
+        const sel = el("select", { class: "input", style: { padding: "6px 30px 6px 8px", fontSize: "13px" } }, cats.map((c) => el("option", { value: c, selected: c === row.category ? true : null }, c)));
         sel.onchange = () => (row.category = sel.value);
         tbody.appendChild(el("tr", { style: { opacity: row.duplicate ? 0.5 : 1 } },
           el("td", null, cb),

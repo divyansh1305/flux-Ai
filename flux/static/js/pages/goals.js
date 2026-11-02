@@ -29,7 +29,7 @@
   }
 
   function eta(g) {
-    if (g.complete) return "Goal reached 🎉";
+    if (g.complete) return "Goal reached";
     if (!g.deadline) return `${inr0(g.remaining)} to go`;
     const days = Math.ceil((new Date(g.deadline + "T00:00:00") - new Date()) / 86400000);
     if (days <= 0) return `Target date passed · ${inr0(g.remaining)} to go`;
@@ -48,11 +48,11 @@
       const autoGoal = goals.find((g) => g.id === u.autosave_goal_id);
       const modeText = u.autosave_mode === "off" ? "Auto-save is off."
         : u.autosave_mode === "roundup" ? `Every expense rounds up to the next ₹${u.autosave_value}` : `${u.autosave_value}% of every expense`;
-      const auto = el("div", { class: "notice info" }, "🔁 ",
+      const auto = el("div", { class: "notice info" }, icon("repeat"),
         el("div", null, u.autosave_mode === "off" ? modeText : `${modeText} and the difference goes to `, u.autosave_mode !== "off" ? el("b", null, autoGoal ? autoGoal.title : "no goal yet") : null,
           ". ", el("a", { class: "brand", href: "/app/settings" }, "Change")));
       const cards = goals.map((g) => el("div", { class: "card" },
-        el("div", { class: "row between" }, el("h3", null, "🎯 " + g.title), g.id === u.autosave_goal_id ? el("span", { class: "badge autosave" }, "auto-save") : null),
+        el("div", { class: "row between" }, el("h3", null, g.title), g.id === u.autosave_goal_id ? el("span", { class: "badge autosave" }, "auto-save") : null),
         el("div", { class: "row between", style: { margin: "16px 0 8px", alignItems: "flex-end" } },
           el("div", null, el("div", { class: "stat" }, el("div", { class: "value", style: { fontSize: "24px" } }, inr0(g.saved))), el("div", { class: "tiny faint" }, "of " + inr0(g.target))),
           el("div", { style: { fontSize: "22px", fontWeight: 800 }, class: g.complete ? "green" : "" }, g.percent + "%")),

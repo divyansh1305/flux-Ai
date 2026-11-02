@@ -45,6 +45,16 @@
     camera: '<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="4"/>',
     image: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
     check: '<path d="M5 12l5 5 9-11"/>',
+    bank: '<path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/>',
+    alert: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+    repeat: '<path d="M17 2l4 4-4 4"/><path d="M3 12V10a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 12v2a4 4 0 0 1-4 4H3"/>',
+    chat: '<path d="M4 5h16v11H8l-4 4z"/>',
+    zap: '<path d="M13 3L5 13h6l-1 8 8-10h-6z"/>',
+    file: '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/>',
+    wave: '<path d="M7 12V7a2 2 0 0 1 4 0v4M11 11V5a2 2 0 0 1 4 0v6M15 11V7a2 2 0 0 1 4 0v6a7 7 0 0 1-7 7h-1a7 7 0 0 1-6-3.5L3 13a2 2 0 0 1 3.4-2L7 12"/>',
+    shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+    arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
   };
   function icon(name) {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -75,13 +85,18 @@
     const d = new Date();
     return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   };
-  const CAT_EMOJI = {
-    "Food & Dining": "🍽️", Groceries: "🛒", Transport: "🚕", Shopping: "🛍️", "Bills & Utilities": "💡", Rent: "🏠",
-    Entertainment: "🎬", Health: "💊", Education: "📚", Travel: "✈️", Subscriptions: "📺", "Personal Care": "💇",
-    Transfers: "🔁", Investments: "📈", Other: "📦", Cashback: "🪙", Salary: "💼", Freelance: "💻", "Pocket Money": "👛", Refund: "↩️", Interest: "🏦",
-    Gift: "🎁", "Investment Returns": "📈", "Other Income": "💰", "Goal Saving": "🎯",
-  };
-  const CAT_COLORS = ["#ff5a1f", "#f5f5f4", "#3ecf8e", "#f5a623", "#7aa7ff", "#ff5c5c", "#a3a3a3", "#5a5a5a"];
+  const CAT_EMOJI = {}; // kept for compatibility; the UI uses initials + icons instead of emoji
+  function tintFor(key) {
+    let h = 0;
+    for (const ch of String(key || "")) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    return "tint-" + (h % 6);
+  }
+  // GPay-style avatar: first letter of the merchant/person, same soft colour every time.
+  function avatar(name, ic) {
+    const m = String(name || "").match(/[A-Za-z0-9\u0900-\u097F]/);
+    return el("div", { class: "tx-icon " + tintFor(name), "aria-hidden": "true" }, ic ? icon(ic) : (m ? m[0].toUpperCase() : "•"));
+  }
+  const CAT_COLORS = ["#2f7d67", "#d0913a", "#4f7cc4", "#b9638a", "#7a6ec9", "#8f9d45", "#a39d92", "#c8c2b6"];
 
   // ─── API client ───────────────────────────────────────────
   function csrf() {
@@ -170,7 +185,7 @@
     const day = el("input", { class: "input", type: "date", value: todayISO(), max: todayISO() });
     const check = el("div");
     const fill = () => {
-      cat.replaceChildren(...(current === "expense" ? m.expense_categories : m.income_categories).map((c) => el("option", { value: c }, (CAT_EMOJI[c] || "") + " " + c)));
+      cat.replaceChildren(...(current === "expense" ? m.expense_categories : m.income_categories).map((c) => el("option", { value: c }, c)));
     };
     const seg = el("div", { class: "seg" });
     const bE = el("button", { type: "button", class: "on exp" }, "Expense");
@@ -284,11 +299,11 @@
     const title = t.note || t.category;
     const sign = isIn ? "+" : isSave ? (t.amount < 0 ? "+" : "→ ") : "-";
     const amtCls = isIn ? "green" : isSave ? "brand" : "";
-    const labels = { autosave: "auto-save", upi: "UPI", sms: "SMS", invest: "invest", import: "import", voice: "voice" };
-    const badge = t.source !== "manual" ? el("span", { class: "badge " + t.source }, labels[t.source] || t.source) : null;
+    // Only show a tag when it means something to the user (not where the data came from).
+    const badge = t.source === "autosave" ? el("span", { class: "badge autosave" }, "auto-saved") : null;
     const editable = t.kind === "income" || t.kind === "expense";
     return el("div", { class: "tx" },
-      el("div", { class: "tx-icon", "aria-hidden": "true" }, CAT_EMOJI[t.category] || "•"),
+      avatar(title, isSave ? "target" : null),
       el("div", editable ? { class: "tx-main tx-edit", role: "button", tabindex: "0", title: "Change category or note",
         onclick: () => editTx(t), onkeydown: (e) => { if (e.key === "Enter") editTx(t); } } : { class: "tx-main" },
         el("div", { class: "tx-title" }, title),
@@ -330,7 +345,7 @@
   }
 
   window.Flux = {
-    el, icon, api, download, toast, ok, err, modal, confirmBox, inr, inr0, dateFmt, todayISO, CAT_EMOJI, CAT_COLORS,
+    el, icon, api, download, toast, ok, err, modal, confirmBox, inr, inr0, dateFmt, todayISO, CAT_EMOJI, CAT_COLORS, avatar,
     boot, pageHead, txRow, deleteTx, editTx, addTransactionModal, refresh, onRefresh, logout, meta,
     get user() { return USER; }, set user(u) { USER = u; }, get config() { return CONFIG; },
   };

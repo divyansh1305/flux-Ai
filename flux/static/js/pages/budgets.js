@@ -4,7 +4,7 @@
   async function budgetModal(existing) {
     const m = await meta();
     const cat = el("select", { class: "input", disabled: existing ? true : null },
-      m.expense_categories.map((c) => el("option", { value: c, selected: existing && existing.category === c ? true : null }, (CAT_EMOJI[c] || "") + " " + c)));
+      m.expense_categories.map((c) => el("option", { value: c, selected: existing && existing.category === c ? true : null }, c)));
     const limit = el("input", { class: "input big num", type: "number", min: "1", step: "1", required: true, value: existing ? existing.limit : "", placeholder: "4000" });
     const v = await modal(existing ? "Edit budget" : "New monthly budget",
       el("div", { class: "form" }, el("label", { class: "field" }, "Category", cat), el("label", { class: "field" }, "Monthly limit (₹)", limit),
@@ -31,7 +31,7 @@
       const today = new Date();
       const daysLeft = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate() - today.getDate();
       const cards = budgets.map((b) => el("div", { class: "card" },
-        el("div", { class: "row between" }, el("h3", null, (CAT_EMOJI[b.category] || "") + " " + b.category),
+        el("div", { class: "row between" }, el("h3", null, b.category),
           el("span", { class: "pill " + b.state }, b.state === "ok" ? "On track" : b.state === "ahead" ? "Spending fast" : "Over budget")),
         el("div", { class: "row between", style: { margin: "14px 0 8px" } },
           el("div", null, el("div", { class: "stat" }, el("div", { class: "value", style: { fontSize: "22px" } }, inr0(b.spent))), el("div", { class: "tiny faint" }, "of " + inr0(b.limit))),

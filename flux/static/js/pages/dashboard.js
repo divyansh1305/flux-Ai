@@ -1,5 +1,5 @@
 (function () {
-  const { el, icon, api, inr, inr0, pageHead, txRow, deleteTx, addTransactionModal, onRefresh, CAT_COLORS } = window.Flux;
+  const { el, icon, api, inr, inr0, txRow, deleteTx, addTransactionModal, onRefresh, CAT_COLORS, avatar, dateFmt } = window.Flux;
   const C = window.FluxCharts;
 
   function greeting(name) {
@@ -9,7 +9,7 @@
   }
 
   async function render(main, user) {
-    const content = el("div", { class: "stack", style: { gap: "16px" } });
+    const content = el("div", { class: "stack narrow", style: { gap: "18px" } });
     main.replaceChildren(content);
     const load = async () => {
       const [d, pending] = await Promise.all([api("/api/dashboard"), api("/api/pay/pending")]);
@@ -19,129 +19,150 @@
     await load();
   }
 
-  function money(v) {
-    const [whole, dec] = inr(v).split(".");
-    return el("span", null, whole, dec ? el("span", { class: "dec" }, "." + dec) : null);
+  const section = (title, link, ...kids) => el("section", null,
+    el("div", { class: "section-title" }, el("span", null, title), link || null), ...kids);
+
+  async function alignBank() {
+    try {
+      const r = await api("/api/ledger/align", { method: "POST" });
+      window.Flux.ok(`Done. Flux now matches your bank: ${inr0(r.balance)} available.`);
+      window.Flux.refresh();
+    } catch (e) { window.Flux.err(e); }
   }
 
   function pendingCard(p) {
     const done = async (status) => {
       try {
         const r = await api(`/api/pay/${p.id}/confirm`, { method: "POST", body: { status } });
-        window.Flux.ok(status === "paid" ? `Logged ${inr(p.amount)} to ${p.payee_name}.` + (r.autosaved ? ` ${inr(r.autosaved)} auto-saved.` : "") : "Okay, not logged.");
+        window.Flux.ok(status === "paid" ? `Saved ${inr(p.amount)} to ${p.payee_name}.` + (r.autosaved ? ` ${inr(r.autosaved)} put aside.` : "") : "Okay, not saved.");
         window.Flux.refresh();
       } catch (e) { window.Flux.err(e); }
     };
-    return el("div", { class: "notice info", style: { alignItems: "center" } },
-      el("div", { style: { flex: 1 } }, "Did your ", el("b", null, inr(p.amount)), " payment to ", el("b", null, p.payee_name || p.payee_vpa), " go through?"),
-      el("button", { class: "btn sm primary", onclick: () => done("paid") }, "Yes, log it"),
-      el("button", { class: "btn sm ghost", onclick: () => done("failed") }, "No"));
+    return el("div", { class: "card row", style: { gap: "12px", alignItems: "center", flexWrap: "wrap" } },
+      avatar(p.payee_name || p.payee_vpa),
+      el("div", { style: { flex: 1, minWidth: "180px" } }, el("div", { style: { fontWeight: 600 } }, `Did your ${inr(p.amount)} payment go through?`),
+        el("div", { class: "small muted" }, p.payee_name || p.payee_vpa)),
+      el("div", { class: "row", style: { gap: "8px" } },
+        el("button", { class: "btn sm ghost", onclick: () => done("failed") }, "No"),
+        el("button", { class: "btn sm primary", onclick: () => done("paid") }, "Yes, it did")));
+  }
+
+  function setupCard(s) {
+    if (s.complete) return null;
+    try { if (localStorage.getItem("flux_setup_hidden") === String(s.done)) return null; } catch (e) { /* storage blocked */ }
+    const run = (st) => {
+      if (st.done) return;
+      if (st.action === "income") addTransactionModal("income");
+      else if (st.action === "align") alignBank();
+      else if (st.href) location.href = st.href;
+    };
+    const card = el("div", { class: "card" },
+      el("div", { class: "row between", style: { marginBottom: "6px" } },
+        el("div", null, el("h2", null, "Let's get you set up"), el("div", { class: "progress-text", style: { marginTop: "2px" } }, `${s.done} of ${s.total} done · takes about 3 minutes`)),
+        el("button", { class: "btn sm ghost", onclick: () => { try { localStorage.setItem("flux_setup_hidden", String(s.done)); } catch (e) { /* ignore */ } card.remove(); } }, "Later")),
+      el("div", { class: "bar ok", style: { margin: "10px 0 6px" } }, el("i", { style: { width: (s.done / s.total) * 100 + "%" } })),
+      el("div", { class: "setup" }, s.steps.map((st) => el("div", {
+        class: "setup-step" + (st.done ? " done" : ""), role: st.done ? null : "button", tabindex: st.done ? null : "0",
+        style: { cursor: st.done || (!st.href && !st.action) ? "default" : "pointer" },
+        onclick: () => run(st), onkeydown: (e) => { if (e.key === "Enter") run(st); } },
+        el("span", { class: "tick" }, icon("check")),
+        el("div", { class: "s-main" }, el("div", { class: "s-title" }, st.title), st.done ? null : el("div", { class: "s-sub" }, st.sub)),
+        st.done || (!st.href && !st.action) ? null : el("span", { class: "faint", style: { display: "grid" } }, icon("arrow"))))));
+    return card;
   }
 
   function build(d, user, pending) {
     const m = d.month;
     const sf = d.safe;
-    const bankChip = d.bank
-      ? el("span", { class: "delta", title: "Balance your bank reported in its latest SMS/statement" },
-        "🏦 Bank says ", inr0(d.bank.balance), el("span", { class: "faint" }, " · " + window.Flux.dateFmt(d.bank.as_of)),
-        d.reconcile.status === "in_sync" ? el("span", { class: "green" }, " · in sync") : d.reconcile.status === "drift" ? el("span", { class: "amber" }, " · check") : null)
-      : null;
-    const hero = el("section", { class: "hero" },
-      el("div", null,
-        el("div", { class: "eyebrow" }, greeting(user.name) + " · safe to spend today"),
-        el("div", { class: "big" + (sf.status === "ok" ? "" : " amber"), style: { marginTop: "14px" } }, money(sf.left_today)),
-        el("div", { class: "sub" }, sf.message),
-        el("div", { class: "row wrap", style: { marginTop: "14px", gap: "8px" } },
-          el("span", { class: "delta" }, "Available ", inr0(d.balance)),
-          sf.bills_due ? el("span", { class: "delta" }, "Bills due ", inr0(sf.bills_due)) : null,
-          sf.goal_reserve ? el("span", { class: "delta" }, "Goal plan ", inr0(sf.goal_reserve)) : null,
-          bankChip)),
-      el("div", { class: "actions" },
-        el("a", { class: "btn primary lg", href: "/app/pay" }, icon("qr"), "Scan & Pay"),
-        el("button", { class: "btn lg", onclick: () => addTransactionModal("expense") }, icon("plus"), "Add"),
-        el("button", { class: "btn lg", onclick: () => window.FluxVoice && window.FluxVoice.open(true), "aria-label": "Ask Flux" }, icon("mic"))));
+    const safe = Math.max(0, Math.floor(sf.left_today));
+
+    // ── Hero: one number that answers "can I spend today?"
+    const meta = el("div", { class: "hero-meta" },
+      el("span", null, "In your account ", el("b", null, inr0(d.balance))),
+      sf.bills_due ? el("span", null, "Bills coming ", el("b", null, inr0(sf.bills_due))) : null,
+      d.bank && d.reconcile.status === "in_sync" ? el("span", { class: "ok" }, icon("check"), "Matches your bank") : null);
+    const hero = el("section", { class: "hero-card" },
+      el("div", { class: "eyebrow" }, greeting(user.name)),
+      el("div", { class: "hero-label", style: { marginTop: "14px" } }, "Safe to spend today"),
+      el("div", { class: "hero" }, el("div", { class: "big" + (sf.status === "ok" ? "" : " amber"), style: { marginTop: "4px" } }, inr0(safe))),
+      el("div", { class: "muted", style: { fontSize: "15px" } }, sf.status === "ok"
+        ? (sf.bills_due ? "Your upcoming bills are already set aside." : "Spend up to this and you stay on track this month.")
+        : sf.message),
+      meta,
+      el("div", { class: "hero-actions" },
+        el("a", { class: "btn primary", href: "/app/pay" }, icon("qr"), "Scan & Pay"),
+        el("button", { class: "btn", onclick: () => addTransactionModal("expense") }, icon("plus"), "Add expense")));
+
+    // ── Bank match (gentle; the setup card covers it for brand-new users)
+    const setupShowsBank = !d.setup.complete && d.setup.steps.some((s) => s.key === "bank" && !s.done && s.action === "align");
     const gap = d.bank_gap;
-    const alignCard = d.bank && gap !== null && Math.abs(gap) >= 1 && d.reconcile.status !== "drift"
-      ? el("div", { class: "notice info" }, "🏦 ", el("div", null,
-          el("b", null, `Your bank shows ${inr0(d.bank.balance)}, Flux counts ${inr0(d.bank.balance - gap)} in the account. `),
-          gap > 0 ? "Flux only knows money from after you started tracking. " : "Some spending before tracking, or cash, isn't in Flux yet. ",
-          el("button", { class: "btn sm", style: { marginLeft: "6px" }, onclick: async () => {
-            try { const r = await window.Flux.api("/api/ledger/align", { method: "POST" }); window.Flux.ok(`Matched to your bank. Available is now ${inr0(r.balance)}.`); window.Flux.refresh(); }
-            catch (e) { window.Flux.err(e); } } }, "Match my bank")))
+    const bankCard = d.bank && gap !== null && Math.abs(gap) >= 1 && d.reconcile.status !== "drift" && !setupShowsBank
+      ? el("div", { class: "notice info", style: { alignItems: "center" } }, icon("bank"),
+          el("div", { style: { flex: 1 } }, el("b", null, `Your bank says ${inr0(d.bank.balance)}.`), " Flux started counting later, so the numbers differ. Match them in one tap."),
+          el("button", { class: "btn sm", onclick: alignBank }, "Match"))
       : null;
-    const recon = d.reconcile.status === "drift" ? el("div", { class: "notice caution" }, "🔎 ", el("div", null, el("b", null, "Something's missing. "), d.reconcile.message)) : null;
-    const bills = sf.bills.length ? el("div", { class: "card" }, el("div", { class: "card-head" }, el("h2", null, "Coming up this month"), el("span", { class: "tiny faint" }, "detected from your history")),
-      el("div", { class: "tx-list" }, sf.bills.map((b) => el("div", { class: "tx" },
-        el("div", { class: "tx-icon" }, window.Flux.CAT_EMOJI[b.category] || "🔁"),
-        el("div", { class: "tx-main" }, el("div", { class: "tx-title" }, b.name), el("div", { class: "tx-sub" }, `${b.cadence} · due ${window.Flux.dateFmt(b.next_date)}`)),
-        el("div", { class: "tx-amt" }, inr(b.amount)))))) : null;
-    const stats = el("div", { class: "grid g-3" },
-      el("div", { class: "card stat" }, el("div", { class: "label" }, "Spent in " + m.month.split(" ")[0]), el("div", { class: "value" }, inr0(m.expenses)),
-        el("div", { class: "sub" }, `Projected ${inr0(d.forecast.projected_month_total)} by month end`)),
-      el("div", { class: "card stat" }, el("div", { class: "label" }, "Saved in goals"), el("div", { class: "value green" }, inr0(d.total_saved)),
-        el("div", { class: "sub" }, `${inr0(m.saved)} this month`)),
-      el("div", { class: "card stat" }, el("div", { class: "label" }, "Money Health"),
-        el("div", { class: "value" + (d.health.score == null ? "" : d.health.score >= 70 ? " green" : d.health.score >= 45 ? " amber" : " red") }, d.health.score == null ? "—" : d.health.score + "/100"),
-        el("div", { class: "sub" }, m.savings_rate == null ? "Add income to see your savings rate" : `Savings rate ${m.savings_rate}% this month`)));
+    const drift = d.reconcile.status === "drift"
+      ? el("div", { class: "notice caution" }, icon("alert"), el("div", null, el("b", null, "A payment may be missing. "), d.reconcile.message)) : null;
+    const alerts = d.forecast.alerts.slice(0, 2).map((a) => el("div", { class: "notice caution" }, icon("alert"), el("div", null, a)));
 
-
-    // Spending chart + category donut
-    const chartCard = el("div", { class: "card" },
-      el("div", { class: "card-head" }, el("h2", null, "Last 30 days"), el("span", { class: "tiny faint" }, `Avg ${inr0(d.forecast.daily_average)}/day this month`)),
-      d.series.some((x) => x.expense) ? C.bars(d.series) : el("div", { class: "empty" }, el("b", null, "No spending yet"), "Add an expense or import a statement to see your chart."));
-
-    const cats = m.by_category.slice(0, 6);
-    const catCard = el("div", { class: "card" }, el("div", { class: "card-head" }, el("h2", null, "Where it went"), el("a", { class: "link", href: "/app/transactions" }, "See all")));
-    if (cats.length) {
-      catCard.appendChild(el("div", { class: "row", style: { gap: "20px", alignItems: "center" } },
-        C.donut(cats, CAT_COLORS, { size: 132, label: inr0(m.expenses) }),
-        el("div", { class: "legend", style: { flex: 1, minWidth: 0 } }, cats.map((c, i) =>
-          el("div", { class: "row between" }, el("span", null, el("span", { class: "dot", style: { background: CAT_COLORS[i] } }), c.category),
-            el("span", { class: "num muted" }, inr0(c.amount)))))));
-    } else catCard.appendChild(el("div", { class: "empty" }, "Nothing spent this month yet."));
-
-    // Health score
+    // ── This month, as a simple list
     const h = d.health;
-    const healthCard = el("div", { class: "card" }, el("div", { class: "card-head" }, el("h2", null, "Money Health"), el("a", { class: "link", href: "/app/coach" }, "Details")),
-      el("div", { class: "row", style: { gap: "18px" } },
-        el("div", { class: "score-ring" }, C.ring(h.score), el("div", { class: "center" }, el("div", null, el("div", { class: "big" }, h.score == null ? "—" : String(h.score)), el("div", { class: "tiny faint" }, "of 100")))),
-        el("div", { class: "small muted", style: { flex: 1 } }, h.tips.length ? h.tips[0] : "You're doing great. Keep it up!")));
+    const month = section("This month", el("a", { class: "link", href: "/app/coach" }, "Details"),
+      el("div", { class: "card", style: { padding: "6px 20px" } },
+        el("div", { class: "kv" }, el("div", { class: "k" }, "Spent", el("small", null, m.expenses ? `On track for ${inr0(d.forecast.projected_month_total)} by month end` : "Nothing yet this month")), el("div", { class: "v" }, inr0(m.expenses))),
+        el("div", { class: "kv" }, el("div", { class: "k" }, "Money in"), el("div", { class: "v green" }, inr0(m.income))),
+        el("div", { class: "kv" }, el("div", { class: "k" }, "Put aside for goals", el("small", null, `${inr0(d.total_saved)} saved in total`)), el("div", { class: "v" }, inr0(m.saved))),
+        h.score != null ? el("div", { class: "kv" }, el("div", { class: "k" }, "Money health", el("small", null, h.tips[0] || "Looking good")),
+          el("div", { class: "v " + (h.score >= 70 ? "green" : h.score >= 45 ? "amber" : "red") }, h.score + " / 100")) : null));
 
-    // Budgets
-    const budgetCard = el("div", { class: "card" }, el("div", { class: "card-head" }, el("h2", null, "Budgets"), el("a", { class: "link", href: "/app/budgets" }, "Manage")));
+    const bills = sf.bills.length ? section("Coming up",
+      el("span", { class: "tiny faint" }, "spotted from your history"),
+      el("div", { class: "card", style: { padding: "4px 20px" } }, el("div", { class: "tx-list" }, sf.bills.map((b) => el("div", { class: "tx" },
+        avatar(b.name),
+        el("div", { class: "tx-main" }, el("div", { class: "tx-title" }, b.name), el("div", { class: "tx-sub" }, `${b.cadence === "monthly" ? "Every month" : "Every week"} · next ${dateFmt(b.next_date)}`)),
+        el("div", { class: "tx-amt" }, inr0(b.amount))))))) : null;
+
+    const recent = section("Recent", el("a", { class: "link", href: "/app/transactions" }, "See all"),
+      el("div", { class: "card", style: { padding: "4px 20px" } }, d.recent.length
+        ? el("div", { class: "tx-list" }, d.recent.map((t) => txRow(t)))
+        : el("div", { class: "empty" }, el("b", null, "No payments yet"), "Turn on automatic tracking, or tap Add expense.")));
+
+    // ── Spending picture
+    const cats = m.by_category.slice(0, 5);
+    const spending = cats.length || d.series.some((x) => x.expense) ? section("Where your money went", null,
+      el("div", { class: "card" },
+        d.series.some((x) => x.expense) ? el("div", null, el("div", { class: "tiny faint", style: { marginBottom: "6px" } }, `Last 30 days · about ${inr0(d.forecast.daily_average)} a day`), C.bars(d.series)) : null,
+        cats.length ? el("div", { class: "row wrap", style: { gap: "22px", alignItems: "center", marginTop: "16px" } },
+          C.donut(cats, CAT_COLORS, { size: 120, label: inr0(m.expenses) }),
+          el("div", { class: "legend", style: { flex: 1, minWidth: "180px" } }, cats.map((c, i) =>
+            el("div", { class: "row between" }, el("span", null, el("span", { class: "dot", style: { background: CAT_COLORS[i] } }), c.category),
+              el("span", { class: "num muted" }, inr0(c.amount)))))) : null)) : null;
+
+    // ── Budgets & goals
+    const budgetCard = el("div", { class: "card" }, el("div", { class: "card-head" }, el("h2", null, "Budgets"), el("a", { class: "link", href: "/app/budgets" }, d.budgets.length ? "Manage" : "Set one")));
     if (d.budgets.length) {
       d.budgets.slice(0, 4).forEach((b) => budgetCard.appendChild(el("div", { class: "budget-row" },
-        el("div", { class: "row between small" }, el("span", null, b.category), el("span", { class: "num muted" }, `${inr0(b.spent)} / ${inr0(b.limit)}`)),
+        el("div", { class: "row between small" }, el("span", null, b.category), el("span", { class: "num muted" }, `${inr0(b.left > 0 ? b.left : 0)} left`)),
         el("div", { class: "bar " + b.state, style: { marginTop: "8px" } }, el("i", { style: { width: Math.min(100, b.percent) + "%" } })))));
-    } else budgetCard.appendChild(el("div", { class: "empty" }, el("b", null, "No budgets yet"), 'Try saying "set food budget to 4000".'));
+    } else budgetCard.appendChild(el("p", { class: "small muted" }, "A budget tells Flux how much is okay to spend on something each month."));
 
-    // Goals
-    const goalCard = el("div", { class: "card" }, el("div", { class: "card-head" }, el("h2", null, "Goals"), el("a", { class: "link", href: "/app/goals" }, "View")));
+    const goalCard = el("div", { class: "card" }, el("div", { class: "card-head" }, el("h2", null, "Goals"), el("a", { class: "link", href: "/app/goals" }, d.goals.length ? "View" : "Add one")));
     if (d.goals.length) {
       d.goals.slice(0, 3).forEach((g) => goalCard.appendChild(el("div", { class: "budget-row" },
-        el("div", { class: "row between small" }, el("span", null, "🎯 " + g.title), el("span", { class: "num muted" }, g.percent + "%")),
-        el("div", { class: "bar brand", style: { marginTop: "8px" } }, el("i", { style: { width: g.percent + "%" } })),
-        el("div", { class: "tiny faint", style: { marginTop: "6px" } }, `${inr0(g.saved)} of ${inr0(g.target)}`))));
-    } else goalCard.appendChild(el("div", { class: "empty" }, el("b", null, "No goals yet"), "Create one and every expense will round up into it."));
-
-    // Recent
-    const recent = el("div", { class: "card" }, el("div", { class: "card-head" }, el("h2", null, "Recent activity"), el("a", { class: "link", href: "/app/transactions" }, "All transactions")));
-    recent.appendChild(d.recent.length ? el("div", { class: "tx-list" }, d.recent.map((t) => txRow(t, deleteTx)))
-      : el("div", { class: "empty" }, el("b", null, "Nothing here yet"), 'Tap the mic and say "spent 120 on lunch", or import your bank statement.'));
-
-    const alerts = d.forecast.alerts.map((a) => el("div", { class: "notice caution" }, "⚠️ ", a));
+        el("div", { class: "row between small" }, el("span", null, g.title), el("span", { class: "num muted" }, `${inr0(g.saved)} of ${inr0(g.target)}`)),
+        el("div", { class: "bar ok", style: { marginTop: "8px" } }, el("i", { style: { width: g.percent + "%" } })))));
+    } else goalCard.appendChild(el("p", { class: "small muted" }, "Pick something to save for, and small round-ups from each payment go into it."));
 
     return [
       hero,
       ...pending.map(pendingCard),
-      recon,
-      alignCard,
-      ...alerts,
-      stats,
+      setupCard(d.setup),
+      bankCard, drift, ...alerts,
+      month,
       bills,
-      el("div", { class: "grid g-main" }, chartCard, catCard),
-      el("div", { class: "grid g-3" }, healthCard, budgetCard, goalCard),
       recent,
+      spending,
+      el("div", { class: "grid g-2" }, budgetCard, goalCard),
     ];
   }
 

@@ -31,11 +31,11 @@ class MainActivity : Activity() {
     private lateinit var status: TextView
     private val io = Executors.newSingleThreadExecutor()
 
-    private val bg = Color.parseColor("#0E0E10")
-    private val card = Color.parseColor("#1A1A1E")
-    private val fg = Color.parseColor("#F4F4F5")
-    private val muted = Color.parseColor("#A1A1AA")
-    private val accent = Color.parseColor("#D4FF3A")
+    private val bg = Color.parseColor("#F6F4EF")
+    private val card = Color.parseColor("#FFFFFF")
+    private val fg = Color.parseColor("#1D1C1A")
+    private val muted = Color.parseColor("#5F5B54")
+    private val accent = Color.parseColor("#1F6B57")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -114,7 +114,7 @@ class MainActivity : Activity() {
         })
 
         // 4. Status
-        status = text("", 14f, accent).apply { pad(top = 18) }
+        status = text("", 14f, fg).apply { pad(top = 18) }
         root.addView(status)
         refreshStatus()
 
@@ -152,7 +152,7 @@ class MainActivity : Activity() {
 
     private fun button(label: String, secondary: Boolean = false, onClick: () -> Unit) = Button(this).apply {
         text = label; isAllCaps = false; textSize = 15f
-        setTextColor(if (secondary) fg else bg)
+        setTextColor(if (secondary) fg else Color.WHITE)
         setBackgroundColor(if (secondary) card else accent)
         setOnClickListener { onClick() }
         layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(50)).apply { topMargin = dp(10) }

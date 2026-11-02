@@ -61,7 +61,7 @@
       const payeesBox = el("div", { class: "chips" });
       api("/api/pay/payees").then((list) => {
         list.forEach((p) => payeesBox.appendChild(el("button", { class: "chip", type: "button", onclick: () => handleCode(p.vpa, prefillAmount) },
-          (CAT_EMOJI[p.category] || "") + " " + (p.name || p.vpa))));
+          (p.name || p.vpa))));
         if (list.length) payeesBox.before(el("div", { class: "small muted", style: { marginTop: "8px" } }, "Pay again"));
       }).catch(() => {});
 
@@ -133,7 +133,7 @@
       const initials = (d.name || d.vpa).split(/[\s@.]+/).filter(Boolean).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
       const amount = el("input", { class: "input big num", type: "number", inputmode: "decimal", min: "1", max: "100000", step: "0.01",
         value: d.amount || "", placeholder: "0", readonly: d.amount_locked ? true : null, "aria-label": "Amount" });
-      const cat = el("select", { class: "input" }, m.expense_categories.map((c) => el("option", { value: c, selected: c === d.category ? true : null }, (CAT_EMOJI[c] || "") + " " + c)));
+      const cat = el("select", { class: "input" }, m.expense_categories.map((c) => el("option", { value: c, selected: c === d.category ? true : null }, c)));
       const note = el("input", { class: "input", maxlength: "50", placeholder: "What's this for? (optional)", value: d.note || "" });
       const check = el("div");
       const payBtn = el("button", { class: "btn primary lg block", type: "submit" }, "Continue to pay");

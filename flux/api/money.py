@@ -217,6 +217,41 @@ def export_transactions():
 
 
 # ─── Dashboard ────────────────────────────────────────────────
+def setup_status(uid):
+    """New-user checklist: earn trust step by step instead of showing scores built on nothing."""
+    from .. import ledger
+
+    db = get_db()
+    one = lambda sql: db.execute(sql, (uid,)).fetchone() is not None  # noqa: E731
+    has_income = one("SELECT 1 FROM transactions WHERE user_id = ? AND kind = 'income' LIMIT 1")
+    has_auto = one("SELECT 1 FROM ingest_tokens WHERE user_id = ?")
+    has_budget = one("SELECT 1 FROM budgets WHERE user_id = ?")
+    has_goal = one("SELECT 1 FROM goals WHERE user_id = ? AND archived = 0")
+    has_bank = one("SELECT 1 FROM balance_snapshots WHERE user_id = ?")
+    gap = ledger.bank_gap(uid)
+    steps = [
+        {"key": "income", "title": "Add your monthly income", "sub": "Pocket money, salary or stipend", "done": has_income,
+         "action": "income"},
+        {"key": "auto", "title": "Turn on automatic tracking", "sub": "Payments log themselves from your phone",
+         "done": has_auto, "href": "/app/settings"},
+        {"key": "budget", "title": "Set one budget", "sub": "Food is a good place to start", "done": has_budget,
+         "href": "/app/budgets"},
+        {"key": "goal", "title": "Pick something to save for", "sub": "Round-ups go here automatically", "done": has_goal,
+         "href": "/app/goals"},
+        {"key": "bank", "title": "Match Flux with your bank", "done": bool(has_bank and gap is not None and abs(gap) < 1),
+         "sub": "One tap, after your first bank SMS arrives" if not has_bank else "Your bank balance is ready to match",
+         "action": "align" if has_bank else None},
+    ]
+    done = sum(1 for s in steps if s["done"])
+    return {"steps": steps, "done": done, "total": len(steps), "complete": done == len(steps)}
+
+
+@bp.get("/setup")
+@login_required
+def setup():
+    return jsonify(setup_status(current_user()["id"]))
+
+
 @bp.get("/dashboard")
 @login_required
 def dashboard():
@@ -241,6 +276,7 @@ def dashboard():
         "forecast": finance.month_forecast(uid),
         "series": finance.daily_series(uid, 30),
         "recent": [tx_json(r) for r in recent],
+        "setup": setup_status(uid),
     })
 
 

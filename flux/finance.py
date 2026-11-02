@@ -370,6 +370,9 @@ def month_forecast(user_id, day=None):
 
 
 # ─── Money Health Score ───────────────────────────────────────
+MIN_DAYS_FOR_SCORE = 5
+
+
 def health_score(user_id):
     """0–100 score from four documented parts. Not a credit score."""
     today = clock.today()
@@ -379,7 +382,15 @@ def health_score(user_id):
     tips = []
 
     if inc30 == 0 and exp30 == 0:
-        return {"score": None, "parts": [], "tips": ["Add your income and a few expenses to get your score."]}
+        return {"score": None, "parts": [], "days_tracked": 0,
+                "tips": ["Add your income and a few expenses to get your score."]}
+    # A score from one day of data would be made up, so wait for about a week of real activity.
+    days_tracked = get_db().execute(
+        "SELECT COUNT(DISTINCT date) FROM transactions WHERE user_id = ? AND date >= ? AND kind IN ('income','expense')",
+        (user_id, start30.isoformat())).fetchone()[0]
+    if days_tracked < MIN_DAYS_FOR_SCORE:
+        return {"score": None, "parts": [], "days_tracked": days_tracked,
+                "tips": [f"Your score appears after about a week of tracking ({days_tracked} of {MIN_DAYS_FOR_SCORE} days so far)."]}
 
     # 1. Savings rate (40): saving 20%+ of income earns full marks.
     rate = (inc30 - exp30) / inc30 if inc30 > 0 else -1
@@ -397,8 +408,8 @@ def health_score(user_id):
         if off:
             tips.append("Spending is running ahead of budget in: " + ", ".join(off) + ".")
     else:
-        p_budget = 10
-        tips.append("Set budgets for your top 2–3 categories to unlock full points.")
+        p_budget = 0  # no budgets means no points (it used to give 10 for free)
+        tips.append("Set a budget for your top 2–3 categories to earn these points.")
 
     # 3. Tracking consistency (15): logging on 10 of the last 14 days = full marks.
     days_logged = get_db().execute(
@@ -417,13 +428,13 @@ def health_score(user_id):
 
     parts = [
         {"name": "Savings rate", "points": p_rate, "max": 40, "detail": f"{max(rate, 0) * 100:.0f}% of income kept (last 30 days)"},
-        {"name": "Budgets", "points": p_budget, "max": 25, "detail": f"{len(budgets)} budget(s) set"},
+        {"name": "Budgets", "points": p_budget, "max": 25, "detail": f"{len(budgets)} budget{'' if len(budgets) == 1 else 's'} set" if budgets else "No budgets yet"},
         {"name": "Tracking habit", "points": p_consistency, "max": 15, "detail": f"Logged on {days_logged} of the last 14 days"},
         {"name": "Safety buffer", "points": p_buffer, "max": 20, "detail": ("No spending logged yet" if not exp30 else
                                                                          f"Covers {months:.1f} months of expenses" if months < 99
                                                                          else "Covers more than 8 years of expenses")},
     ]
-    return {"score": sum(p["points"] for p in parts), "parts": parts, "tips": tips[:3]}
+    return {"score": sum(p["points"] for p in parts), "parts": parts, "tips": tips[:3], "days_tracked": days_tracked}
 
 
 def snapshot_for_ai(user):

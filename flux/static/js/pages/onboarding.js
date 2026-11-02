@@ -19,7 +19,7 @@
       if (step === 0) {
         const amt = el("input", { class: "input big num", type: "number", min: "1", placeholder: "25000", value: data.income });
         const cat = el("select", { class: "input" }, ["Salary", "Pocket Money", "Freelance", "Other Income"].map((c) => el("option", { value: c, selected: data.incomeCat === c ? true : null }, c)));
-        card.append(el("div", { style: { fontSize: "34px" } }, "👋"),
+        card.append(el("div", { class: "feature" }, el("div", { class: "ico" }, icon("wave"))),
           el("h1", { style: { margin: "8px 0" } }, `Welcome to Flux, ${user.name.split(" ")[0]}!`),
           el("p", { class: "muted" }, "Let's set you up in under a minute. How much money comes in each month?"),
           el("div", { class: "form", style: { marginTop: "20px" } }, el("label", { class: "field" }, "Monthly income (₹)", amt), el("label", { class: "field" }, "Mostly from", cat)),
@@ -27,7 +27,7 @@
       } else if (step === 1) {
         const title = el("input", { class: "input", maxlength: "60", placeholder: "New laptop, Goa trip, Emergency fund…", value: data.goalTitle });
         const target = el("input", { class: "input big num", type: "number", min: "1", placeholder: "50000", value: data.goalTarget });
-        card.append(el("div", { style: { fontSize: "34px" } }, "🎯"), el("h1", { style: { margin: "8px 0" } }, "What are you saving for?"),
+        card.append(el("div", { class: "feature" }, el("div", { class: "ico" }, icon("target"))), el("h1", { style: { margin: "8px 0" } }, "What are you saving for?"),
           el("p", { class: "muted" }, "Goals give your savings a purpose. You can add more later."),
           el("div", { class: "chips", style: { marginTop: "16px" } }, ["Emergency fund", "New phone", "Trip", "Laptop"].map((g) => el("button", { class: "chip", onclick: () => { title.value = g; } }, g))),
           el("div", { class: "form", style: { marginTop: "16px" } }, el("label", { class: "field" }, "Goal", title), el("label", { class: "field" }, "Target (₹)", target)),
@@ -42,12 +42,12 @@
           class: "card", style: { textAlign: "left", cursor: "pointer", borderColor: data.mode === m && (m === "off" || data.value === v) ? "var(--brand)" : null, padding: "14px 16px" },
           onclick: () => { data.mode = m; data.value = v; paint(); } }, el("b", null, t), el("div", { class: "small muted" }, d))));
         paint();
-        card.append(el("div", { style: { fontSize: "34px" } }, "🔁"), el("h1", { style: { margin: "8px 0" } }, "Save automatically as you spend"),
+        card.append(el("div", { class: "feature" }, el("div", { class: "ico" }, icon("repeat"))), el("h1", { style: { margin: "8px 0" } }, "Save automatically as you spend"),
           el("p", { class: "muted" }, "Instead of cashback that makes you spend more, Flux moves a little of every expense into your goal, only when you have the balance."),
           list, nav(false, () => { step++; draw(); }));
       } else {
         const V = window.FluxVoice;
-        card.append(el("div", { style: { fontSize: "34px" } }, "🎙️"), el("h1", { style: { margin: "8px 0" } }, "Just talk to Flux"),
+        card.append(el("div", { class: "feature" }, el("div", { class: "ico" }, icon("mic"))), el("h1", { style: { margin: "8px 0" } }, "Just talk to Flux"),
           el("p", { class: "muted" }, "Tap the mic button (or press Ctrl/⌘+K) on any page and say things like:"),
           el("div", { class: "stack", style: { gap: "8px", marginTop: "16px" } },
             ["“Spent 250 on Swiggy”", "“What's my balance?”", "“Can I afford 3000 shoes?”", "“Maine 200 chai pe kharch kiye”"].map((t) => el("div", { class: "bubble me", style: { marginLeft: 0 } }, t))),

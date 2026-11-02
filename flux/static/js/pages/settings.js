@@ -119,7 +119,7 @@
       if (/localhost|127\.0\.0\.1/.test(location.hostname)) kids.push(el("div", { class: "notice info" }, "Your phone can't reach localhost. Deploy Flux (e.g. on Render) and set this up from the live site."));
       autoBox.replaceChildren(...kids);
     }
-    const autoCard = el("div", { class: "card", style: { gridColumn: "1 / -1" } }, el("h2", null, "⚡ Automatic tracking (Android app + iPhone)"), el("div", { style: { marginTop: "12px" } }, autoBox));
+    const autoCard = el("div", { class: "card", style: { gridColumn: "1 / -1" } }, el("h2", null, "Automatic tracking"), el("div", { style: { marginTop: "12px" } }, autoBox));
     drawAuto().catch(err);
 
     // Learned merchant rules + opt-in accuracy samples
@@ -138,7 +138,7 @@
         ok(contrib.checked ? "Thanks! Masked copies of new auto-logged messages will be kept for you to export." : "Turned off. Saved samples deleted.");
       } catch (e) { err(e); }
     };
-    const learnCard = el("div", { class: "card", style: { gridColumn: "1 / -1" } }, el("h2", null, "🧠 What Flux has learned"),
+    const learnCard = el("div", { class: "card", style: { gridColumn: "1 / -1" } }, el("h2", null, "What Flux has learned"),
       el("div", { style: { marginTop: "12px" } }, rulesBox),
       el("hr", { style: { border: 0, borderTop: "1px solid var(--line)", margin: "16px 0" } }),
       el("label", { class: "row", style: { gap: "10px", alignItems: "flex-start" } }, contrib,

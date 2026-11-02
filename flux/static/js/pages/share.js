@@ -48,7 +48,7 @@
           cats.map((c) => el("option", { value: c, selected: c === row.category ? true : null }, c)));
         sel.onchange = () => (row.category = sel.value);
         list.appendChild(el("div", { class: "tx", style: { opacity: row.duplicate ? 0.5 : 1 } }, cb,
-          el("div", { class: "tx-icon" }, CAT_EMOJI[row.category] || "•"),
+          window.Flux.avatar(row.note || row.category),
           el("div", { class: "tx-main" }, el("div", { class: "tx-title" }, row.note), el("div", { class: "tx-sub" }, row.date, row.duplicate ? " · already added" : "")),
           sel, el("div", { class: "tx-amt " + (row.kind === "income" ? "green" : "") }, (row.kind === "income" ? "+" : "-") + inr(row.amount))));
       });

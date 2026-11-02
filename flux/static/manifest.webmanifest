@@ -5,8 +5,8 @@
   "start_url": "/app",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0b0b0b",
-  "theme_color": "#0b0b0b",
+  "background_color": "#f6f4ef",
+  "theme_color": "#1f6b57",
   "icons": [{ "src": "/static/img/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }],
   "shortcuts": [
     { "name": "Scan & Pay", "url": "/app/pay" },

@@ -97,8 +97,14 @@ def test_budgets_and_pre_spend_check(client, user):
 
 def test_health_score_reflects_money_not_clicks(client, user):
     """Old bug: score went UP with every expense because it counted activity."""
+    from datetime import timedelta
+
+    from flux import clock
+
     add(client, "income", 10000, "Salary")
     add(client, "expense", 2000, "Rent")
+    for i in range(1, 6):  # a week of real tracking, so a score is shown at all
+        add(client, "expense", 50, "Food & Dining", date=(clock.today() - timedelta(days=i)).isoformat())
     good = client.get("/api/insights").json["health"]["score"]
     for _ in range(5):
         add(client, "expense", 1500, "Shopping")
@@ -146,3 +152,20 @@ def test_dates_use_indian_time_not_server_utc(client, user, monkeypatch):
     monkeypatch.setattr(clock, "today", lambda: date(2026, 11, 2))
     r = add(client, "expense", 99, "Food & Dining")
     assert r["transaction"]["date"] == "2026-11-02"
+
+
+def test_no_score_from_one_day_of_data_and_no_free_budget_points(client, user):
+    add(client, "income", 30000, "Salary")
+    add(client, "expense", 100, "Food & Dining")
+    h = client.get("/api/insights").json["health"]
+    assert h["score"] is None and "week" in h["tips"][0]
+
+
+def test_setup_checklist_tracks_progress(client, user):
+    s = client.get("/api/setup").json
+    assert s["done"] < s["total"] and [x["key"] for x in s["steps"]][:2] == ["income", "auto"]
+    add(client, "income", 30000, "Salary")
+    client.put("/api/budgets/Food%20%26%20Dining", json={"limit": 4000})
+    s2 = client.get("/api/setup").json
+    done = {x["key"] for x in s2["steps"] if x["done"]}
+    assert {"income", "budget"} <= done and s2["done"] == s["done"] + 2
