@@ -12,7 +12,7 @@ for f in (".env", "flux.env", os.path.expanduser("~/.env"), os.path.expanduser("
         break
 
 key = os.environ.get("GEMINI_API_KEY", "").strip()
-model = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+model = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 if not key:
     sys.exit("PROBLEM: GEMINI_API_KEY is empty or missing in your settings file.")
 print("key found, starts with:", key[:3], "... length", len(key), "| model:", model)

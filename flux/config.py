@@ -59,7 +59,7 @@ class Config:
 
         # Gemini (optional - app works without it)
         self.GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-        self.GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+        self.GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 
         # Zerodha Kite Publisher (optional). Without it, investing runs in clearly-labelled practice mode.
         self.KITE_API_KEY = os.environ.get("KITE_API_KEY", "")
