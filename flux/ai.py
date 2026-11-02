@@ -2,54 +2,48 @@
 import json
 import logging
 
+import requests
 from flask import current_app
 
 log = logging.getLogger("flux.ai")
-_client = None
-_client_key = None
+API = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+_session = requests.Session()   # reused connection; honours HTTPS_PROXY (needed on PythonAnywhere)
 
 
-def _get_client():
-    global _client, _client_key
-    key = current_app.config.get("GEMINI_API_KEY")
-    if not key:
-        return None
-    if _client is None or _client_key != key:
-        try:
-            from google import genai
-
-            _client = genai.Client(api_key=key)
-            _client_key = key
-        except Exception:
-            log.exception("Gemini client could not start")
-            return None
-    return _client
+def _key():
+    return (current_app.config.get("GEMINI_API_KEY") or "").strip()
 
 
 def available():
-    return _get_client() is not None
+    return bool(_key())
+
+
+def call(key, model, prompt, system=None, json_mode=False, max_tokens=600, timeout=20):
+    """Plain REST call to Gemini. Works with both old (AIza…) and new (AQ.…) API keys.
+    Raises on HTTP errors so callers/diagnostics can see the reason."""
+    body = {
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.3, "maxOutputTokens": max_tokens,
+                             "responseMimeType": "application/json" if json_mode else "text/plain"},
+    }
+    if system:
+        body["systemInstruction"] = {"parts": [{"text": system}]}
+    r = _session.post(API.format(model=model), json=body, timeout=timeout,
+                      headers={"x-goog-api-key": key, "Content-Type": "application/json"})
+    if r.status_code != 200:
+        raise RuntimeError(f"Gemini HTTP {r.status_code}: {r.text[:300]}")
+    data = r.json()
+    parts = (data.get("candidates") or [{}])[0].get("content", {}).get("parts", [])
+    return "".join(p.get("text", "") for p in parts).strip()
 
 
 def generate(prompt, system=None, json_mode=False, max_tokens=600):
-    client = _get_client()
-    if client is None:
+    key = _key()
+    if not key:
         return None
     try:
-        from google.genai import types
-
-        cfg = types.GenerateContentConfig(
-            system_instruction=system,
-            max_output_tokens=max_tokens,
-            temperature=0.3,
-            response_mime_type="application/json" if json_mode else "text/plain",
-        )
-        resp = client.models.generate_content(
-            model=current_app.config["GEMINI_MODEL"], contents=prompt, config=cfg
-        )
-        text = (resp.text or "").strip()
-        if json_mode:
-            return json.loads(text)
-        return text
+        text = call(key, current_app.config["GEMINI_MODEL"], prompt, system, json_mode, max_tokens)
+        return json.loads(text) if json_mode else text
     except Exception:
         log.exception("Gemini request failed")
         return None
