@@ -1,0 +1,40 @@
+# One-click deploy on Render (https://render.com). Set the secret values in the dashboard.
+services:
+  - type: web
+    name: flux
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -c gunicorn.conf.py "flux:create_app()"
+    healthCheckPath: /healthz
+    envVars:
+      - key: FLUX_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_PATH
+        value: /var/data/flux.db
+      - key: EMAIL_SENDER
+        sync: false
+      - key: EMAIL_PASSWORD
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: KITE_API_KEY
+        sync: false
+      - key: APP_TIMEZONE
+        value: Asia/Kolkata
+      - key: METRICS_TOKEN
+        generateValue: true
+      - key: BACKUP_DIR
+        value: /var/data/backups
+      - key: BACKUP_TOKEN
+        generateValue: true
+    disk:
+      name: flux-data
+      mountPath: /var/data
+      sizeGB: 1

@@ -1,0 +1,25 @@
+name: tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -q
+      - name: Parser benchmark (held-out + synthetic)
+        run: |
+          python packages/upi_parse/benchmarks/evaluate.py packages/upi_parse/benchmarks/heldout_v1.jsonl
+          python packages/upi_parse/benchmarks/evaluate.py packages/upi_parse/benchmarks/synthetic_v1.jsonl
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t flux .
+      - name: Container boots and is ready
+        run: |
+          docker run -d -p 8000:8000 -e SECRET_KEY=$(python3 -c 'import secrets;print(secrets.token_hex(32))') --name flux flux
+          for i in $(seq 1 20); do curl -fs localhost:8000/readyz && exit 0; sleep 1; done; docker logs flux; exit 1

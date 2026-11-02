@@ -1,0 +1,13 @@
+.env
+*.db
+*.db-*
+instance/
+__pycache__/
+*.pyc
+.pytest_cache/
+tests/
+android/
+docs/
+sample_data/
+.git/
+**/statement.csv

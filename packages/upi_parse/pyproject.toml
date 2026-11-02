@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "upi-parse"
+version = "0.1.0"
+description = "Parse Indian bank SMS, UPI app notifications, UPI QR codes and bank statement narrations into clean, categorised transactions."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Divyansh Budhiraja" }]
+keywords = ["upi", "india", "fintech", "sms", "bank", "transactions", "parser", "npci"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Office/Business :: Financial",
+  "Typing :: Typed",
+]
+dependencies = []
+
+[project.scripts]
+upi-parse = "upi_parse.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+upi_parse = ["py.typed"]

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0b0b">
+  <title>Sign in · Flux</title>
+  <link rel="icon" href="/static/img/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+  <div class="auth-wrap">
+    <aside class="auth-side">
+      <a href="/" class="logo" style="padding:0"><span class="logo-mark">F</span>Flux</a>
+      <div>
+        <h1>Pause<br>before<br>you pay.</h1>
+        <p style="margin-top:18px;max-width:380px;font-size:17px;opacity:.9">Scan, check your budget, pay in your own UPI app, and save a little every time.</p>
+      </div>
+      <p class="tiny" style="opacity:.8">Flux is a budgeting tool, not financial advice.</p>
+    </aside>
+    <main class="auth-main">
+      <div class="auth-card">
+        <h1 id="title">Sign in to Flux</h1>
+        <p class="muted" id="subtitle" style="margin:6px 0 24px">We'll email you a 6-digit code. No password needed.</p>
+
+        <form id="email-form" class="form" novalidate>
+          <label class="field">Email<input class="input" id="email" type="email" autocomplete="email" required placeholder="you@example.com"></label>
+          <label class="field hidden" id="name-field">Your name<input class="input" id="name" autocomplete="name" maxlength="60" placeholder="Riya Sharma"></label>
+          <button class="btn primary lg block" id="email-btn" type="submit">Continue</button>
+        </form>
+
+        <form id="code-form" class="form hidden" novalidate>
+          <label class="field">6-digit code<input class="input otp" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required placeholder="••••••"></label>
+          <button class="btn primary lg block" id="code-btn" type="submit">Verify and sign in</button>
+          <div class="row between small">
+            <button class="btn ghost sm" type="button" id="change-email">Use a different email</button>
+            <button class="btn ghost sm" type="button" id="resend">Resend code</button>
+          </div>
+        </form>
+
+        <div id="dev-note" class="notice info hidden" style="margin-top:14px">Developer mode: email isn't configured, so the code was printed in the server terminal.</div>
+        <div id="error" class="notice stop hidden" role="alert" style="margin-top:14px"></div>
+
+        <div id="google-wrap" class="hidden">
+          <div class="divider" style="margin:20px 0">or</div>
+          <div id="google-btn" style="display:flex;justify-content:center"></div>
+        </div>
+        <p class="tiny faint" style="margin-top:28px">By continuing you agree to our <a class="brand" href="/privacy">privacy policy</a>.</p>
+      </div>
+    </main>
+  </div>
+  <script src="/static/js/pages/login.js" defer></script>
+</body>
+</html>
