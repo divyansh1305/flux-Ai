@@ -419,7 +419,9 @@ def health_score(user_id):
         {"name": "Savings rate", "points": p_rate, "max": 40, "detail": f"{max(rate, 0) * 100:.0f}% of income kept (last 30 days)"},
         {"name": "Budgets", "points": p_budget, "max": 25, "detail": f"{len(budgets)} budget(s) set"},
         {"name": "Tracking habit", "points": p_consistency, "max": 15, "detail": f"Logged on {days_logged} of the last 14 days"},
-        {"name": "Safety buffer", "points": p_buffer, "max": 20, "detail": f"Covers {months:.1f} months of expenses"},
+        {"name": "Safety buffer", "points": p_buffer, "max": 20, "detail": ("No spending logged yet" if not exp30 else
+                                                                         f"Covers {months:.1f} months of expenses" if months < 99
+                                                                         else "Covers more than 8 years of expenses")},
     ]
     return {"score": sum(p["points"] for p in parts), "parts": parts, "tips": tips[:3]}
 
