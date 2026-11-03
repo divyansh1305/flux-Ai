@@ -188,7 +188,8 @@ def test_kite_mode_when_key_configured(app, client, user, prices):
 
 
 # ─── Voice: paying ──────────────────────────────────────────
-def test_voice_pay_uses_known_payee(client, user):
+def test_voice_pay_uses_known_payee(app, client, user):
+    app.config["FEATURE_PAY"] = True
     prep = client.post("/api/pay/prepare", json={"vpa": "rahul.k@okaxis", "name": "Rahul K", "amount": 50, "category": "Other"}).json
     client.post(f"/api/pay/{prep['payment_id']}/confirm", json={"status": "paid"})
     r = client.post("/api/voice/command", json={"text": "pay 200 to rahul"}).json

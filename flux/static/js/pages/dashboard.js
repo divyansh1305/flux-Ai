@@ -12,7 +12,8 @@
     const content = el("div", { class: "stack narrow", style: { gap: "18px" } });
     main.replaceChildren(content);
     const load = async () => {
-      const [d, pending] = await Promise.all([api("/api/dashboard"), api("/api/pay/pending")]);
+      const payOn = (window.Flux.config.features || {}).pay;
+      const [d, pending] = await Promise.all([api("/api/dashboard"), payOn ? api("/api/pay/pending") : Promise.resolve([])]);
       content.replaceChildren(...build(d, user, pending).filter(Boolean));
     };
     onRefresh(load);
@@ -90,8 +91,8 @@
         : sf.message),
       meta,
       el("div", { class: "hero-actions" },
-        el("a", { class: "btn primary", href: "/app/pay" }, icon("qr"), "Scan & Pay"),
-        el("button", { class: "btn", onclick: () => addTransactionModal("expense") }, icon("plus"), "Add expense")));
+        el("button", { class: "btn primary", onclick: () => addTransactionModal("expense") }, icon("plus"), "Add expense"),
+        el("button", { class: "btn", onclick: () => window.FluxVoice && window.FluxVoice.open(false) }, icon("chat"), "Ask Flux")));
 
     // ── Bank match (gentle; the setup card covers it for brand-new users)
     const setupShowsBank = !d.setup.complete && d.setup.steps.some((s) => s.key === "bank" && !s.done && s.action === "align");

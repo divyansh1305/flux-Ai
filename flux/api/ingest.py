@@ -46,7 +46,9 @@ def create_token():
                " token_hash = excluded.token_hash, created_at = datetime('now'), last_used_at = NULL, uses = 0",
                (current_user()["id"], _digest(token)))
     db.commit()
-    return jsonify({"token": token, "url": request.host_url.rstrip("/") + "/api/ingest/sms"})
+    base = request.host_url.rstrip("/")
+    return jsonify({"token": token, "url": base + "/api/ingest/sms", "iphone_url": f"{base}/api/ingest/sms/{token}",
+                    "server": base})
 
 
 @bp.delete("/ingest/token")
@@ -57,9 +59,9 @@ def revoke_token():
     return jsonify({"active": False})
 
 
-def _user_from_token():
+def _user_from_token(path_token=None):
     auth = request.headers.get("Authorization", "")
-    token = auth[7:].strip() if auth.lower().startswith("bearer ") else ""
+    token = path_token or (auth[7:].strip() if auth.lower().startswith("bearer ") else "")
     # Tokens carry 256 bits of randomness, so guessing is hopeless; this cap just sheds junk
     # traffic. A *valid* token is never blocked, even if someone on the same carrier NAT IP sprays.
     bad_key = f"ingest_bad_token:{client_ip()}"
@@ -134,13 +136,32 @@ def ingest_row(user, row, source):
             "category": row["category"], "balance": rupees(finance.balance(user["id"]))}
 
 
+def _message_text():
+    """Accept the SMS as JSON {"text": ...}, a form field, or the raw body (iPhone Shortcuts 'File')."""
+    data = request.get_json(silent=True)
+    if isinstance(data, dict) and data.get("text"):
+        return str(data["text"])
+    if request.form.get("text"):
+        return request.form["text"]
+    return request.get_data(as_text=True) or ""
+
+
+@bp.post("/ingest/sms/<token>")
+@rate_limit(60, 60, scope="ingest_sms", by="token")
+def ingest_sms_link(token):
+    """iPhone one-link setup: the personal link carries the token, so the Shortcut needs no headers."""
+    return _ingest_sms(_user_from_token(token))
+
+
 @bp.post("/ingest/sms")
 @rate_limit(60, 60, scope="ingest_sms", by="token")
 def ingest_sms():
-    user = _user_from_token()
+    return _ingest_sms(_user_from_token())
+
+
+def _ingest_sms(user):
     db = get_db()
-    data = request.get_json(silent=True)
-    text = (data.get("text") if isinstance(data, dict) else None) or request.get_data(as_text=True) or ""
+    text = _message_text()
     row = parse_sms(str(text)[:2000])
     if row is not None:
         row["sample_text"] = str(text)[:600]

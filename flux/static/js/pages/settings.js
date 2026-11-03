@@ -83,44 +83,80 @@
           try { await api("/api/account", { method: "DELETE", body: { confirm: v } }); location.href = "/"; } catch (e) { err(e); }
         } }, icon("trash"), "Delete account")));
 
-    // Automatic tracking (iPhone Shortcuts / Android SMS forwarders)
-    const autoBox = el("div", { class: "stack", style: { gap: "12px" } });
-    const steps = (url, token) => el("ol", { class: "small", style: { paddingLeft: "20px", margin: 0, lineHeight: 1.85, color: "var(--muted)" } },
-      el("li", null, "Open the ", el("b", null, "Shortcuts"), " app → ", el("b", null, "Automation"), " → ", el("b", null, "+"), " → ", el("b", null, "Message"), "."),
-      el("li", null, "Message Contains: ", el("b", null, "debited"), ". Sender: any. Choose ", el("b", null, "Run Immediately"), "."),
-      el("li", null, "Tap ", el("b", null, "New Blank Automation"), " → add action ", el("b", null, "Get Contents of URL"), "."),
-      el("li", null, "URL: ", el("code", { class: "tiny", style: { wordBreak: "break-all", color: "var(--text)" } }, url)),
-      el("li", null, "Method ", el("b", null, "POST"), ". Header ", el("b", null, "Authorization"), " = ",
-        el("code", { class: "tiny", style: { wordBreak: "break-all", color: "var(--text)" } }, "Bearer " + (token || "<your token>"))),
-      el("li", null, "Request Body ", el("b", null, "JSON"), ": key ", el("b", null, "text"), " → value ", el("b", null, "Shortcut Input › Content"), "."),
-      el("li", null, "Optional: add ", el("b", null, "Show Notification"), " with ", el("b", null, "Contents of URL › message"), " to see what Flux logged."),
-      el("li", null, "Repeat for messages containing ", el("b", null, "Sent Rs"), " (HDFC style) and ", el("b", null, "credited"), " (income)."));
-    async function drawAuto(fresh) {
+    // Automatic tracking — one personal link, a bank picker, copy buttons. Only real steps.
+    const BANKS = {
+      "HDFC Bank": ["Sent Rs", "credited"], "SBI": ["debited", "credited"], "ICICI Bank": ["debited", "credited"],
+      "Axis Bank": ["debited", "credited"], "Kotak": ["Sent Rs", "Received Rs"], "Paytm Payments Bank": ["debited", "credited"],
+      "Other bank": ["debited", "credited"],
+    };
+    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    const copy = (text, label) => el("button", { class: "btn sm", type: "button", onclick: () =>
+      (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => ok(label + " copied.")).catch(() => window.prompt("Copy this:", text)) }, "Copy");
+    const autoBox = el("div", { class: "stack", style: { gap: "14px" } });
+    let link = null;      // the personal link, only known right after it is created
+    let platform = isAndroid ? "android" : "iphone";
+    let bank = "HDFC Bank";
+
+    function numbered(items) {
+      return el("ol", { class: "stack", style: { gap: "10px", paddingLeft: "20px", margin: 0 } }, items.map((x) => el("li", { class: "small" }, x)));
+    }
+
+    async function drawAuto() {
       const st = await api("/api/ingest/token");
-      const url = location.origin + "/api/ingest/sms";
-      const kids = [el("p", { class: "small muted" }, "Log bank SMS automatically, without opening Flux. On iPhone, a Shortcuts automation forwards each debit/credit SMS to your private Flux link. Flux ignores OTPs and offers, skips duplicates, and won't double-count payments you made through Scan & Pay.")];
-      if (fresh) {
-        const copyBtn = el("button", { class: "btn sm", onclick: () => navigator.clipboard && navigator.clipboard.writeText(fresh.token).then(() => ok("Token copied.")) }, "Copy token");
-        kids.push(el("div", { class: "notice caution" }, el("div", null, el("b", null, "Your token (shown once): "),
-          el("code", { style: { wordBreak: "break-all", color: "var(--text)" } }, fresh.token), el("div", { style: { marginTop: "8px" } }, copyBtn))));
-      }
-      if (st.active || fresh) {
-        kids.push(el("div", { class: "tiny", style: { fontWeight: 700, letterSpacing: ".04em", color: "var(--muted)" } }, "ANDROID · FLUX COMPANION APP"));
-        kids.push(el("p", { class: "small muted", style: { margin: 0 } }, "Install Flux Companion, tick consent, paste ", el("b", null, location.origin), " and your token, then turn on Notification access. Every GPay, PhonePe, Paytm and bank payment gets logged on its own."));
-        kids.push(el("div", { class: "tiny", style: { fontWeight: 700, letterSpacing: ".04em", color: "var(--muted)", marginTop: "6px" } }, "IPHONE · SHORTCUTS AUTOMATION"));
-        kids.push(steps(url, fresh && fresh.token));
-        kids.push(el("div", { class: "tiny faint" }, st.uses ? `Used ${st.uses} time(s), last ${st.last_used_at} UTC.` : "Not used yet."));
-        kids.push(el("div", { class: "row wrap" },
-          el("button", { class: "btn sm", onclick: async () => drawAuto(await api("/api/ingest/token", { method: "POST" })) }, "New token"),
-          el("button", { class: "btn sm danger", onclick: async () => { await api("/api/ingest/token", { method: "DELETE" }); ok("Automatic tracking turned off."); drawAuto(); } }, "Turn off")));
+      const kids = [];
+      kids.push(el("p", { class: "small muted", style: { margin: 0 } },
+        "Flux reads only your bank's payment messages, never your chats or OTPs, and never your bank password."));
+      const seg = el("div", { class: "seg" }, [["iphone", "iPhone"], ["android", "Android"]].map(([k, label]) =>
+        el("button", { type: "button", class: platform === k ? "on" : "", onclick: () => { platform = k; drawAuto(); } }, label)));
+      kids.push(seg);
+
+      if (platform === "iphone") {
+        const words = BANKS[bank];
+        const bankSel = el("select", { class: "input", style: { maxWidth: "260px" }, onchange: (e) => { bank = e.target.value; drawAuto(); } },
+          Object.keys(BANKS).map((b) => el("option", { value: b, selected: b === bank ? true : null }, b)));
+        let linkBlock;
+        if (link) {
+          linkBlock = el("div", { class: "notice ok", style: { flexDirection: "column", gap: "8px" } },
+            el("div", null, el("b", null, "Your personal link"), " (keep it private, like a password):"),
+            el("code", { style: { wordBreak: "break-all", color: "var(--text)", fontSize: "12px" } }, link),
+            el("div", null, copy(link, "Link")));
+        } else {
+          linkBlock = el("div", { class: "row wrap", style: { gap: "10px" } },
+            el("button", { class: "btn primary", type: "button", onclick: async () => {
+              const r = await api("/api/ingest/token", { method: "POST" }); link = r.iphone_url; drawAuto(); } },
+              st.active ? "Make a new link" : "Get my personal link"),
+            st.active ? el("span", { class: "small muted" }, "Making a new link stops the old one. Update your automations after.") : null);
+        }
+        kids.push(el("div", { class: "stack", style: { gap: "10px" } },
+          el("label", { class: "field" }, "Your bank", bankSel),
+          linkBlock));
+        kids.push(numbered([
+          ["Open the ", el("b", null, "Shortcuts"), " app → ", el("b", null, "Automation"), " (bottom) → ", el("b", null, "+"), " → ", el("b", null, "Message"), "."],
+          ["Tap ", el("b", null, "Message Contains"), " and type ", el("code", null, words[0]), " ", copy(words[0], "Word"), ". Leave Sender empty. Choose ", el("b", null, "Run Immediately"), " → ", el("b", null, "Next"), " → ", el("b", null, "New Blank Automation"), "."],
+          ["Search ", el("b", null, "Get Contents of URL"), " and add it. Tap ", el("b", null, "URL"), " and paste your personal link."],
+          ["Tap the small ", el("b", null, "›"), " on that block. Set ", el("b", null, "Method"), " to ", el("b", null, "POST"), ", ", el("b", null, "Request Body"), " to ", el("b", null, "File"), ", then tap ", el("b", null, "File"), " and pick ", el("b", null, "Shortcut Input"), ". Tap ", el("b", null, "Done"), "."],
+          ["Do steps 1–4 once more with the word ", el("code", null, words[1]), " ", copy(words[1], "Word"), " so money you receive is added too."],
+          ["Test it: send ₹1 by UPI. It shows up in Flux under Recent within a few seconds."],
+        ]));
       } else {
-        kids.push(el("div", null, el("button", { class: "btn primary", onclick: async () => drawAuto(await api("/api/ingest/token", { method: "POST" })) }, "Set up automatic tracking")));
+        kids.push(el("div", { class: "notice info" }, icon("info"), el("div", null,
+          el("b", null, "Android app: coming soon. "),
+          "It will log every GPay, PhonePe, Paytm and bank payment by itself after one tap. Until then, open ",
+          el("a", { class: "link", href: "/app/share" }, "Paste bank SMS"), " to add payments in seconds, or ",
+          el("a", { class: "link", href: "/app/import" }, "upload your statement"), ".")));
       }
-      if (/localhost|127\.0\.0\.1/.test(location.hostname)) kids.push(el("div", { class: "notice info" }, "Your phone can't reach localhost. Deploy Flux (e.g. on Render) and set this up from the live site."));
+
+      kids.push(el("div", { class: "small " + (st.uses ? "green" : "muted") },
+        st.active ? (st.uses ? `Working: ${st.uses} message${st.uses === 1 ? "" : "s"} received, last at ${st.last_used_at} UTC.` : "Link ready. Waiting for your first payment message.") : "Not set up yet."));
+      if (st.active) kids.push(el("div", null, el("button", { class: "btn sm danger", type: "button", onclick: async () => {
+        await api("/api/ingest/token", { method: "DELETE" }); link = null; ok("Automatic tracking turned off."); drawAuto(); } }, "Turn off automatic tracking")));
+      if (/localhost|127\.0\.0\.1/.test(location.hostname)) kids.push(el("div", { class: "notice info" }, "Your phone can't reach localhost. Set this up from the live site."));
       autoBox.replaceChildren(...kids);
     }
-    const autoCard = el("div", { class: "card", style: { gridColumn: "1 / -1" } }, el("h2", null, "Automatic tracking"), el("div", { style: { marginTop: "12px" } }, autoBox));
+    const autoCard = el("div", { class: "card", id: "auto", style: { gridColumn: "1 / -1" } }, el("h2", null, "Automatic tracking"), el("div", { style: { marginTop: "12px" } }, autoBox));
     drawAuto().catch(err);
+    if (location.hash === "#auto") setTimeout(() => autoCard.scrollIntoView({ behavior: "smooth" }), 300);
 
     // Learned merchant rules + opt-in accuracy samples
     const rulesBox = el("div", { class: "stack", style: { gap: "8px" } });

@@ -1,7 +1,7 @@
 """Voice assistant + AI coach endpoints."""
 from datetime import datetime, timedelta, timezone
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, current_app
 
 from .. import ai, finance, voice
 from ..db import get_db
@@ -211,6 +211,15 @@ def execute(cmd):
             get_db().execute("DELETE FROM transactions WHERE id=? AND user_id=?", (row["id"], uid))
             get_db().commit()
             out.update(reply=f"Removed the {inr(rupees(abs(row['amount'])))} {row['category']} entry.", refresh=True)
+
+    elif intent == "pay" and not current_app.config.get("FEATURE_PAY"):
+        out["reply"] = ("Flux doesn't send money. Pay in your usual UPI app, and the payment will show up here "
+                        "automatically from your bank SMS.")
+
+    elif intent == "navigate" and (
+            (cmd["page"] == "/app/pay" and not current_app.config.get("FEATURE_PAY"))
+            or (cmd["page"] == "/app/invest" and not current_app.config.get("FEATURE_INVEST"))):
+        out["reply"] = "That isn't available in Flux yet."
 
     elif intent == "pay":
         from urllib.parse import urlencode

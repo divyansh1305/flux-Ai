@@ -64,6 +64,11 @@ class Config:
         # Zerodha Kite Publisher (optional). Without it, investing runs in clearly-labelled practice mode.
         self.KITE_API_KEY = os.environ.get("KITE_API_KEY", "")
 
+        # Only real, working features are shown. Scan & Pay hands off to UPI apps, which we can't verify
+        # on every phone, so it is off unless switched on; investing appears only with a real Zerodha key.
+        self.FEATURE_PAY = _bool("FEATURE_PAY", False)
+        self.FEATURE_INVEST = bool(self.KITE_API_KEY) and _bool("FEATURE_INVEST", True)
+
         # OTP policy
         self.OTP_TTL_SECONDS = 600
         self.OTP_MAX_ATTEMPTS = 5

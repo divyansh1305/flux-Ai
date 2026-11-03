@@ -159,6 +159,8 @@ def me():
         "user": user_json(u) if u else None,
         "google_client_id": current_app.config["GOOGLE_CLIENT_ID"] or None,
         "ai_available": ai.available(),
+        "features": {"pay": bool(current_app.config.get("FEATURE_PAY")),
+                     "invest": bool(current_app.config.get("FEATURE_INVEST"))},
     })
 
 

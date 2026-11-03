@@ -233,7 +233,7 @@ def setup_status(uid):
         {"key": "income", "title": "Add your monthly income", "sub": "Pocket money, salary or stipend", "done": has_income,
          "action": "income"},
         {"key": "auto", "title": "Turn on automatic tracking", "sub": "Payments log themselves from your phone",
-         "done": has_auto, "href": "/app/settings"},
+         "done": has_auto, "href": "/app/settings#auto"},
         {"key": "budget", "title": "Set one budget", "sub": "Food is a good place to start", "done": has_budget,
          "href": "/app/budgets"},
         {"key": "goal", "title": "Pick something to save for", "sub": "Round-ups go here automatically", "done": has_goal,

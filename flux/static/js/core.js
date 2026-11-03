@@ -241,8 +241,11 @@
     ["/app/invest", "trend", "Invest"],
     ["/app/coach", "spark", "Coach"],
   ];
-  const MOBILE_NAV = [["/app", "home", "Home"], ["/app/transactions", "list", "Activity"], ["/app/pay", "qr", "Pay"],
+  // Centre button: quick "Add" (always works). Scan & Pay only when it is switched on.
+  const MOBILE_NAV = [["/app", "home", "Home"], ["/app/transactions", "list", "Activity"], ["#add", "plus", "Add"],
     ["/app/goals", "target", "Goals"], ["/app/coach", "spark", "Coach"]];
+  const featureOn = (href) => !((href === "/app/pay" && !(CONFIG.features || {}).pay) ||
+                                (href === "/app/invest" && !(CONFIG.features || {}).invest));
   let USER = null;
   let CONFIG = {};
 
@@ -264,7 +267,7 @@
     const main = el("main", { class: "main", id: "main" });
     if (location.pathname !== "/onboarding") {
       const initials = USER.name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-      const nav = el("nav", { class: "nav", "aria-label": "Main" }, NAV.map(([href, ic, label]) =>
+      const nav = el("nav", { class: "nav", "aria-label": "Main" }, NAV.filter(([href]) => featureOn(href)).map(([href, ic, label]) =>
         el("a", { href, class: path === href ? "active" : null, "aria-current": path === href ? "page" : null }, icon(ic), el("span", null, label))));
       const top = el("header", { class: "topbar" }, el("div", { class: "topbar-in" },
         el("a", { href: "/app", class: "logo" }, el("span", { class: "logo-mark" }, "F"), "Flux"),
@@ -274,8 +277,8 @@
           el("a", { href: "/app/settings", class: "icon-link" + (path === "/app/settings" ? " active" : ""), title: "Settings", "aria-label": "Settings" }, icon("gear")),
           el("a", { href: "/app/settings", class: "avatar", title: USER.name, "aria-label": "Account" }, initials))));
       const bottom = el("nav", { class: "bottom-nav", "aria-label": "Main" }, MOBILE_NAV.map(([href, ic, label]) =>
-        href === "/app/pay"
-          ? el("a", { href, class: "pay" }, el("span", { class: "pay-dot" }, icon(ic)), label)
+        href === "#add"
+          ? el("a", { href: "#", class: "pay", onclick: (e) => { e.preventDefault(); addTransactionModal("expense"); } }, el("span", { class: "pay-dot" }, icon(ic)), label)
           : el("a", { href, class: path === href ? "active" : null }, icon(ic), label)));
       document.body.append(top, main, bottom);
     } else {

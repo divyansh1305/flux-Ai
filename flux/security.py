@@ -68,7 +68,8 @@ def ensure_csrf_token():
 def check_csrf():
     if request.method in SAFE_METHODS or not request.path.startswith("/api/"):
         return
-    if request.path in ("/api/ingest/sms", "/api/ingest/notification"):  # bearer token, no cookies -> no CSRF
+    if request.path in ("/api/ingest/sms", "/api/ingest/notification") or request.path.startswith("/api/ingest/sms/"):
+        # token-authenticated (header or personal link), no cookies -> no CSRF
         return
     sent = request.headers.get(CSRF_HEADER, "")
     expected = session.get("csrf", "")
@@ -142,6 +143,9 @@ def _bearer_key():
     auth = request.headers.get("Authorization", "")
     if auth.startswith("Bearer ") and len(auth) > 12:
         return "t:" + hashlib.sha256(auth[7:].strip().encode()).hexdigest()[:16]
+    path_token = (request.view_args or {}).get("token")
+    if path_token:
+        return "t:" + hashlib.sha256(str(path_token).encode()).hexdigest()[:16]
     return "ip:" + client_ip()
 
 
