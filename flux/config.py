@@ -56,6 +56,8 @@ class Config:
 
         # Google Sign-In (optional)
         self.GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+        # Gmail connect (read bank alert emails). Needs the same OAuth client's secret.
+        self.GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 
         # Gemini (optional - app works without it)
         self.GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")

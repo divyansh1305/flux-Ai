@@ -50,7 +50,7 @@ def find_duplicate(user_id, kind, amount_paise, day, ref=None, source="sms", win
     rows = db.execute(
         "SELECT id, ref, COALESCE(origin, source) AS origin FROM transactions"
         " WHERE user_id = ? AND kind = ? AND amount = ? AND date BETWEEN ? AND ?"
-        " AND COALESCE(origin, source) != ? AND source IN ('sms','upi','notification','import','voice','manual')"
+        " AND COALESCE(origin, source) != ? AND source IN ('sms','upi','notification','import','voice','manual','email')"
         " ORDER BY id DESC LIMIT 10",
         (user_id, kind, amount_paise, lo.isoformat(), hi.isoformat(), origin)).fetchall()
     for row in rows:

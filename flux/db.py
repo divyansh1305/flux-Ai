@@ -9,7 +9,7 @@ import sqlite3
 
 from flask import current_app, g
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 # Columns added to existing tables after launch (ALTER TABLE ADD COLUMN is enough for these).
 ADDED_COLUMNS = [
     ("users", "contribute_samples", "INTEGER NOT NULL DEFAULT 0"),

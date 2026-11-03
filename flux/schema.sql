@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     date            TEXT NOT NULL,
     goal_id         INTEGER REFERENCES goals(id) ON DELETE SET NULL,
     parent_id       INTEGER REFERENCES transactions(id) ON DELETE CASCADE,
-    source          TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual','voice','import','autosave','upi','sms','invest','notification')),
+    source          TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual','voice','import','autosave','upi','sms','invest','notification','email')),
     import_hash     TEXT,
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
     ref             TEXT,           -- bank/UPI reference (UTR/RRN): exact key for cross-source de-duplication
@@ -152,3 +152,21 @@ CREATE TABLE IF NOT EXISTS parse_samples (
     created_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_samples_user ON parse_samples(user_id);
+
+-- Gmail connect: read-only access to bank alert emails. Only the refresh token is kept (encrypted).
+CREATE TABLE IF NOT EXISTS gmail_accounts (
+    user_id         INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    email           TEXT NOT NULL,
+    refresh_token   TEXT NOT NULL,          -- Fernet-encrypted with a key derived from SECRET_KEY
+    connected_at    TEXT NOT NULL DEFAULT (datetime('now')),
+    last_sync_at    TEXT,
+    imported        INTEGER NOT NULL DEFAULT 0,
+    last_error      TEXT
+);
+
+-- Which emails were already looked at, so each is read once (no email content is stored).
+CREATE TABLE IF NOT EXISTS gmail_seen (
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    msg_id          TEXT NOT NULL,
+    PRIMARY KEY (user_id, msg_id)
+);

@@ -18,6 +18,15 @@
     };
     onRefresh(load);
     await load();
+    const params = new URLSearchParams(location.search);
+    if (params.get("gmail") === "connected") {
+      window.Flux.ok("Gmail connected. Your recent bank payments are being added.");
+      history.replaceState(null, "", "/app");
+    }
+    // Quietly check Gmail for new bank alerts (the server checks at most every 10 minutes).
+    if ((window.Flux.config.features || {}).gmail) {
+      api("/api/gmail/sync", { method: "POST", body: {} }).then((r) => { if (r && r.logged) { window.Flux.ok(`${r.logged} new payment${r.logged === 1 ? "" : "s"} added from Gmail.`); load(); } }).catch(() => {});
+    }
   }
 
   const section = (title, link, ...kids) => el("section", null,

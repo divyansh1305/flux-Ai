@@ -15,7 +15,7 @@ from .categorize import categorize
 from .model import Transaction
 
 DEBIT_RE = re.compile(r"\b(debited|sent|spent|paid|withdrawn|withdrawal|purchase|deducted|dr|debit|transferred|"
-                      r"for using your)\b", re.I)
+                      r"for using your|made\s+a\s+(?:upi\s+)?payment)\b", re.I)
 CREDIT_RE = re.compile(r"\b(credited|received|deposited|refund(?:ed)?|cr|credit|added)\b", re.I)
 SKIP_RE = re.compile(
     r"\b(otp|one[- ]time password|verification code|do not share|"

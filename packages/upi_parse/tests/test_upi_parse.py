@@ -123,3 +123,16 @@ def test_masked_text_still_parses_to_the_same_amount_and_direction():
     raw = "Rs.347.00 debited from A/c XX1234 on 01-11-26 to VPA zomato@hdfc (UPI Ref No 628811112222). Avl Bal Rs 9,653.00"
     a, b = parse_sms(raw), parse_sms(mask_text(raw))
     assert (a.amount, a.direction, a.balance, a.category) == (b.amount, b.direction, b.balance, b.category)
+
+
+# ─── Bank alert emails (Gmail connect) ───────────────────────
+@pytest.mark.parametrize("text,direction,amount,merchant,ref", [
+    ("Dear Customer, Rs.120.00 has been debited from account 1234 to VPA swiggy@icici SWIGGY on 03-11-26. Your UPI transaction reference number is 630712345678.",
+     "debit", "120.00", "Swiggy", "630712345678"),
+    ("Dear Customer, You have made a UPI payment of INR 199.00 to uber@axisbank on 03-11-2026 from your ICICI Bank Account XX1234. UPI Ref No. 630712345681.",
+     "debit", "199.00", "Uber", "630712345681"),
+    ("Payment of Rs 500 received from Rahul via UPI ref 630712345690", "credit", "500.00", "Rahul", "630712345690"),
+])
+def test_bank_alert_emails(text, direction, amount, merchant, ref):
+    t = parse_sms(text)
+    assert (t.direction, str(t.amount), t.merchant, t.reference) == (direction, amount, merchant, ref)

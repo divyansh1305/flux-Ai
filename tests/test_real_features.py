@@ -3,7 +3,7 @@
 
 def test_unverified_features_are_hidden_by_default(app, client, user):
     feats = client.get("/api/auth/me").json["features"]
-    assert feats == {"pay": False, "invest": False}
+    assert feats["pay"] is False and feats["invest"] is False
     assert client.get("/app/pay").status_code == 302 and client.get("/app/invest").status_code == 302
     r = client.post("/api/voice/command", json={"text": "pay 200 to rahul"}).json
     assert "doesn't send money" in r["reply"] and not r.get("navigate")

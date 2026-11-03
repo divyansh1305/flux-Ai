@@ -102,11 +102,36 @@
       return el("ol", { class: "stack", style: { gap: "10px", paddingLeft: "20px", margin: 0 } }, items.map((x) => el("li", { class: "small" }, x)));
     }
 
+    async function gmailBlock() {
+      if (!(window.Flux.config.features || {}).gmail) return null;
+      const g = await api("/api/gmail");
+      if (!g.connected) {
+        return el("div", { class: "notice info", style: { flexDirection: "column", alignItems: "stretch", gap: "10px" } },
+          el("div", null, el("b", null, "Easiest: connect Gmail. "), "Most banks email you for every payment. Flux reads only those alert emails (read-only: it can't send, delete or change anything) and adds the payments by itself. Works on iPhone and Android."),
+          el("div", null, el("a", { class: "btn primary", href: "/gmail/connect" }, "Connect Gmail")),
+          el("div", { class: "tiny faint" }, "Google will say \"Google hasn't verified this app\" because Flux is new. Tap Continue. You can disconnect any time."));
+      }
+      const when = g.last_sync_at ? window.Flux.dateFmt(g.last_sync_at.slice(0, 10)) + " " + g.last_sync_at.slice(11, 16) + " UTC" : "not yet";
+      return el("div", { class: "notice ok", style: { flexDirection: "column", alignItems: "stretch", gap: "8px" } },
+        el("div", null, el("b", null, "Gmail connected"), ` (${g.email}). ${g.imported} payment${g.imported === 1 ? "" : "s"} added so far. Last checked: ${when}.`),
+        g.error ? el("div", { class: "small", style: { color: "var(--red)" } }, g.error) : null,
+        el("div", { class: "row wrap", style: { gap: "8px" } },
+          el("button", { class: "btn sm", type: "button", onclick: async () => {
+            try { const r = await api("/api/gmail/sync", { method: "POST", body: { force: true } });
+              ok(r.error ? r.error : r.logged ? `Added ${r.logged} new payment${r.logged === 1 ? "" : "s"}.` : "No new payments."); drawAuto(); } catch (e) { err(e); } } }, "Check now"),
+          el("button", { class: "btn sm danger", type: "button", onclick: async () => {
+            await api("/api/gmail", { method: "DELETE" }); ok("Gmail disconnected."); drawAuto(); } }, "Disconnect")));
+    }
+
     async function drawAuto() {
-      const st = await api("/api/ingest/token");
+      const [st, gm] = await Promise.all([api("/api/ingest/token"), gmailBlock()]);
       const kids = [];
       kids.push(el("p", { class: "small muted", style: { margin: 0 } },
         "Flux reads only your bank's payment messages, never your chats or OTPs, and never your bank password."));
+      if (gm) {
+        kids.push(gm);
+        kids.push(el("div", { class: "small muted", style: { marginTop: "4px" } }, "Or use your phone's bank SMS:"));
+      }
       const seg = el("div", { class: "seg" }, [["iphone", "iPhone"], ["android", "Android"]].map(([k, label]) =>
         el("button", { type: "button", class: platform === k ? "on" : "", onclick: () => { platform = k; drawAuto(); } }, label)));
       kids.push(seg);
@@ -156,6 +181,9 @@
     }
     const autoCard = el("div", { class: "card", id: "auto", style: { gridColumn: "1 / -1" } }, el("h2", null, "Automatic tracking"), el("div", { style: { marginTop: "12px" } }, autoBox));
     drawAuto().catch(err);
+    const gq = new URLSearchParams(location.search).get("gmail");
+    if (gq === "error") err(new Error("Gmail couldn't be connected. Please try again, and tick the Gmail permission box on Google's screen."));
+    if (gq === "cancelled") ok("Gmail wasn't connected. You can try again any time.");
     if (location.hash === "#auto") setTimeout(() => autoCard.scrollIntoView({ behavior: "smooth" }), 300);
 
     // Learned merchant rules + opt-in accuracy samples

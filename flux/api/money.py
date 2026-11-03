@@ -224,7 +224,7 @@ def setup_status(uid):
     db = get_db()
     one = lambda sql: db.execute(sql, (uid,)).fetchone() is not None  # noqa: E731
     has_income = one("SELECT 1 FROM transactions WHERE user_id = ? AND kind = 'income' LIMIT 1")
-    has_auto = one("SELECT 1 FROM ingest_tokens WHERE user_id = ?")
+    has_auto = one("SELECT 1 FROM ingest_tokens WHERE user_id = ?") or one("SELECT 1 FROM gmail_accounts WHERE user_id = ?")
     has_budget = one("SELECT 1 FROM budgets WHERE user_id = ?")
     has_goal = one("SELECT 1 FROM goals WHERE user_id = ? AND archived = 0")
     has_bank = one("SELECT 1 FROM balance_snapshots WHERE user_id = ?")

@@ -5,11 +5,14 @@ from upi_parse import split_messages  # noqa: F401  (re-exported)
 from . import clock
 
 
-def parse_sms(text):
-    tx = _parse_sms(text, today=clock.today())
+def parse_sms(text, received_on=None):
+    """`received_on` = when the message arrived (e.g. an email's date), used when the text has no date."""
+    today = clock.today()
+    tx = _parse_sms(text, today=received_on or today)
     if tx is None:
         return None
-    day = tx.txn_date if tx.txn_date and tx.txn_date <= clock.today() else clock.today()
+    fallback = received_on or today
+    day = tx.txn_date if tx.txn_date and tx.txn_date <= today else fallback
     label = tx.merchant or ("Bank credit" if tx.direction == "credit" else "Bank debit")
     return {
         "date": day.isoformat(), "kind": "expense" if tx.is_debit else "income", "amount": float(tx.amount),

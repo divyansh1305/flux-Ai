@@ -52,9 +52,9 @@ def create_app(overrides=None):
 
     backup.init_app(app)
 
-    from .api import auth, ingest, invest, money, pay, statement, voice
+    from .api import auth, gmail, ingest, invest, money, pay, statement, voice
 
-    for bp in (auth.bp, money.bp, statement.bp, voice.bp, pay.bp, invest.bp, ingest.bp):
+    for bp in (auth.bp, money.bp, statement.bp, voice.bp, pay.bp, invest.bp, ingest.bp, gmail.bp):
         app.register_blueprint(bp)
 
     @app.before_request

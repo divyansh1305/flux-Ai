@@ -160,6 +160,7 @@ def me():
         "google_client_id": current_app.config["GOOGLE_CLIENT_ID"] or None,
         "ai_available": ai.available(),
         "features": {"pay": bool(current_app.config.get("FEATURE_PAY")),
+                     "gmail": bool(current_app.config.get("GOOGLE_CLIENT_ID") and current_app.config.get("GOOGLE_CLIENT_SECRET")),
                      "invest": bool(current_app.config.get("FEATURE_INVEST"))},
     })
 

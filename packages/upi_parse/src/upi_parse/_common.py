@@ -14,7 +14,7 @@ BALANCE_RE = re.compile(
     r"clear\s+bal(?:ance)?|total\s+bal(?:ance)?)\s*[:\-]?\s*(?:is\s*)?" + CURRENCY + r"?[\s:]*([\d,]+(?:\.\d{1,2})?)", re.I)
 REF_RE = re.compile(
     r"(?:upi\s*ref(?:erence)?(?:\s*no\.?|\s*number)?|ref(?:erence)?(?:\s*no\.?|\s*number|\s*id)?|utr(?:\s*no\.?)?|"
-    r"rrn|txn\s*id|transaction\s*id|upi)\s*[:#.\-]?\s*(\d{10,16})", re.I)
+    r"rrn|txn\s*id|transaction\s*id|upi)(?:\s+is)?\s*[:#.\-]?\s*(\d{10,16})", re.I)
 VPA_RE = re.compile(r"\b([a-z0-9][a-z0-9.\-_]{1,63}@[a-z][a-z0-9]{1,20})\b", re.I)
 ACCOUNT_RE = re.compile(r"(?:a/?c|acct|account|card)(?:\s*(?:no\.?|number|ending(?:\s*with)?))?\s*[:.]?\s*[xX*]*(\d{3,4})\b", re.I)
 MONTHS = "jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec"

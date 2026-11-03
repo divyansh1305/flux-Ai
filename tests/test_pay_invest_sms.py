@@ -219,7 +219,7 @@ def test_migrates_v1_database(tmp_path, monkeypatch):
 
     create_app({"DATABASE": str(path), "SECRET_KEY": "k" * 40})
     conn = sqlite3.connect(path)
-    assert conn.execute("PRAGMA user_version").fetchone()[0] == 4
+    assert conn.execute("PRAGMA user_version").fetchone()[0] == 5
     assert conn.execute("SELECT amount FROM transactions").fetchone()[0] == 50000
     conn.execute("INSERT INTO transactions (user_id, kind, amount, category, date, source) VALUES (1,'expense',100,'Other','2026-10-02','upi')")
     conn.commit()
