@@ -20,8 +20,8 @@ APP_PAGES = {
     "/app/goals": "goals.html",
     "/app/import": "import.html",
     "/app/coach": "coach.html",
-    "/app/pay": "pay.html",
-    "/app/invest": "invest.html",
+    "/app/plans": "plans.html",
+    "/app/privacy-center": "know.html",
     "/app/share": "share.html",
     "/app/settings": "settings.html",
 }
@@ -52,9 +52,9 @@ def create_app(overrides=None):
 
     backup.init_app(app)
 
-    from .api import auth, gmail, ingest, invest, money, pay, statement, voice
+    from .api import auth, gmail, ingest, money, plans, statement, voice
 
-    for bp in (auth.bp, money.bp, statement.bp, voice.bp, pay.bp, invest.bp, ingest.bp, gmail.bp):
+    for bp in (auth.bp, money.bp, statement.bp, voice.bp, ingest.bp, gmail.bp, plans.bp):
         app.register_blueprint(bp)
 
     @app.before_request
@@ -85,9 +85,6 @@ def create_app(overrides=None):
         def app_view(name=name):
             if current_user() is None:
                 return redirect("/login")
-            if (name == "pay.html" and not app.config.get("FEATURE_PAY")) or \
-               (name == "invest.html" and not app.config.get("FEATURE_INVEST")):
-                return redirect("/app")
             return page(name)
 
         app.add_url_rule(path, f"page_{name}", app_view)

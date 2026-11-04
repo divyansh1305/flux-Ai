@@ -7,7 +7,7 @@ The goal is **50 weekly active users whose balance stays in sync with their bank
 - [ ] **Rotate the old Gemini keys** that were in the original project's code and `.env`. Create a new key at aistudio.google.com/apikey.
 - [ ] Push `flux-v2` to a **new private GitHub repo**. Check that `.env`, `*.db` and `statement.csv` are *not* in it (`git status` before the first commit).
 - [ ] Render → New → Blueprint → pick the repo. `render.yaml` creates the service, the disk, `SECRET_KEY` and `METRICS_TOKEN`.
-- [ ] Set `EMAIL_SENDER` and `EMAIL_PASSWORD` (a Gmail App Password), `GEMINI_API_KEY`, and optionally `GOOGLE_CLIENT_ID` and `KITE_API_KEY`.
+- [ ] Set `EMAIL_SENDER` and `EMAIL_PASSWORD` (a Gmail App Password), `GEMINI_API_KEY`, and optionally `GOOGLE_CLIENT_ID`.
 - [ ] Open `https://<app>.onrender.com/readyz` and check it shows `{"ok": true}`.
 - [ ] Sign up yourself, then create a token in Settings → Automatic tracking.
 - [ ] Free Render instances sleep after 15 minutes idle, and the first request then takes about 30 s. Before launch, use the Starter plan (about $7/month) or point an uptime pinger at `/healthz`.

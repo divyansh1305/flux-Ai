@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.text.InputType
@@ -21,7 +22,7 @@ import java.util.concurrent.Executors
 /**
  * One screen, built in code (no layout XML to keep the app tiny):
  *   1. Prominent disclosure + explicit consent (Google Play User Data policy).
- *   2. Server URL + ingest token (from Flux web → Settings → Auto-log).
+ *   2. Link the account: one tap on "Link the Flux app" in Flux web (a fluxapp://connect link), or paste by hand.
  *   3. Button to open Settings → Notification access.
  *   4. Status: access granted? connected? items waiting?
  */
@@ -36,11 +37,40 @@ class MainActivity : Activity() {
     private val fg = Color.parseColor("#1D1C1A")
     private val muted = Color.parseColor("#5F5B54")
     private val accent = Color.parseColor("#1F6B57")
+    private var linkMessage: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         store = SecureStore(this)
+        if (store.serverUrl.isEmpty()) store.serverUrl = OFFICIAL_SERVER
+        handleLink(intent)
         render()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleLink(intent)
+        render()
+    }
+
+    /** fluxapp://connect?server=…&token=… from the Flux website. Only the official server is accepted, so a
+     *  link from anywhere else can never point this phone's payments at someone else's server. */
+    private fun handleLink(intent: Intent?) {
+        val data: Uri = intent?.data ?: return
+        if (data.scheme != "fluxapp" || data.host != "connect") return
+        val server = data.getQueryParameter("server")?.trim()?.trimEnd('/') ?: ""
+        val token = data.getQueryParameter("token")?.trim() ?: ""
+        if (server != OFFICIAL_SERVER || !token.startsWith("flx_") || token.length > 200) {
+            linkMessage = "That link didn't come from Flux, so nothing was changed."
+            return
+        }
+        store.serverUrl = server
+        store.token = token
+        linkMessage = "Phone linked to your Flux account. Last step: turn on notification access below."
+        io.execute {
+            val msg = Uploader(this).ping(server, token)
+            runOnUiThread { linkMessage = msg; if (::status.isInitialized) refreshStatus() }
+        }
     }
 
     override fun onResume() {
@@ -81,7 +111,12 @@ class MainActivity : Activity() {
 
         // 2. Link account
         root.addView(section("Link your Flux account"))
-        val server = input("https://your-flux.onrender.com", store.serverUrl, InputType.TYPE_TEXT_VARIATION_URI)
+        root.addView(text("Easiest: open Flux in your browser → Settings → Android → \"Link the Flux app\". It opens this app and links it by itself.", 14f, muted))
+        root.addView(button("Open Flux in the browser", secondary = true) {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("$OFFICIAL_SERVER/app/settings#auto")))
+        })
+        root.addView(text("Or paste it by hand:", 13f, muted).apply { pad(top = 14) })
+        val server = input(OFFICIAL_SERVER, store.serverUrl, InputType.TYPE_TEXT_VARIATION_URI)
         val token = input("flx_… token from Flux → Settings → Auto-log", "", InputType.TYPE_TEXT_VARIATION_PASSWORD)
         if (store.token != null) token.hint = "Token saved (paste a new one to replace)"
         root.addView(server)
@@ -102,9 +137,18 @@ class MainActivity : Activity() {
 
         // 3. Notification access
         root.addView(section("Turn it on"))
+        root.addView(text("On the next screen, tap Flux Companion and allow it.", 14f, muted))
         root.addView(button("Open Notification access settings") {
             if (!store.consented) { status.text = "Please tick the consent box first"; return@button }
             startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+        })
+        root.addView(text(
+            "If Android says \"Restricted setting\": this happens with apps installed from a link instead of the Play Store. " +
+                "Tap the button below, then ⋮ (top right) → Allow restricted settings, and come back.",
+            13f, muted
+        ).apply { pad(top = 10) })
+        root.addView(button("Open app info", secondary = true) {
+            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
         })
         root.addView(button("Unlink this phone", secondary = true) {
             store.token = null
@@ -130,7 +174,7 @@ class MainActivity : Activity() {
             (if (granted) "✓" else "✗") + " Notification access on",
             "Waiting to upload: ${Uploader(this).pendingCount()}",
         )
-        status.text = lines.joinToString("\n")
+        status.text = (listOfNotNull(linkMessage) + lines).joinToString("\n")
     }
 
     // ---- tiny view helpers ----
@@ -161,6 +205,10 @@ class MainActivity : Activity() {
 
     private fun View.boxed() {
         setBackgroundColor(card); setPadding(dp(14), dp(12), dp(14), dp(12))
+    }
+
+    companion object {
+        const val OFFICIAL_SERVER = "https://fluxai.pythonanywhere.com"
     }
 
     private fun View.pad(top: Int = 0, bottom: Int = 0) {

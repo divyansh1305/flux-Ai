@@ -37,7 +37,7 @@ Change the link and your name. Send them personally; that works far better than 
 
 > I built Flux, an automatic money tracker for UPI users, and launched it to N students.
 >
-> The hard part wasn't the UI. It was **correctness**: one payment shows up as a Scan & Pay, a GPay notification, a bank SMS and a statement row. Flux matches them into one, reconciles against the balance your bank reports, and measures its own categorisation accuracy from users' corrections (currently X%).
+> The hard part wasn't the UI. It was **correctness**: one payment shows up as a GPay notification, a Gmail alert, a bank SMS and a statement row. Flux matches them into one, reconciles against the balance your bank reports, and measures its own categorisation accuracy from users' corrections (currently X%).
 >
 > Stack: Flask, SQLite (WAL), a Kotlin Android companion, and an open-source parser library (upi-parse). Load-tested at 228 req/s, p95 116 ms.
 >

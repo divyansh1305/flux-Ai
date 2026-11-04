@@ -41,6 +41,10 @@ class GmailError(Exception):
     pass
 
 
+class GmailReconnect(GmailError):
+    """Google no longer accepts Flux's token (user removed access, or an app in Testing mode hit its 7-day limit)."""
+
+
 def configured():
     c = current_app.config
     return bool(c.get("GOOGLE_CLIENT_ID") and c.get("GOOGLE_CLIENT_SECRET"))
@@ -97,7 +101,7 @@ def _access_token(refresh_token):
         "refresh_token": refresh_token, "client_id": current_app.config["GOOGLE_CLIENT_ID"],
         "client_secret": current_app.config["GOOGLE_CLIENT_SECRET"], "grant_type": "refresh_token"})
     if r.status_code != 200:
-        raise GmailError("Gmail access was removed or expired. Please connect Gmail again.")
+        raise GmailReconnect("Gmail access was removed or expired. Please connect Gmail again.")
     return r.json()["access_token"]
 
 
@@ -111,7 +115,8 @@ def save_account(user_id, token_data):
     email = _profile_email(access)
     get_db().execute(
         "INSERT INTO gmail_accounts (user_id, email, refresh_token) VALUES (?,?,?) ON CONFLICT(user_id) DO UPDATE SET"
-        " email = excluded.email, refresh_token = excluded.refresh_token, connected_at = datetime('now'), last_error = NULL",
+        " email = excluded.email, refresh_token = excluded.refresh_token, connected_at = datetime('now'), last_error = NULL,"
+        " needs_reconnect = 0",
         (user_id, email or "your Gmail", _enc(token_data["refresh_token"])))
     return email
 
@@ -133,7 +138,7 @@ def status(user_id):
     if not row:
         return {"connected": False, "available": configured()}
     return {"connected": True, "available": True, "email": row["email"], "last_sync_at": row["last_sync_at"],
-            "imported": row["imported"], "error": row["last_error"]}
+            "imported": row["imported"], "error": row["last_error"], "needs_reconnect": bool(row["needs_reconnect"])}
 
 
 # ─── reading emails ───────────────────────────────────────────
@@ -209,6 +214,9 @@ def sync(user, force=False, min_minutes=10):
             received = date.fromtimestamp(int(msg.get("internalDate", "0")) / 1000) if msg.get("internalDate") else None
             row = parse_sms(text, received_on=received)
             if row is None:
+                from .checks import detect_failed
+
+                detect_failed(user["id"], text, received)
                 skipped += 1
                 continue
             row["origin"] = "gmail"
@@ -220,9 +228,10 @@ def sync(user, force=False, min_minutes=10):
         db.commit()
         return {"connected": True, "logged": logged, "skipped": skipped, "checked": len(ids)}
     except GmailError as e:
-        db.execute("UPDATE gmail_accounts SET last_error = ? WHERE user_id = ?", (str(e)[:200], user["id"]))
+        db.execute("UPDATE gmail_accounts SET last_error = ?, needs_reconnect = ? WHERE user_id = ?",
+                   (str(e)[:200], 1 if isinstance(e, GmailReconnect) else 0, user["id"]))
         db.commit()
-        return {"connected": True, "error": str(e), "logged": 0}
+        return {"connected": True, "error": str(e), "logged": 0, "needs_reconnect": isinstance(e, GmailReconnect)}
     except requests.RequestException:
         log.exception("Gmail sync network error")
         return {"connected": True, "error": "Couldn't reach Gmail right now. Flux will try again later.", "logged": 0}

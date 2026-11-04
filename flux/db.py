@@ -15,6 +15,13 @@ ADDED_COLUMNS = [
     ("users", "contribute_samples", "INTEGER NOT NULL DEFAULT 0"),
     # Money already in the account before Flux started tracking (paise). Set by "Match my bank".
     ("users", "opening_balance", "INTEGER NOT NULL DEFAULT 0"),
+    # Personal safe-to-spend: when money comes in, roughly how much, and what to keep untouched.
+    ("users", "income_pattern", "TEXT NOT NULL DEFAULT 'unset'"),   # unset | monthly | varies
+    ("users", "pay_day", "INTEGER"),                               # 1-31 when income_pattern = monthly
+    ("users", "expected_income", "INTEGER NOT NULL DEFAULT 0"),    # paise, optional
+    ("users", "cushion", "INTEGER NOT NULL DEFAULT 0"),            # paise never counted as spendable
+    ("users", "adult_confirmed", "INTEGER NOT NULL DEFAULT 0"),    # DPDP: Flux is for 18+ only
+    ("gmail_accounts", "needs_reconnect", "INTEGER NOT NULL DEFAULT 0"),
 ]
 
 

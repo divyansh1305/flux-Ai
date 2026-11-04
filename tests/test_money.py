@@ -163,9 +163,13 @@ def test_no_score_from_one_day_of_data_and_no_free_budget_points(client, user):
 
 def test_setup_checklist_tracks_progress(client, user):
     s = client.get("/api/setup").json
-    assert s["done"] < s["total"] and [x["key"] for x in s["steps"]][:2] == ["income", "auto"]
-    add(client, "income", 30000, "Salary")
-    client.put("/api/budgets/Food%20%26%20Dining", json={"limit": 4000})
+    assert s["done"] == 0 and [x["key"] for x in s["steps"]][:2] == ["auto", "income"]
+    client.patch("/api/account", json={"income_pattern": "monthly", "pay_day": 1})
+    from datetime import timedelta
+
+    from flux import clock
+
+    client.post("/api/plans", json={"title": "Dinner", "amount": 2000, "date": (clock.today() + timedelta(days=3)).isoformat()})
     s2 = client.get("/api/setup").json
     done = {x["key"] for x in s2["steps"] if x["done"]}
-    assert {"income", "budget"} <= done and s2["done"] == s["done"] + 2
+    assert {"income", "plan"} <= done and s2["done"] == 2

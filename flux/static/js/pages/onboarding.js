@@ -1,74 +1,96 @@
+/* Setup in three screens: (1) 18+ and a promise, (2) when money comes in, (3) connect payments.
+   It ends with real payments arriving (Gmail pulls the last 30 days) instead of an empty app. */
 (function () {
-  const { el, icon, api, err, inr } = window.Flux;
+  const { el, api, err } = window.Flux;
 
   async function render(main, user) {
     let step = 0;
-    const data = { income: "", incomeCat: "Salary", goalTitle: "", goalTarget: "", mode: "roundup", value: 10 };
-    const wrap = el("div", { style: { maxWidth: "520px", margin: "6vh auto 0" } });
+    const data = { pattern: "monthly", payDay: 1, balance: "" };
+    const wrap = el("div", { style: { maxWidth: "520px", margin: "6vh auto 0", padding: "0 16px" } });
     main.style.marginLeft = "0";
     main.appendChild(wrap);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    const gmailOn = (window.Flux.config.features || {}).gmail;
+    const apk = (window.Flux.config.features || {}).android_apk;
 
-    const steps = () => el("div", { class: "steps" }, [0, 1, 2, 3].map((i) => el("i", { class: i <= step ? "on" : "" })));
-    const nav = (canSkip, next) => el("div", { class: "row between", style: { marginTop: "24px" } },
-      step > 0 ? el("button", { class: "btn ghost", onclick: () => { step--; draw(); } }, "Back") : el("span"),
-      el("div", { class: "row" }, canSkip ? el("button", { class: "btn ghost", onclick: () => { step++; draw(); } }, "Skip") : null,
-        el("button", { class: "btn primary", onclick: next }, step === 3 ? "Go to dashboard" : "Continue")));
+    const dots = () => el("div", { class: "steps" }, [0, 1, 2].map((i) => el("i", { class: i <= step ? "on" : "" })));
+    const back = () => step > 0 ? el("button", { class: "btn ghost", type: "button", onclick: () => { step--; draw(); } }, "Back") : el("span");
+
+    async function finish(next) {
+      try {
+        await api("/api/account", { method: "PATCH", body: { onboarded: true } });
+        location.href = next;
+      } catch (e) { err(e); }
+    }
 
     function draw() {
-      const card = el("div", { class: "card", style: { padding: "32px" } }, steps());
+      const card = el("div", { class: "card", style: { padding: "28px" } }, dots());
       if (step === 0) {
-        const amt = el("input", { class: "input big num", type: "number", min: "1", placeholder: "25000", value: data.income });
-        const cat = el("select", { class: "input" }, ["Salary", "Pocket Money", "Freelance", "Other Income"].map((c) => el("option", { value: c, selected: data.incomeCat === c ? true : null }, c)));
-        card.append(el("div", { class: "feature" }, el("div", { class: "ico" }, icon("wave"))),
-          el("h1", { style: { margin: "8px 0" } }, `Welcome to Flux, ${user.name.split(" ")[0]}!`),
-          el("p", { class: "muted" }, "Let's set you up in under a minute. How much money comes in each month?"),
-          el("div", { class: "form", style: { marginTop: "20px" } }, el("label", { class: "field" }, "Monthly income (₹)", amt), el("label", { class: "field" }, "Mostly from", cat)),
-          nav(true, () => { data.income = amt.value; data.incomeCat = cat.value; step++; draw(); }));
+        const adult = el("input", { type: "checkbox", id: "adult" });
+        const go = el("button", { class: "btn primary", type: "button", disabled: true, onclick: async () => {
+          try { await api("/api/account", { method: "PATCH", body: { adult_confirmed: true } }); step = 1; draw(); } catch (e) { err(e); }
+        } }, "Continue");
+        adult.onchange = () => { go.disabled = !adult.checked; };
+        card.append(
+          el("h1", { style: { margin: "10px 0 6px" } }, `Hi ${user.name.split(" ")[0]}, welcome to Flux`),
+          el("p", { class: "muted" }, "Flux tells you how much you can safely spend today, and logs your payments by itself."),
+          el("ul", { class: "small", style: { margin: "16px 0", paddingLeft: "18px", lineHeight: 1.8 } },
+            ["Never sells your data or shows ads", "Never offers loans", "Can't move your money or see your bank password"].map((t) => el("li", null, t))),
+          el("label", { class: "row", style: { gap: "10px", alignItems: "center", margin: "8px 0 4px" } }, adult, el("span", null, "I'm 18 or older")),
+          el("p", { class: "tiny faint" }, "Flux is only for adults, as India's data protection law requires for apps like this."),
+          el("div", { class: "row between", style: { marginTop: "20px" } }, el("span"), go));
       } else if (step === 1) {
-        const title = el("input", { class: "input", maxlength: "60", placeholder: "New laptop, Goa trip, Emergency fund…", value: data.goalTitle });
-        const target = el("input", { class: "input big num", type: "number", min: "1", placeholder: "50000", value: data.goalTarget });
-        card.append(el("div", { class: "feature" }, el("div", { class: "ico" }, icon("target"))), el("h1", { style: { margin: "8px 0" } }, "What are you saving for?"),
-          el("p", { class: "muted" }, "Goals give your savings a purpose. You can add more later."),
-          el("div", { class: "chips", style: { marginTop: "16px" } }, ["Emergency fund", "New phone", "Trip", "Laptop"].map((g) => el("button", { class: "chip", onclick: () => { title.value = g; } }, g))),
-          el("div", { class: "form", style: { marginTop: "16px" } }, el("label", { class: "field" }, "Goal", title), el("label", { class: "field" }, "Target (₹)", target)),
-          nav(true, () => { data.goalTitle = title.value.trim(); data.goalTarget = target.value; step++; draw(); }));
-      } else if (step === 2) {
-        const opts = [["roundup", 10, "Round up to ₹10", "₹47 → save ₹3. Gentle, barely noticeable."],
-          ["roundup", 100, "Round up to ₹100", "₹470 → save ₹30. Faster saving."],
-          ["percent", 5, "Save 5% of every expense", "₹400 → save ₹20. The anti-cashback."],
-          ["off", 10, "No auto-save", "I'll move money to goals myself."]];
-        const list = el("div", { class: "stack", style: { gap: "10px", marginTop: "18px" } });
-        const paint = () => list.replaceChildren(...opts.map(([m, v, t, d]) => el("button", {
-          class: "card", style: { textAlign: "left", cursor: "pointer", borderColor: data.mode === m && (m === "off" || data.value === v) ? "var(--brand)" : null, padding: "14px 16px" },
-          onclick: () => { data.mode = m; data.value = v; paint(); } }, el("b", null, t), el("div", { class: "small muted" }, d))));
+        const seg = el("div", { class: "seg" });
+        const day = el("input", { class: "input num", type: "number", min: "1", max: "31", value: data.payDay, style: { maxWidth: "120px" }, "aria-label": "Date of the month" });
+        const dayRow = el("label", { class: "field" }, "On which date?", day);
+        const bal = el("input", { class: "input num", type: "number", inputmode: "decimal", placeholder: "Optional", value: data.balance, "aria-label": "Money in your bank now" });
+        const opts = [["monthly", "Same date every month"], ["varies", "It varies"]];
+        const paint = () => {
+          seg.replaceChildren(...opts.map(([k, l]) => el("button", { type: "button", class: data.pattern === k ? "on" : "", onclick: () => { data.pattern = k; paint(); } }, l)));
+          dayRow.style.display = data.pattern === "monthly" ? "" : "none";
+        };
         paint();
-        card.append(el("div", { class: "feature" }, el("div", { class: "ico" }, icon("repeat"))), el("h1", { style: { margin: "8px 0" } }, "Save automatically as you spend"),
-          el("p", { class: "muted" }, "Instead of cashback that makes you spend more, Flux moves a little of every expense into your goal, only when you have the balance."),
-          list, nav(false, () => { step++; draw(); }));
+        card.append(
+          el("h1", { style: { margin: "10px 0 6px" } }, "When does your money come in?"),
+          el("p", { class: "muted" }, "Salary, stipend or money from home. Flux makes today's number last until then."),
+          el("div", { class: "form", style: { marginTop: "16px" } }, seg, dayRow,
+            el("label", { class: "field" }, "About how much is in your bank right now? (₹)", bal),
+            el("p", { class: "tiny faint" }, "So the number is useful today. Flux matches it with your bank later.")),
+          el("div", { class: "row between", style: { marginTop: "20px" } }, back(),
+            el("div", { class: "row" },
+              el("button", { class: "btn ghost", type: "button", onclick: () => { step = 2; draw(); } }, "Skip"),
+              el("button", { class: "btn primary", type: "button", onclick: async () => {
+                data.payDay = Number(day.value) || 1; data.balance = bal.value;
+                const body = { income_pattern: data.pattern };
+                if (data.pattern === "monthly") body.pay_day = Math.min(31, Math.max(1, data.payDay));
+                if (data.balance !== "") body.current_balance = data.balance;
+                try { await api("/api/account", { method: "PATCH", body }); step = 2; draw(); } catch (e) { err(e); }
+              } }, "Continue"))));
       } else {
-        const V = window.FluxVoice;
-        card.append(el("div", { class: "feature" }, el("div", { class: "ico" }, icon("mic"))), el("h1", { style: { margin: "8px 0" } }, "Just talk to Flux"),
-          el("p", { class: "muted" }, "Tap the mic button (or press Ctrl/⌘+K) on any page and say things like:"),
-          el("div", { class: "stack", style: { gap: "8px", marginTop: "16px" } },
-            ["“Spent 250 on Swiggy”", "“What's my balance?”", "“Can I afford 3000 shoes?”", "“Maine 200 chai pe kharch kiye”"].map((t) => el("div", { class: "bubble me", style: { marginLeft: 0 } }, t))),
-          V && !V.supported ? el("div", { class: "notice caution", style: { marginTop: "14px" } }, "Voice input needs Chrome, Edge or Safari. You can always type commands instead.") : null,
-          nav(false, finish));
+        const options = [];
+        if (gmailOn) {
+          options.push(el("div", { class: "card", style: { padding: "16px", borderColor: isAndroid ? null : "var(--brand)" } },
+            el("b", null, isAndroid ? "Connect Gmail" : "Connect Gmail (recommended)"),
+            el("p", { class: "small muted", style: { margin: "6px 0 12px" } }, "Your bank emails you after every payment. Flux reads only those bank emails, never personal mail, and can't send or delete anything. It also brings in the last 30 days at once."),
+            el("button", { class: "btn primary", type: "button", onclick: () => finish("/gmail/connect") }, "Connect Gmail"),
+            el("p", { class: "tiny faint", style: { marginTop: "8px" } }, "Google may say \"Google hasn't verified this app\" because Flux is new. Tap Advanced → Continue.")));
+        }
+        if (isAndroid && apk) {
+          options.unshift(el("div", { class: "card", style: { padding: "16px", borderColor: "var(--brand)" } },
+            el("b", null, "Get the Flux app (recommended on Android)"),
+            el("p", { class: "small muted", style: { margin: "6px 0 12px" } }, "Logs every GPay, PhonePe, Paytm and bank payment by itself. Reads only payment notifications, never chats or OTPs."),
+            el("button", { class: "btn primary", type: "button", onclick: () => finish("/app/settings#auto") }, "Set it up")));
+        }
+        card.append(
+          el("h1", { style: { margin: "10px 0 6px" } }, "See your payments automatically"),
+          el("p", { class: "muted" }, options.length > 1 ? "Pick one. You can add the other later in Settings." : "You can change this later in Settings."),
+          el("div", { class: "stack", style: { gap: "12px", marginTop: "16px" } }, ...options,
+            el("button", { class: "btn ghost", type: "button", onclick: () => finish("/app") }, "I'll add payments myself for now")),
+          el("div", { class: "row between", style: { marginTop: "16px" } }, back(), el("span")));
       }
       wrap.replaceChildren(card);
     }
-
-    async function finish() {
-      try {
-        if (Number(data.income) > 0) await api("/api/transactions", { method: "POST", body: { kind: "income", amount: data.income, category: data.incomeCat, note: "Monthly income" } });
-        let goalId = null;
-        if (data.goalTitle && Number(data.goalTarget) > 0) goalId = (await api("/api/goals", { method: "POST", body: { title: data.goalTitle, target: data.goalTarget } })).id;
-        const body = { onboarded: true, autosave_mode: data.mode };
-        if (data.mode !== "off") body.autosave_value = data.value;
-        if (goalId) body.autosave_goal_id = goalId;
-        await api("/api/account", { method: "PATCH", body });
-        location.href = "/app";
-      } catch (e) { err(e); }
-    }
+    if (user.adult_confirmed) step = 1;
     draw();
   }
 

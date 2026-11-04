@@ -31,10 +31,10 @@
       const v = Number(value.value) || 0;
       if (mode.value === "roundup") {
         const up = Math.ceil(47 / v) * v;
-        example.textContent = `Example: a ₹47 expense rounds up to ₹${up}, so ₹${up - 47} goes to your goal.`;
+        example.textContent = `Example: a ₹47 expense rounds up to ₹${up}, so ₹${up - 47} is set aside for your goal.`;
       } else if (mode.value === "percent") {
-        example.textContent = `Example: a ₹400 expense sends ₹${(400 * v) / 100} to your goal.`;
-      } else example.textContent = "Nothing is saved automatically.";
+        example.textContent = `Example: a ₹400 expense sets aside ₹${(400 * v) / 100} for your goal.`;
+      } else example.textContent = "Nothing is set aside automatically.";
     };
     const example = el("p", { class: "tiny faint" });
     mode.onchange = fillValues;
@@ -42,16 +42,16 @@
     const goalSel = el("select", { class: "input" }, el("option", { value: "" }, goals.length ? "Choose a goal" : "Create a goal first"),
       goals.map((g) => el("option", { value: g.id, selected: u.autosave_goal_id === g.id ? true : null }, g.title)));
     fillValues();
-    const autosave = el("div", { class: "card" }, el("h2", null, "Auto-save"),
-      el("p", { class: "small muted", style: { margin: "6px 0 14px" } }, "Flux's anti-cashback: a little from every expense moves into your goal, but only if you have the balance."),
+    const autosave = el("div", { class: "card" }, el("h2", null, "Set aside as you spend"),
+      el("p", { class: "small muted", style: { margin: "6px 0 14px" } }, "After each expense, Flux sets a little aside for your goal, only if you have it. The money stays in your bank account: Flux just stops counting it as spendable. To really save it, move it to a savings account or RD."),
       el("div", { class: "form" },
         el("label", { class: "field" }, "Mode", mode),
         el("label", { class: "field" }, "Amount", value), example,
-        el("label", { class: "field" }, "Send it to", goalSel),
+        el("label", { class: "field" }, "For which goal", goalSel),
         el("div", null, el("button", { class: "btn primary", onclick: () => {
           const body = { autosave_mode: mode.value, autosave_goal_id: goalSel.value ? Number(goalSel.value) : null };
           if (mode.value !== "off") body.autosave_value = Number(value.value);
-          save(body, "Auto-save updated.");
+          save(body, "Saved.");
         } }, "Save"))));
 
     // Voice
@@ -69,15 +69,16 @@
         el("div", null, el("button", { class: "btn", onclick: () => V && V.open(true) }, icon("mic"), "Try it now"))));
 
     // Data & privacy
-    const data = el("div", { class: "card" }, el("h2", null, "Your data"),
-      el("p", { class: "small muted", style: { margin: "6px 0 14px" } }, "You own your data. Download everything, or delete your account permanently."),
+    const data = el("div", { class: "card", id: "data" }, el("h2", null, "Your data"),
+      el("p", { class: "small muted", style: { margin: "6px 0 14px" } }, "You own your data. See exactly what Flux has, download it, or delete your account permanently."),
       el("div", { class: "row wrap" },
+        el("a", { class: "btn", href: "/app/privacy-center" }, icon("eye"), "What Flux knows"),
         el("button", { class: "btn", onclick: () => download("/api/account/export", "flux-my-data.json").catch(err) }, icon("download"), "Download my data"),
         el("button", { class: "btn", onclick: logout }, icon("out"), "Sign out"),
         el("button", { class: "btn danger", onclick: async () => {
           const input = el("input", { class: "input", placeholder: "Type DELETE" });
           const v = await modal("Delete account?", el("div", { class: "form" },
-            el("p", { class: "muted small" }, "This permanently deletes your account, transactions, budgets and goals. It cannot be undone."), input),
+            el("p", { class: "muted small" }, "This permanently deletes your account, payments, plans, budgets and goals, and removes Flux's access to your Gmail. It cannot be undone."), input),
             [{ label: "Cancel", value: null, cls: "ghost" }, { label: "Delete forever", submit: true, cls: "danger", value: () => input.value }]);
           if (v === null) return;
           try { await api("/api/account", { method: "DELETE", body: { confirm: v } }); location.href = "/"; } catch (e) { err(e); }
@@ -112,6 +113,11 @@
           el("div", { class: "tiny faint" }, "Google will say \"Google hasn't verified this app\" because Flux is new. Tap Continue. You can disconnect any time."));
       }
       const when = g.last_sync_at ? window.Flux.dateFmt(g.last_sync_at.slice(0, 10)) + " " + g.last_sync_at.slice(11, 16) + " UTC" : "not yet";
+      if (g.needs_reconnect) {
+        return el("div", { class: "notice caution", style: { flexDirection: "column", alignItems: "stretch", gap: "10px" } },
+          el("div", null, el("b", null, "Gmail needs to be reconnected. "), `Google stopped sharing ${g.email}'s bank emails with Flux, so new email payments aren't coming in.`),
+          el("div", null, el("a", { class: "btn primary", href: "/gmail/connect" }, "Reconnect Gmail")));
+      }
       return el("div", { class: "notice ok", style: { flexDirection: "column", alignItems: "stretch", gap: "8px" } },
         el("div", null, el("b", null, "Gmail connected"), ` (${g.email}). ${g.imported} payment${g.imported === 1 ? "" : "s"} added so far. Last checked: ${when}.`),
         g.error ? el("div", { class: "small", style: { color: "var(--red)" } }, g.error) : null,
@@ -130,7 +136,7 @@
         "Flux reads only your bank's payment messages, never your chats or OTPs, and never your bank password."));
       if (gm) {
         kids.push(gm);
-        kids.push(el("div", { class: "small muted", style: { marginTop: "4px" } }, "Or use your phone's bank SMS:"));
+        kids.push(el("div", { class: "small muted", style: { marginTop: "4px" } }, "Or set up your phone:"));
       }
       const seg = el("div", { class: "seg" }, [["iphone", "iPhone"], ["android", "Android"]].map(([k, label]) =>
         el("button", { type: "button", class: platform === k ? "on" : "", onclick: () => { platform = k; drawAuto(); } }, label)));
@@ -165,11 +171,29 @@
           ["Test it: send ₹1 by UPI. It shows up in Flux under Recent within a few seconds."],
         ]));
       } else {
-        kids.push(el("div", { class: "notice info" }, icon("info"), el("div", null,
-          el("b", null, "Android app: coming soon. "),
-          "It will log every GPay, PhonePe, Paytm and bank payment by itself after one tap. Until then, open ",
-          el("a", { class: "link", href: "/app/share" }, "Paste bank SMS"), " to add payments in seconds, or ",
-          el("a", { class: "link", href: "/app/import" }, "upload your statement"), ".")));
+        const apk = (window.Flux.config.features || {}).android_apk;
+        if (!apk) {
+          kids.push(el("div", { class: "notice info" }, icon("info"), el("div", null,
+            el("b", null, "Android app: coming soon. "), "Until then, ",
+            el("a", { class: "link", href: "/app/share" }, "paste bank SMS"), " or ",
+            el("a", { class: "link", href: "/app/import" }, "upload your statement"), ".")));
+        } else {
+          const linkApp = el("button", { class: "btn primary", type: "button", onclick: async () => {
+            try {
+              const r = await api("/api/ingest/token", { method: "POST" });
+              location.href = `fluxapp://connect?server=${encodeURIComponent(r.server)}&token=${encodeURIComponent(r.token)}`;
+            } catch (e) { err(e); }
+          } }, "Link the Flux app");
+          kids.push(el("p", { class: "small", style: { margin: 0 } },
+            "The Flux app logs every GPay, PhonePe, Paytm and bank payment by itself. It reads only payment notifications, never chats or OTPs, and has no SMS permission."));
+          kids.push(numbered([
+            ["Download the app ", el("a", { class: "btn sm", href: apk }, icon("download"), "Flux for Android"), ". Open the file and allow your browser to install it (Android asks once)."],
+            ["Come back to this page on the same phone and tap ", linkApp, ". It opens the app and links your account."],
+            ["In the app: tick the box, tap ", el("b", null, "Open Notification access settings"), ", choose Flux Companion and allow it. If Android says \"Restricted setting\", the app shows you the one extra step."],
+            ["Test it: pay ₹1 by UPI. It appears in Flux under Recent within a minute."],
+          ]));
+          if (!isAndroid) kids.push(el("div", { class: "tiny faint" }, "Open this page on your Android phone to do these steps."));
+        }
       }
 
       kids.push(el("div", { class: "small " + (st.uses ? "green" : "muted") },

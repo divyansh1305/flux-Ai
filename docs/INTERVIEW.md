@@ -6,12 +6,12 @@
 2. **What I built:** Flux, an automatic money tracker that logs every UPI and bank payment by itself and keeps a ledger that is actually *correct*.
 3. **Capture:** an Android companion app I wrote in Kotlin reads payment notifications, filters on the phone, and sends only completed payments. iPhone users forward bank SMS through a Shortcuts automation.
 4. **Parsing:** I extracted the parsing into an open-source library, `upi-parse`. On 38 messages from 9 banks it had never seen, it scored 96.6% on direction and 100% on amount.
-5. **Correctness:** the same payment arrives up to four ways (Scan & Pay, SMS, notification, statement). My ledger dedupes by UPI reference, or by amount ± 1 day from a *different channel*. It also reconciles against the "Avl Bal" the bank itself reports.
-6. **The useful number:** safe-to-spend today = available − bills due (auto-detected) − goal plan, divided by days left.
+5. **Correctness:** the same payment arrives up to four ways (UPI app notification, SMS, Gmail, statement). My ledger dedupes by UPI reference, or by amount ± 1 day from a *different channel*. It also reconciles against the "Avl Bal" the bank itself reports.
+6. **The useful number:** a *personal* safe-to-spend: money you have + sure income − bills − your plans − your cushion, divided by days until *your* payday. I built it after user research showed people want "what can I spend today", not charts.
 7. **Learning:** when a user fixes a category, Flux learns the merchant, re-files past entries and reports its *measured* accuracy from those corrections.
-8. **No licences needed:** payments open the user's own UPI app through NPCI intent links, and investing goes through Zerodha Kite Publisher, so Flux never touches money.
+8. **Real problems, real rupees:** Flux watches failed payments until the refund arrives (RBI's T+1/T+5 rules), flags double charges and subscription price rises. I deliberately cut Pay and Invest because they weren't real for users yet, and made Flux 18+ to comply with India's DPDP rules.
 9. **Production:** request IDs, JSON logs, Prometheus metrics, Docker, gunicorn. A load test ran at 228 req/s with p95 of 116 ms and zero errors on 2 vCPUs, and it caught three real bugs.
-10. **Quality:** 162 tests in CI, including a regression test for every bug I found.
+10. **Quality:** 172 tests in CI, including a regression test for every bug I found.
 
 ## Architecture (draw this)
 
@@ -63,7 +63,7 @@ SQLite in WAL mode handles this load on one box, and it keeps the system simple.
 - Turn ingest into a queue (SQS or Kafka) so parsing is async and retries are idempotent. Dedupe is already idempotent.
 
 **"Can Flux move money?"**
-No, by design. UPI initiation needs NPCI TPAP approval, so Flux uses `upi://pay` intent links to open the user's own UPI app. Stock orders go through Kite Publisher, where the user confirms in Zerodha's window. That fits SEBI's 2026 algo rules.
+No, by design. Moving money needs NPCI/RBI licences and it would pull Flux towards lending, which is what users told us they don't want. I had a Scan & Pay prototype but removed it: anything in the app has to really work.
 
 **"How does voice work?"**
 - Web Speech API → text → a rule parser in English, Hindi and Hinglish, taking about 1 ms.
@@ -81,7 +81,7 @@ Correctness is the product. A tracker that's 95% right gets abandoned the first 
 
 ## Numbers to remember
 
-- 162 tests passing
+- 172 tests passing
 - 228 req/s, p95 116 ms, 0 errors (500 users, 60 s, 2 vCPU)
 - 40 → 28 queries on the dashboard
 - Parser on unseen banks: 96.6% direction, 100% amount, 86.2% category, 91.7% UTR

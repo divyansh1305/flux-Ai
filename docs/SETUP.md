@@ -44,7 +44,6 @@ git push -u origin main
 | `EMAIL_PASSWORD` | the 16-letter app password |
 | `GEMINI_API_KEY` | the key from step 1 |
 | `GOOGLE_CLIENT_ID` | leave empty for now (step 6) |
-| `KITE_API_KEY` | leave empty (investing runs in practice mode) |
 
 4. The plan is **Starter**. The disk that stores user data needs a paid plan, about $7/month.
 5. Wait for "Live", then open `https://YOUR-APP.onrender.com/readyz`. It should show `{"db":"up","ok":true}`.

@@ -37,6 +37,9 @@ def user_json(u):
         "autosave_mode": u["autosave_mode"], "autosave_value": u["autosave_value"],
         "autosave_goal_id": u["autosave_goal_id"], "voice_lang": u["voice_lang"],
         "contribute_samples": bool(u["contribute_samples"]),
+        "adult_confirmed": bool(u["adult_confirmed"]),
+        "income_pattern": u["income_pattern"], "pay_day": u["pay_day"],
+        "expected_income": u["expected_income"] / 100, "cushion": u["cushion"] / 100,
     }
 
 
@@ -159,9 +162,8 @@ def me():
         "user": user_json(u) if u else None,
         "google_client_id": current_app.config["GOOGLE_CLIENT_ID"] or None,
         "ai_available": ai.available(),
-        "features": {"pay": bool(current_app.config.get("FEATURE_PAY")),
-                     "gmail": bool(current_app.config.get("GOOGLE_CLIENT_ID") and current_app.config.get("GOOGLE_CLIENT_SECRET")),
-                     "invest": bool(current_app.config.get("FEATURE_INVEST"))},
+        "features": {"gmail": bool(current_app.config.get("GOOGLE_CLIENT_ID") and current_app.config.get("GOOGLE_CLIENT_SECRET")),
+                     "android_apk": current_app.config.get("ANDROID_APK_URL") or None},
     })
 
 
@@ -211,7 +213,45 @@ def update_account():
         fields["contribute_samples"] = 1 if data["contribute_samples"] is True else 0
         if not fields["contribute_samples"]:  # turning it off deletes what was kept
             get_db().execute("DELETE FROM parse_samples WHERE user_id = ?", (u["id"],))
+    if data.get("adult_confirmed") is True:
+        fields["adult_confirmed"] = 1
+    if "income_pattern" in data:
+        if data["income_pattern"] not in ("unset", "monthly", "varies"):
+            raise ApiError("Choose when your money usually comes in.")
+        fields["income_pattern"] = data["income_pattern"]
+    if "pay_day" in data:
+        pd = data["pay_day"]
+        if pd is not None:
+            try:
+                pd = int(pd)
+            except (TypeError, ValueError):
+                raise ApiError("Pay day must be a date from 1 to 31.")
+            if not 1 <= pd <= 31:
+                raise ApiError("Pay day must be a date from 1 to 31.")
+        fields["pay_day"] = pd
+    for key, label in (("expected_income", "Expected income"), ("cushion", "Safety cushion")):
+        if key in data:
+            try:
+                v = round(float(data[key] or 0) * 100)
+            except (TypeError, ValueError):
+                raise ApiError(f"{label} must be a number.")
+            if not 0 <= v <= 10_000_000_00:
+                raise ApiError(f"{label} looks too large.")
+            fields[key] = v
+    if data.get("current_balance") not in (None, ""):
+        # "About how much is in your bank right now?" -> the opening balance that makes Flux show that amount.
+        from ..finance import balance, opening_balance
+
+        try:
+            target = round(float(data["current_balance"]) * 100)
+        except (TypeError, ValueError):
+            raise ApiError("Balance must be a number.")
+        if not -10_000_000_00 <= target <= 10_000_000_00:
+            raise ApiError("Balance looks too large.")
+        fields["opening_balance"] = target - (balance(u["id"]) - opening_balance(u["id"]))
     if "onboarded" in data:
+        if data["onboarded"] and not (fields.get("adult_confirmed") or u["adult_confirmed"]):
+            raise ApiError("Flux is for people aged 18 or older. Please confirm your age to continue.")
         fields["onboarded"] = 1 if data["onboarded"] else 0
     if fields:
         cols = ", ".join(f"{k} = ?" for k in fields)  # keys are whitelisted above
@@ -236,8 +276,10 @@ def export_account():
     rules = [{"merchant": r["merchant_key"], "category": r["category"]}
              for r in db.execute("SELECT * FROM merchant_rules WHERE user_id = ?", (u["id"],))]
     samples = [r["masked_text"] for r in db.execute("SELECT masked_text FROM parse_samples WHERE user_id = ?", (u["id"],))]
+    plans = [{"kind": r["kind"], "title": r["title"], "amount": r["amount"] / 100, "date": r["date"], "sure": bool(r["sure"]),
+              "done": bool(r["done"])} for r in db.execute("SELECT * FROM plans WHERE user_id = ? ORDER BY date", (u["id"],))]
     resp = jsonify({"profile": user_json(u), "transactions": tx, "budgets": budgets, "merchant_rules": rules,
-                    "masked_samples": samples,
+                    "masked_samples": samples, "plans": plans,
                     "goals": goals_with_progress(u["id"], include_archived=True)})
     resp.headers["Content-Disposition"] = "attachment; filename=flux-my-data.json"
     return resp
@@ -250,7 +292,37 @@ def delete_account():
         raise ApiError('Type DELETE to confirm.')
     uid = current_user()["id"]
     db = get_db()
+    from .. import gmail
+
+    gmail.disconnect(uid)  # also revokes Flux's access at Google, not just our copy of the token
     db.execute("DELETE FROM users WHERE id = ?", (uid,))  # cascades to all user data
     db.commit()
     session.clear()
     return jsonify({"ok": True})
+
+
+@bp.get("/account/knows")
+@login_required
+def what_flux_knows():
+    """Plain answer to "what does Flux have about me?": every source and every kind of record, counted."""
+    from .. import gmail
+
+    u = current_user()
+    db = get_db()
+    count = lambda sql: db.execute(sql, (u["id"],)).fetchone()[0]  # noqa: E731
+    token = db.execute("SELECT created_at, last_used_at FROM ingest_tokens WHERE user_id = ?", (u["id"],)).fetchone()
+    return jsonify({
+        "email": u["email"], "member_since": u["created_at"][:10],
+        "sources": {"gmail": gmail.status(u["id"]),
+                    "phone": {"connected": bool(token), "last_used_at": token["last_used_at"] if token else None}},
+        "counts": {
+            "transactions": count("SELECT COUNT(*) FROM transactions WHERE user_id = ?"),
+            "plans": count("SELECT COUNT(*) FROM plans WHERE user_id = ?"),
+            "goals": count("SELECT COUNT(*) FROM goals WHERE user_id = ?"),
+            "budgets": count("SELECT COUNT(*) FROM budgets WHERE user_id = ?"),
+            "merchant_rules": count("SELECT COUNT(*) FROM merchant_rules WHERE user_id = ?"),
+            "bank_balances": count("SELECT COUNT(*) FROM balance_snapshots WHERE user_id = ?"),
+            "masked_samples": count("SELECT COUNT(*) FROM parse_samples WHERE user_id = ?"),
+        },
+        "contribute_samples": bool(u["contribute_samples"]),
+    })

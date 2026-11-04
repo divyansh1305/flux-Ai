@@ -3,7 +3,7 @@ from datetime import date
 
 import pytest
 
-from flux import clock, market
+from flux import clock
 
 TODAY = date(2026, 11, 10)
 
@@ -33,10 +33,9 @@ def add(client, kind, amount, category, **kw):
 
 
 # ─── De-duplication across sources ───────────────────────────
-def test_scan_pay_then_bank_sms_then_statement_is_one_payment(app, client, user):
+def test_upi_notification_then_bank_sms_then_statement_is_one_payment(app, client, user):
     t = tok(client)
-    prep = client.post("/api/pay/prepare", json={"vpa": "zomato@hdfc", "name": "Zomato", "amount": 347, "category": "Food & Dining"}).json
-    client.post(f"/api/pay/{prep['payment_id']}/confirm", json={"status": "paid"})
+    assert notif(app, t, "com.google.android.apps.nbu.paisa.user", "₹347 paid to Zomato", "Paid from HDFC Bank •• 1234")["logged"]
     r = sms(app, t, "Rs.347.00 debited from A/c XX1234 on 10-11-26 to VPA zomato@hdfc (UPI Ref No 628811112222). Avl Bal Rs 9,653.00")
     assert not r["logged"] and "another source" in r["reason"]
     stmt = ("Date,Narration,Ref,Value Dt,Withdrawal Amt.,Deposit Amt.,Closing Balance\n"
@@ -82,20 +81,14 @@ def test_reconciliation_detects_missing_transaction(app, client, user):
 
 
 # ─── Double-entry invariants ─────────────────────────────────
-def test_trial_balance_always_balances(client, user, monkeypatch):
-    market.clear_cache()
-    monkeypatch.setattr(market, "fetch_price", lambda s: 280.0)
+def test_trial_balance_always_balances(client, user):
     add(client, "income", 10000, "Salary")
     g = client.post("/api/goals", json={"title": "Trip", "target": 20000}).json
     add(client, "expense", 347, "Food & Dining")   # + ₹3 auto-save
     client.post(f"/api/goals/{g['id']}/contribute", json={"amount": 2000})
-    prep = client.post("/api/invest/prepare", json={"goal_id": g["id"], "symbol": "NIFTYBEES", "amount": 900}).json
-    client.post(f"/api/invest/{prep['investment_id']}/complete", json={"status": "success"})
     tb = client.get("/api/ledger").json["trial_balance"]
     assert tb["sum"] == 0
     assert tb["unallocated"] == tb["available"] == client.get("/api/dashboard").json["balance"]
-    assert tb["accounts"]["assets:investments"] == 840.0
-    market.clear_cache()
 
 
 # ─── Recurring bills & safe-to-spend ─────────────────────────

@@ -69,11 +69,10 @@
           }))));
       } else compare.appendChild(el("div", { class: "empty" }, "Not enough data yet."));
       const cb = ins.cashback;
-      const cbCard = el("div", { class: "card" }, el("div", { class: "card-head" }, el("h2", null, "Cashback vs auto-save"), el("span", { class: "tiny faint" }, `last ${cb.days} days`)),
-        el("div", { class: "grid g-3" },
+      const cbCard = el("div", { class: "card" }, el("div", { class: "card-head" }, el("h2", null, "Cashback vs spending"), el("span", { class: "tiny faint" }, `last ${cb.days} days`)),
+        el("div", { class: "grid g-2" },
           el("div", { class: "stat" }, el("div", { class: "label" }, "Cashback received"), el("div", { class: "value" }, inr0(cb.cashback)), el("div", { class: "sub" }, `${cb.cashback_rate}% of spending`)),
-          el("div", { class: "stat" }, el("div", { class: "label" }, "Everyday spending"), el("div", { class: "value" }, inr0(cb.spend))),
-          el("div", { class: "stat" }, el("div", { class: "label" }, "Auto-saved"), el("div", { class: "value green" }, inr0(cb.autosaved)))),
+          el("div", { class: "stat" }, el("div", { class: "label" }, "Everyday spending"), el("div", { class: "value" }, inr0(cb.spend)))),
         el("p", { class: "small muted", style: { marginTop: "14px" } }, cb.verdict));
       const rec = ins.recurring;
       const recCard = el("div", { class: "card" }, el("div", { class: "card-head" }, el("h2", null, "Regular payments"),

@@ -170,3 +170,40 @@ CREATE TABLE IF NOT EXISTS gmail_seen (
     msg_id          TEXT NOT NULL,
     PRIMARY KEY (user_id, msg_id)
 );
+
+-- Plans: money the user expects to spend (dinner on Friday) or receive (client pays on the 20th).
+-- Spend plans are kept out of "safe to spend" until their day; income plans count only when marked sure.
+CREATE TABLE IF NOT EXISTS plans (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind            TEXT NOT NULL DEFAULT 'spend' CHECK (kind IN ('spend','income')),
+    title           TEXT NOT NULL,
+    amount          INTEGER NOT NULL CHECK (amount > 0),
+    date            TEXT NOT NULL,
+    sure            INTEGER NOT NULL DEFAULT 1,
+    done            INTEGER NOT NULL DEFAULT 0,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_plans_user_date ON plans(user_id, date);
+
+-- Payments the bank said failed: money may have left the account and must come back (RBI T+1 / T+5 rules).
+CREATE TABLE IF NOT EXISTS refund_watch (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    amount          INTEGER NOT NULL,
+    date            TEXT NOT NULL,
+    note            TEXT NOT NULL DEFAULT '',
+    ref             TEXT,
+    status          TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','back','ignored')),
+    fingerprint     TEXT NOT NULL,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (user_id, fingerprint)
+);
+
+-- Money checks the user dismissed ("not a double charge"), so they never show again.
+CREATE TABLE IF NOT EXISTS dismissed_checks (
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    check_key       TEXT NOT NULL,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (user_id, check_key)
+);

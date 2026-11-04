@@ -39,20 +39,20 @@
 
   async function render(main, user) {
     const box = el("div", { class: "stack" });
-    main.replaceChildren(pageHead("Goals", "Save for things that matter. Auto-save fills them as you spend.",
+    main.replaceChildren(pageHead("Goals", "Track what you're saving for. Money you set aside stays in your bank; Flux just stops counting it as spendable.",
       el("button", { class: "btn primary", onclick: goalModal }, icon("plus"), "New goal")), box);
 
     async function load() {
       const [goals, me] = await Promise.all([api("/api/goals"), api("/api/auth/me")]);
       const u = me.user;
       const autoGoal = goals.find((g) => g.id === u.autosave_goal_id);
-      const modeText = u.autosave_mode === "off" ? "Auto-save is off."
+      const modeText = u.autosave_mode === "off" ? "Automatic set-aside is off."
         : u.autosave_mode === "roundup" ? `Every expense rounds up to the next ₹${u.autosave_value}` : `${u.autosave_value}% of every expense`;
       const auto = el("div", { class: "notice info" }, icon("repeat"),
-        el("div", null, u.autosave_mode === "off" ? modeText : `${modeText} and the difference goes to `, u.autosave_mode !== "off" ? el("b", null, autoGoal ? autoGoal.title : "no goal yet") : null,
+        el("div", null, u.autosave_mode === "off" ? modeText : `${modeText}, and Flux sets the difference aside for `, u.autosave_mode !== "off" ? el("b", null, autoGoal ? autoGoal.title : "no goal yet") : null,
           ". ", el("a", { class: "brand", href: "/app/settings" }, "Change")));
       const cards = goals.map((g) => el("div", { class: "card" },
-        el("div", { class: "row between" }, el("h3", null, g.title), g.id === u.autosave_goal_id ? el("span", { class: "badge autosave" }, "auto-save") : null),
+        el("div", { class: "row between" }, el("h3", null, g.title), g.id === u.autosave_goal_id ? el("span", { class: "badge autosave" }, "set-aside") : null),
         el("div", { class: "row between", style: { margin: "16px 0 8px", alignItems: "flex-end" } },
           el("div", null, el("div", { class: "stat" }, el("div", { class: "value", style: { fontSize: "24px" } }, inr0(g.saved))), el("div", { class: "tiny faint" }, "of " + inr0(g.target))),
           el("div", { style: { fontSize: "22px", fontWeight: 800 }, class: g.complete ? "green" : "" }, g.percent + "%")),
@@ -62,8 +62,8 @@
           el("button", { class: "btn sm primary", onclick: () => moveModal(g, false) }, "Add money"),
           g.saved > 0 ? el("button", { class: "btn sm", onclick: () => moveModal(g, true) }, "Withdraw") : null,
           g.id !== u.autosave_goal_id ? el("button", { class: "btn sm ghost", onclick: async () => {
-            try { await api("/api/account", { method: "PATCH", body: { autosave_goal_id: g.id } }); ok(`Auto-save now goes to ${g.title}.`); load(); } catch (e) { err(e); }
-          } }, "Use for auto-save") : null,
+            try { await api("/api/account", { method: "PATCH", body: { autosave_goal_id: g.id } }); ok(`Set-asides now go to ${g.title}.`); load(); } catch (e) { err(e); }
+          } }, "Set aside here") : null,
           el("button", { class: "btn sm ghost", onclick: async () => {
             if (!(await confirmBox("Delete goal?", `${g.title} holds ${inr(g.saved)}. Deleting it returns that money to your balance.`, true))) return;
             try { await api(`/api/goals/${g.id}`, { method: "DELETE" }); ok("Goal deleted."); window.Flux.refresh(); } catch (e) { err(e); }

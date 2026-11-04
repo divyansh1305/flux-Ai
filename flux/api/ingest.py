@@ -7,6 +7,7 @@ Auth is a personal bearer token (no cookies), so this endpoint is exempt from CS
 Only a SHA-256 hash of the token is stored; it can be revoked from Settings any time.
 """
 import hashlib
+import re
 import secrets
 
 from flask import Blueprint, jsonify, request
@@ -127,11 +128,15 @@ def ingest_row(user, row, source):
                    (user["id"], res["id"], source, mask_text(row["sample_text"])[:600]))
     if row.get("balance") is not None:
         ledger.record_snapshot(user["id"], round(row["balance"] * 100), row["date"], source, row.get("account_last4"), res["id"])
+    if row["kind"] == "income" and (row.get("category") == "Refund" or re.search(r"refund|revers", row.get("raw", ""), re.I)):
+        from .. import checks
+
+        checks.resolve_by_refund(user["id"], amount, row["date"])
     count_ingest(source, "logged")
     sign = "-" if row["kind"] == "expense" else "+"
     msg = f"Flux logged {sign}₹{row['amount']:,.2f} · {row['note']} ({row['category']})"
     if res["autosaved"]:
-        msg += f" · ₹{rupees(res['autosaved']):,.2f} auto-saved"
+        msg += f" · ₹{rupees(res['autosaved']):,.2f} set aside"
     return {"logged": True, "message": msg, "transaction_id": res["id"], "kind": row["kind"], "amount": row["amount"],
             "category": row["category"], "balance": rupees(finance.balance(user["id"]))}
 
@@ -166,8 +171,14 @@ def _ingest_sms(user):
     if row is not None:
         row["sample_text"] = str(text)[:600]
     if row is None:
+        from .. import checks
+
+        watching = checks.detect_failed(user["id"], str(text)[:2000])
         db.commit()
-        count_ingest("sms", "skipped")
+        count_ingest("sms", "watch" if watching else "skipped")
+        if watching:
+            return jsonify({"logged": False, "watching": True,
+                            "reason": "Failed payment noted. Flux will watch for the money to come back."})
         return jsonify({"logged": False, "reason": "Not a bank transaction (OTPs and offers are ignored)."})
     out = ingest_row(user, row, "sms")
     db.commit()
@@ -192,6 +203,9 @@ def ingest_notification():
         return jsonify({"logged": False, "reason": "App not supported."})
     tx = parse_notification(str(data.get("title", ""))[:300], str(data.get("body", ""))[:1000], package, clock.today())
     if tx is None:
+        from .. import checks
+
+        checks.detect_failed(user["id"], f"{str(data.get('title', ''))[:300]}. {str(data.get('body', ''))[:1000]}")
         db.commit()
         count_ingest("notification", "skipped")
         return jsonify({"logged": False, "reason": "Not a completed payment."})

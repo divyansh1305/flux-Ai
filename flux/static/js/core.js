@@ -55,6 +55,8 @@
     wave: '<path d="M7 12V7a2 2 0 0 1 4 0v4M11 11V5a2 2 0 0 1 4 0v6M15 11V7a2 2 0 0 1 4 0v6a7 7 0 0 1-7 7h-1a7 7 0 0 1-6-3.5L3 13a2 2 0 0 1 3.4-2L7 12"/>',
     shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
     arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+    calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+    eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   };
   function icon(name) {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -204,7 +206,7 @@
           const r = await api("/api/transactions/check", { method: "POST", body: { amount: amount.value, category: cat.value } });
           const lines = r.warnings.length ? r.warnings : ["Looks fine. Balance after: " + inr(r.balance_after) + "."];
           if (r.goal_delay_days) lines.push(`Pushes your goals back ~${r.goal_delay_days} day(s).`);
-          if (r.autosave_would_add > 0) lines.push(`Auto-save will move ${inr(r.autosave_would_add)} to your goal.`);
+          if (r.autosave_would_add > 0) lines.push(`${inr(r.autosave_would_add)} will be set aside for your goal (it stays in your bank).`);
           check.replaceChildren(el("div", { class: "notice " + r.level }, el("div", null, ...lines.map((l) => el("div", null, l)))));
         } catch (e) { /* ignore preview errors */ }
       }, 300);
@@ -224,8 +226,50 @@
     try {
       const r = await api("/api/transactions", { method: "POST", body: v });
       let msg = `Saved ${inr(r.transaction.amount)} ${r.transaction.kind}.`;
-      if (r.autosaved) msg += ` ${inr(r.autosaved)} auto-saved to ${r.autosave_goal}.`;
+      if (r.autosaved) msg += ` ${inr(r.autosaved)} set aside for ${r.autosave_goal}.`;
       ok(msg, { label: "Undo", run: async () => { await api(`/api/transactions/${r.transaction.id}`, { method: "DELETE" }); refresh(); } });
+      refresh();
+      return r;
+    } catch (e) { err(e); return null; }
+  }
+
+  // ─── Shared "plan" modal: money you expect to spend or receive ──
+  async function planModal(existing) {
+    const p = existing || { kind: "spend", title: "", amount: "", date: "", sure: true };
+    let kind = p.kind;
+    const title = el("input", { class: "input", maxlength: "60", placeholder: "Dinner on Friday", value: p.title, required: true });
+    const amount = el("input", { class: "input big num", type: "number", inputmode: "decimal", min: "1", step: "1", placeholder: "2000", value: p.amount || "", required: true, "aria-label": "Amount in rupees" });
+    const maxDay = new Date(); maxDay.setFullYear(maxDay.getFullYear() + 1);
+    const day = el("input", { class: "input", type: "date", min: todayISO(), max: maxDay.toISOString().slice(0, 10), value: p.date || todayISO(), required: true });
+    const sure = el("input", { type: "checkbox", checked: p.sure ? true : null });
+    const sureRow = el("label", { class: "row", style: { gap: "8px", alignItems: "center" } }, sure, el("span", null, "I'm sure this money will come"));
+    const hint = el("p", { class: "tiny faint" });
+    const seg = el("div", { class: "seg" });
+    const bS = el("button", { type: "button" }, "Money going out");
+    const bI = el("button", { type: "button" }, "Money coming in");
+    const paint = () => {
+      bS.className = kind === "spend" ? "on exp" : ""; bI.className = kind === "income" ? "on inc" : "";
+      sureRow.style.display = kind === "income" ? "" : "none";
+      title.placeholder = kind === "income" ? "Client payment, pocket money" : "Dinner on Friday";
+      hint.textContent = kind === "income"
+        ? "Sure money counts in today's number. If you're not sure, Flux shows it separately and never counts on it."
+        : "Flux keeps this aside until the day, so today's number is real. It's not a payment: nothing leaves your bank.";
+    };
+    bS.onclick = () => { kind = "spend"; paint(); };
+    bI.onclick = () => { kind = "income"; paint(); };
+    seg.append(bS, bI);
+    paint();
+    const body = el("div", { class: "form" }, seg, el("label", { class: "field" }, "What for", title),
+      el("div", { class: "grid g-2" }, el("label", { class: "field" }, "Amount (₹)", amount), el("label", { class: "field" }, "When", day)),
+      sureRow, hint);
+    const v = await modal(existing ? "Edit plan" : "Add a plan", body, [
+      { label: "Cancel", value: null, cls: "ghost" },
+      { label: "Save", submit: true, cls: "primary", value: () => ({ kind, title: title.value, amount: amount.value, date: day.value, sure: kind === "income" ? sure.checked : true }) },
+    ]);
+    if (!v) return null;
+    try {
+      const r = existing ? await api(`/api/plans/${existing.id}`, { method: "PATCH", body: v }) : await api("/api/plans", { method: "POST", body: v });
+      ok(existing ? "Plan updated." : "Plan added. Today's number now keeps it aside.");
       refresh();
       return r;
     } catch (e) { err(e); return null; }
@@ -234,18 +278,16 @@
   // ─── Shell ────────────────────────────────────────────────
   const NAV = [
     ["/app", "home", "Home"],
-    ["/app/pay", "qr", "Pay"],
     ["/app/transactions", "list", "Activity"],
     ["/app/budgets", "pie", "Budgets"],
     ["/app/goals", "target", "Goals"],
-    ["/app/invest", "trend", "Invest"],
+    ["/app/plans", "calendar", "Plans"],
     ["/app/coach", "spark", "Coach"],
   ];
-  // Centre button: quick "Add" (always works). Scan & Pay only when it is switched on.
+  // Centre button: quick "Add" (always works).
   const MOBILE_NAV = [["/app", "home", "Home"], ["/app/transactions", "list", "Activity"], ["#add", "plus", "Add"],
-    ["/app/goals", "target", "Goals"], ["/app/coach", "spark", "Coach"]];
-  const featureOn = (href) => !((href === "/app/pay" && !(CONFIG.features || {}).pay) ||
-                                (href === "/app/invest" && !(CONFIG.features || {}).invest));
+    ["/app/plans", "calendar", "Plans"], ["/app/coach", "spark", "Ask"]];
+  const featureOn = () => true;
   let USER = null;
   let CONFIG = {};
 
@@ -303,7 +345,7 @@
     const sign = isIn ? "+" : isSave ? (t.amount < 0 ? "+" : "→ ") : "-";
     const amtCls = isIn ? "green" : isSave ? "brand" : "";
     // Only show a tag when it means something to the user (not where the data came from).
-    const badge = t.source === "autosave" ? el("span", { class: "badge autosave" }, "auto-saved") : null;
+    const badge = t.source === "autosave" ? el("span", { class: "badge autosave" }, "set aside") : null;
     const editable = t.kind === "income" || t.kind === "expense";
     return el("div", { class: "tx" },
       avatar(title, isSave ? "target" : null),
@@ -343,13 +385,13 @@
   }
 
   async function deleteTx(t) {
-    if (!(await confirmBox("Delete transaction?", `${t.note || t.category} · ${inr(t.amount)}. Any auto-save from it is removed too.`, true))) return;
+    if (!(await confirmBox("Delete transaction?", `${t.note || t.category} · ${inr(t.amount)}. Anything set aside from it is removed too.`, true))) return;
     try { await api(`/api/transactions/${t.id}`, { method: "DELETE" }); ok("Deleted."); refresh(); } catch (e) { err(e); }
   }
 
   window.Flux = {
     el, icon, api, download, toast, ok, err, modal, confirmBox, inr, inr0, dateFmt, todayISO, CAT_EMOJI, CAT_COLORS, avatar,
-    boot, pageHead, txRow, deleteTx, editTx, addTransactionModal, refresh, onRefresh, logout, meta,
+    boot, pageHead, txRow, deleteTx, editTx, addTransactionModal, planModal, refresh, onRefresh, logout, meta,
     get user() { return USER; }, set user(u) { USER = u; }, get config() { return CONFIG; },
   };
 })();

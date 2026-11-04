@@ -223,24 +223,20 @@ def setup_status(uid):
 
     db = get_db()
     one = lambda sql: db.execute(sql, (uid,)).fetchone() is not None  # noqa: E731
-    has_income = one("SELECT 1 FROM transactions WHERE user_id = ? AND kind = 'income' LIMIT 1")
     has_auto = one("SELECT 1 FROM ingest_tokens WHERE user_id = ?") or one("SELECT 1 FROM gmail_accounts WHERE user_id = ?")
-    has_budget = one("SELECT 1 FROM budgets WHERE user_id = ?")
-    has_goal = one("SELECT 1 FROM goals WHERE user_id = ? AND archived = 0")
     has_bank = one("SELECT 1 FROM balance_snapshots WHERE user_id = ?")
     gap = ledger.bank_gap(uid)
+    u = db.execute("SELECT income_pattern, cushion FROM users WHERE id = ?", (uid,)).fetchone()
     steps = [
-        {"key": "income", "title": "Add your monthly income", "sub": "Pocket money, salary or stipend", "done": has_income,
-         "action": "income"},
-        {"key": "auto", "title": "Turn on automatic tracking", "sub": "Payments log themselves from your phone",
+        {"key": "auto", "title": "Connect your payments", "sub": "Gmail on iPhone, the Flux app on Android",
          "done": has_auto, "href": "/app/settings#auto"},
-        {"key": "budget", "title": "Set one budget", "sub": "Food is a good place to start", "done": has_budget,
-         "href": "/app/budgets"},
-        {"key": "goal", "title": "Pick something to save for", "sub": "Round-ups go here automatically", "done": has_goal,
-         "href": "/app/goals"},
+        {"key": "income", "title": "Tell Flux when money comes in", "sub": "So today's number lasts until then",
+         "done": bool(u and u["income_pattern"] != "unset"), "href": "/app/plans#money"},
         {"key": "bank", "title": "Match Flux with your bank", "done": bool(has_bank and gap is not None and abs(gap) < 1),
-         "sub": "One tap, after your first bank SMS arrives" if not has_bank else "Your bank balance is ready to match",
+         "sub": "One tap, after your first bank message arrives" if not has_bank else "Your bank balance is ready to match",
          "action": "align" if has_bank else None},
+        {"key": "plan", "title": "Add a plan", "sub": "Like \"Dinner Friday ₹2,000\", so it's kept aside",
+         "done": one("SELECT 1 FROM plans WHERE user_id = ? LIMIT 1"), "href": "/app/plans"},
     ]
     done = sum(1 for s in steps if s["done"])
     return {"steps": steps, "done": done, "total": len(steps), "complete": done == len(steps)}
@@ -260,11 +256,11 @@ def dashboard():
     recent = get_db().execute(
         "SELECT * FROM transactions WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT 6", (uid,)
     ).fetchall()
-    from .. import insights, ledger
+    from .. import checks, gmail, insights, ledger
 
     return jsonify({
         "balance": rupees(finance.balance(uid)),
-        "safe": insights.safe_to_spend(uid),
+        "safe": insights.safe_to_spend(uid, u),
         "bank": ledger.latest_bank_balance(uid),
         "reconcile": ledger.reconcile(uid),
         "bank_gap": ledger.bank_gap(uid),
@@ -277,6 +273,9 @@ def dashboard():
         "series": finance.daily_series(uid, 30),
         "recent": [tx_json(r) for r in recent],
         "setup": setup_status(uid),
+        "checks": checks.all_checks(uid),
+        "gmail": gmail.status(uid),
+        "money_setup": {"income_pattern": u["income_pattern"], "pay_day": u["pay_day"], "cushion": rupees(u["cushion"])},
     })
 
 

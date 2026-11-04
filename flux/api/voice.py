@@ -212,33 +212,9 @@ def execute(cmd):
             get_db().commit()
             out.update(reply=f"Removed the {inr(rupees(abs(row['amount'])))} {row['category']} entry.", refresh=True)
 
-    elif intent == "pay" and not current_app.config.get("FEATURE_PAY"):
-        out["reply"] = ("Flux doesn't send money. Pay in your usual UPI app, and the payment will show up here "
-                        "automatically from your bank SMS.")
-
-    elif intent == "navigate" and (
-            (cmd["page"] == "/app/pay" and not current_app.config.get("FEATURE_PAY"))
-            or (cmd["page"] == "/app/invest" and not current_app.config.get("FEATURE_INVEST"))):
-        out["reply"] = "That isn't available in Flux yet."
-
     elif intent == "pay":
-        from urllib.parse import urlencode
-
-        vpa = cmd.get("vpa")
-        name = cmd.get("payee") or ""
-        if not vpa and name:
-            rows = get_db().execute("SELECT vpa, name FROM payees WHERE user_id=? ORDER BY times_paid DESC", (uid,)).fetchall()
-            words = set(name.lower().split())
-            best = max(rows, key=lambda r: len(words & set((r["name"] + " " + r["vpa"].split("@")[0]).lower().split())), default=None)
-            if best and words & set((best["name"] + " " + best["vpa"].split("@")[0]).lower().split()):
-                vpa, name = best["vpa"], best["name"]
-        q = {"amount": f"{float(cmd['amount']):.2f}"}
-        if vpa:
-            q.update(vpa=vpa, name=name)
-            reply = f"Opening payment of {inr(cmd['amount'])} to {name or vpa}. I'll check your budget first."
-        else:
-            reply = f"Okay, {inr(cmd['amount'])}. Scan their QR code or enter their UPI ID."
-        out.update(reply=reply, navigate="/app/pay?" + urlencode(q))
+        out["reply"] = ("Flux doesn't send money. Pay in your usual UPI app, and the payment shows up here "
+                        "automatically.")
 
     elif intent == "navigate":
         out.update(reply=f"Opening {cmd.get('page_name', 'that')}.", navigate=cmd["page"])

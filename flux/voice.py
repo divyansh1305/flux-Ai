@@ -25,8 +25,7 @@ PAGES = {
     "budgets": "/app/budgets", "budget": "/app/budgets", "goals": "/app/goals", "goal": "/app/goals",
     "import": "/app/import", "statement": "/app/import", "coach": "/app/coach", "insights": "/app/coach",
     "report": "/app/coach", "settings": "/app/settings", "profile": "/app/settings",
-    "pay": "/app/pay", "scanner": "/app/pay", "invest": "/app/invest", "investments": "/app/invest",
-    "portfolio": "/app/invest", "sms": "/app/share",
+    "sms": "/app/share", "plans": "/app/plans",
 }
 
 # Devanagari -> Hinglish so one rule set handles both scripts.
@@ -202,7 +201,7 @@ def parse(text):
         return {"intent": "navigate", "page": PAGES[m.group(1)], "page_name": m.group(1)}
 
     if _has(t, r"^(scan|scan and pay|scan karo|qr|scan qr|open scanner)\b"):
-        return {"intent": "navigate", "page": "/app/pay", "page_name": "Scan & Pay"}
+        return {"intent": "pay", "amount": None}
 
     amount, rest = extract_amount(t)
 
@@ -280,7 +279,7 @@ Allowed intents: add_expense, add_income, check_balance, spending_query, budget_
 goal_status, create_goal, add_to_goal, can_i_afford, health_score, forecast, pay, undo, navigate, help, ask_coach, unknown.
 Fields: intent, amount (number in rupees, or null), category (one of the lists below or null), note (short text),
 title (for create_goal), goal (goal name for add_to_goal/goal_status), page (one of: dashboard, transactions,
-budgets, goals, import, coach, settings, pay, invest), question (for ask_coach), payee (for pay).
+budgets, goals, import, coach, settings, plans), question (for ask_coach), payee (for pay).
 Expense categories: {exp}
 Income categories: {inc}
 The command may be English, Hindi or Hinglish. Output JSON only.

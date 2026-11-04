@@ -1,10 +1,10 @@
 # Flux: the money tracker that's actually right
 
-**Flux logs every UPI and bank payment automatically and keeps a ledger you can trust.** It shows how much you can safely spend today, whether your numbers match your bank's, and how much cashback is really worth to you. It also helps you save and invest without ever touching your money. Everything works by voice, in English, Hindi or Hinglish.
+**Flux logs every UPI and bank payment automatically and keeps a ledger you can trust.** It tells you how much you can safely spend today, built from *your* payday, plans and safety cushion, checks itself against your bank, and catches real problems: failed payments whose money hasn't come back, double charges and subscription price rises. It never moves money, never offers loans and never sells data. For ages 18+.
 
 🛠 Go-live steps: [`docs/SETUP.md`](docs/SETUP.md) · 📄 Interview guide: [`docs/INTERVIEW.md`](docs/INTERVIEW.md) · 🚀 Launch plan: [`docs/LAUNCH.md`](docs/LAUNCH.md) · 📦 Open-source parser: [`packages/upi_parse`](packages/upi_parse) · 🤖 Android app: [`android/`](android)
 
-> **Safe to spend today: ₹412.** ₹9,840 available · ₹3,200 bills before month-end · ₹1,500 goal plan · 🏦 Bank says ₹9,840 ✓ in sync
+> **Safe to spend today: ₹404.** ₹13,502 you have − ₹2,000 Friday dinner plan − ₹1,000 cushion, ÷ 26 days until payday on 1 Dec · watching ₹850 failed payment to Myntra (refund due by 10 Nov)
 
 ---
 
@@ -24,10 +24,10 @@ UPI made spending effortless, but nothing made *knowing where you stand* effortl
 | Question | How Flux answers it |
 |---|---|
 | "Where did my money go?" | **Logs itself.** The Android companion app reads payment notifications (GPay, PhonePe, Paytm, bank apps). iPhone users forward bank SMS with a Shortcuts automation. Statements import from CSV. All of it goes through the open-source `upi-parse` library. |
-| "Is this number even right?" | **One ledger, no double counting.** The same payment seen by Scan & Pay, the bank SMS, the notification and the statement is matched (by UPI reference, or amount ± 1 day from a different channel) and stored once. The bank's own "Avl Bal" is captured to **reconcile** your Flux balance against your real one. |
-| "Can I afford this?" | **Safe to spend today** = (available − bills due before month-end − goal plan) ÷ days left. Recurring bills are detected automatically. Scanning a UPI QR shows the impact *before* your UPI app opens. |
-| "Is cashback helping me?" | **Cashback vs auto-save** compares cashback received with what round-up auto-save actually put away. |
-| "How do I start saving and investing?" | **Auto-save** rounds up each expense into a goal (only if you have the balance). Goal money can buy index ETFs in **your own Zerodha account** via Kite Publisher. |
+| "Is this number even right?" | **One ledger, no double counting.** The same payment seen in a UPI app notification, the bank SMS, Gmail and the statement is matched (by UPI reference, or amount ± 1 day from a different channel) and stored once. The bank's own "Avl Bal" is captured to **reconcile** your Flux balance against your real one. |
+| "What can I spend today?" | **Personal safe-to-spend** = (money you have + money you're *sure* is coming − bills due − your plans − goal top-ups − your safety cushion) ÷ days until *your* next payday (or month end if income varies). Tap it to see every line. Plans like "Dinner Friday ₹2,000" are kept aside, and a plan paid today isn't counted twice. |
+| "Is anything wrong?" | **Money checks:** a failed payment is watched until the refund arrives, with the RBI deadlines (T+1 transfer, T+5 merchant, ₹100/day after); double charges (same merchant, amount and day, different bank refs); subscription price rises. Each can be dismissed for good. |
+| "What do you have about me?" | **What Flux knows:** every source and record type counted, export, delete (which also revokes Gmail). 18+ only, as India's DPDP rules require for behavioural tracking. |
 | "Did Flux file it correctly?" | **You correct it, Flux learns.** Tap a transaction to fix its category and tick "always use this". Flux re-files earlier entries, applies the rule to future payments, and shows its **measured accuracy** from your corrections. |
 
 ## Numbers (measured, not claimed)
@@ -37,19 +37,19 @@ UPI made spending effortless, but nothing made *knowing where you stand* effortl
 | Parser accuracy on unseen bank formats | **96.6% direction, 100% amount, 86.2% category, 91.7% UTR** (first run, 38 messages from 9 banks never used in development) | `packages/upi_parse/benchmarks/evaluate.py` |
 | Load test (2 vCPU, 1 gunicorn worker × 8 threads, load generator on the same box) | **228 req/s, p95 116 ms, p99 171 ms, 0 errors** over 60 s · 500 users with 6 months of history | `scripts/loadtest.py` → [`docs/loadtest-results.json`](docs/loadtest-results.json) |
 | Dashboard query count | **40 → 28 SQL queries** (6.8 → 4.9 ms) after per-request memoisation keyed on SQLite `total_changes` | profiled with cProfile + sqlite trace |
-| Tests | **162 passing** (app + library), on every push in CI | `pytest -q` |
+| Tests | **172 passing** (app) + library tests, on every push in CI | `pytest -q` |
 
 The load test also caught three production bugs before any user did: worker recycling every few seconds at `max_requests=2000`, per-IP rate limits that would make Jio/Airtel users behind carrier NAT throttle each other, and two different UPI apps' identical payments being merged as duplicates.
 
 ## Features
 
 - 🤖 **Android companion app** (Kotlin, no third-party libraries): NotificationListenerService, on-device filtering (OTPs and chats never leave the phone), Keystore-encrypted token, offline retry queue, and the Play-policy prominent disclosure. See [`android/README.md`](android/README.md).
+- 📧 **Gmail connect:** read-only OAuth, Fernet-encrypted refresh token, last 30 days imported at once, email bodies never stored, dead links detected and shown as "Reconnect".
 - 🍎 **iPhone automation:** a Shortcuts "Message" automation posts bank SMS to `/api/ingest/sms` with a revocable bearer token (stored as a SHA-256 hash).
+- 📦 **Android APK built in CI:** `.github/workflows/android.yml` builds the companion app and publishes it as a download; the website links it with one tap through a `fluxapp://connect` deep link that only accepts the official server.
 - 🧾 **Ledger integrity:** cross-source dedupe, bank-balance reconciliation with drift alerts, a double-entry trial balance at `/api/ledger`, and integer paise everywhere.
-- 🔮 **Safe-to-spend, recurring bills, month-end forecast, Money Health Score.**
+- 🔮 **Personal safe-to-spend, plans, safety cushion, recurring bills, month-end forecast, money checks.**
 - 🧠 **Learns from corrections:** merchant rules, re-filing of past entries, measured categorisation accuracy, and an opt-in masked sample export for improving the parser.
-- 📷 **Scan & Pay:** NPCI UPI-linking-spec QR parsing, MCC → category, pre-spend check, then it opens your UPI app pre-filled.
-- 📈 **Invest from goals:** curated index and gold ETFs via Zerodha Kite Publisher, holdings and P&L, and practice mode without a key.
 - 🎙️ **Voice:** "spent 340 on Zomato", "aaj kitna kharch kar sakta hoon?", "what bills are coming up?". Rule parser first, Gemini fallback validated against a whitelist.
 - 📄 Statement import, budgets, goals, AI coach, monthly PDF report, CSV/PDF export, full data export and account deletion. Installable PWA.
 
@@ -78,7 +78,7 @@ flux/            Flask app (factory + blueprints)
   insights.py      safe-to-spend, recurring detection, cashback report
   observability.py request ids, JSON logs, Prometheus metrics
   security.py      auth, CSRF, rate limiting (per IP or per token), CSP, validation
-  api/             auth, money, pay, invest, statement, ingest, voice
+  api/             auth, money, plans, statement, ingest, gmail, voice
 packages/upi_parse/  pip-installable parser library + benchmarks (MIT)
 android/         Flux Companion (Kotlin)
 scripts/loadtest.py
@@ -87,8 +87,8 @@ tests/           pytest suite
 
 ## Regulatory design (why Flux never touches money)
 
-- **Payments:** initiating UPI payments needs NPCI approval as a Third-Party App Provider. Flux opens the user's own UPI app with `upi://pay?…` intent links, so the PIN and the money never pass through Flux.
-- **Investing:** SEBI's retail algo framework (fully in force from April 2026) requires static IPs and empanelment for API orders. Kite Publisher opens the order in Zerodha's own window for the user to confirm.
+- **Payments and investing:** initiating UPI payments needs NPCI approval as a Third-Party App Provider, and API stock orders need SEBI empanelment. Flux does neither: it only reads, so the PIN and the money never pass through Flux.
+- **Personal data (DPDP Act and Rules 2025):** plain-language notice, export and delete, purpose-limited use, and 18+ only because tracking spending habits counts as behavioural monitoring, which is restricted for under-18s.
 - **Bank data:** notifications, SMS and CSV today, all user-initiated and consented. The production path for direct bank sync is the RBI Account Aggregator framework through a licensed FIU partner (for example Setu).
 - **Google Play:** SMS permissions are restricted, so the Android app uses notification access with a prominent disclosure and consent screen.
 
@@ -115,14 +115,13 @@ Load test: see the header of `scripts/loadtest.py`. Docker: `docker build -t flu
 
 ## Deploy
 
-`render.yaml` deploys to Render with a persistent disk. Set `EMAIL_SENDER` and `EMAIL_PASSWORD`, and optionally `GEMINI_API_KEY`, `GOOGLE_CLIENT_ID`, `KITE_API_KEY` and `METRICS_TOKEN`. The full checklist is in [`docs/LAUNCH.md`](docs/LAUNCH.md).
+`render.yaml` deploys to Render with a persistent disk. Set `EMAIL_SENDER` and `EMAIL_PASSWORD`, and optionally `GEMINI_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `METRICS_TOKEN`. The full checklist is in [`docs/LAUNCH.md`](docs/LAUNCH.md).
 
 ## Roadmap
 
 - Account Aggregator sync via a licensed FIU partner.
 - Postgres plus a Redis rate limiter, then more gunicorn workers.
 - Publish `upi-parse` to PyPI, with accuracy on real consented samples.
-- UPI payment-result callback in the Android app (intent result) to close the Scan & Pay loop automatically.
 
 ---
 

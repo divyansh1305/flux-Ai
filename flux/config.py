@@ -63,13 +63,9 @@ class Config:
         self.GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
         self.GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 
-        # Zerodha Kite Publisher (optional). Without it, investing runs in clearly-labelled practice mode.
-        self.KITE_API_KEY = os.environ.get("KITE_API_KEY", "")
-
-        # Only real, working features are shown. Scan & Pay hands off to UPI apps, which we can't verify
-        # on every phone, so it is off unless switched on; investing appears only with a real Zerodha key.
-        self.FEATURE_PAY = _bool("FEATURE_PAY", False)
-        self.FEATURE_INVEST = bool(self.KITE_API_KEY) and _bool("FEATURE_INVEST", True)
+        # Android companion app download (built by .github/workflows/android.yml). Empty = hide the download.
+        self.ANDROID_APK_URL = os.environ.get(
+            "ANDROID_APK_URL", "https://github.com/divyansh1305/flux-Ai/releases/download/android-latest/flux-android.apk")
 
         # OTP policy
         self.OTP_TTL_SECONDS = 600

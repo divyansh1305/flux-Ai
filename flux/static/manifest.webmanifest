@@ -1,7 +1,7 @@
 {
-  "name": "Flux — Spend smarter, save automatically",
+  "name": "Flux — know what you can spend today",
   "short_name": "Flux",
-  "description": "Voice-first money app: scan & pay with a budget check, auto-save, and AI coaching.",
+  "description": "Know what you can safely spend today. Payments log themselves.",
   "start_url": "/app",
   "scope": "/",
   "display": "standalone",
@@ -9,7 +9,7 @@
   "theme_color": "#1f6b57",
   "icons": [{ "src": "/static/img/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }],
   "shortcuts": [
-    { "name": "Scan & Pay", "url": "/app/pay" },
+    { "name": "Plans", "url": "/app/plans" },
     { "name": "Add from SMS", "url": "/app/share" }
   ],
   "share_target": {

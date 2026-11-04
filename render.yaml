@@ -24,8 +24,6 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
-      - key: KITE_API_KEY
-        sync: false
       - key: APP_TIMEZONE
         value: Asia/Kolkata
       - key: METRICS_TOKEN
