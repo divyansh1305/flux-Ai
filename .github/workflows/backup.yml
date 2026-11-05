@@ -16,7 +16,19 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
+      - name: Check it's set up
+        id: check
+        env:
+          FLUX_URL: ${{ secrets.FLUX_URL }}
+        run: |
+          if [ -z "$FLUX_URL" ]; then
+            echo "Off-site backup isn't set up (no FLUX_URL secret). Skipping. On PythonAnywhere the daily task keeps backups in instance/backups."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Download newest backup
+        if: steps.check.outputs.ok == 'true'
         env:
           FLUX_URL: ${{ secrets.FLUX_URL }}
           BACKUP_TOKEN: ${{ secrets.BACKUP_TOKEN }}
@@ -25,13 +37,15 @@ jobs:
             "$FLUX_URL/admin/backup/latest" -o flux-backup.db
           head -c 15 flux-backup.db | grep -q "SQLite format 3"
       - name: Encrypt
+        if: steps.check.outputs.ok == 'true'
         env:
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
           gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_PASSPHRASE" \
             --symmetric --cipher-algo AES256 -o flux-backup.db.gpg flux-backup.db
           rm flux-backup.db
-      - uses: actions/upload-artifact@v4
+      - if: steps.check.outputs.ok == 'true'
+        uses: actions/upload-artifact@v4
         with:
           name: flux-backup-${{ github.run_number }}
           path: flux-backup.db.gpg

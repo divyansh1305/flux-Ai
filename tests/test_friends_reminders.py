@@ -259,11 +259,13 @@ def test_weekly_note_compares_with_usual_weeks(client, user):
 
 # ─── PDF statements ──────────────────────────────────────────
 def _statement_pdf(password=None):
+    from reportlab.lib import pdfencrypt
     from reportlab.lib.pagesizes import A4
     from reportlab.pdfgen import canvas
 
     buf = io.BytesIO()
-    c = canvas.Canvas(buf, pagesize=A4)
+    enc = pdfencrypt.StandardEncryption(password, canPrint=1, strength=128) if password else None
+    c = canvas.Canvas(buf, pagesize=A4, encrypt=enc)
     y = 780
     for row in [[(40, "Date"), (110, "Narration"), (400, "Withdrawal Amt."), (480, "Deposit Amt."), (550, "Closing Balance")],
                 [(40, "01/11/26"), (110, "UPI-SWIGGY-swiggy@icici-430512345678"), (450, "450.00"), (590, "24,550.00")],
@@ -274,17 +276,7 @@ def _statement_pdf(password=None):
             (c.drawRightString if t[0].isdigit() and "." in t else c.drawString)(x, y, t)
         y -= 16
     c.save()
-    data = buf.getvalue()
-    if password:
-        from pypdf import PdfReader, PdfWriter
-
-        w = PdfWriter()
-        w.append(PdfReader(io.BytesIO(data)))
-        w.encrypt(password)
-        out = io.BytesIO()
-        w.write(out)
-        data = out.getvalue()
-    return data
+    return buf.getvalue()
 
 
 def _preview(client, data, password=None):
