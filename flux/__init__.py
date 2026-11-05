@@ -1,4 +1,5 @@
-"""Flux — spend smarter, save automatically."""
+"""Flux — know what you can spend today."""
+import json
 import os
 
 from flask import Flask, jsonify, redirect, request, send_from_directory
@@ -77,14 +78,17 @@ def create_app(overrides=None):
     # ─── Pages ────────────────────────────────────────────────
     page_cache = {}
 
-    def page(name):
+    def page_html(name):
         html = page_cache.get(name)
         if html is None:
             with open(os.path.join(PAGES_DIR, name), encoding="utf-8") as f:
                 html = speed.version_assets(f.read(), version)
             if not app.config.get("TESTING") and not app.debug:
                 page_cache[name] = html
-        resp = app.response_class(html, mimetype="text/html")
+        return html
+
+    def page(name):
+        resp = app.response_class(page_html(name), mimetype="text/html")
         resp.headers["Cache-Control"] = "no-cache"
         return resp
 
@@ -108,6 +112,17 @@ def create_app(overrides=None):
     @app.get("/healthz")
     def healthz():
         return {"ok": True}
+
+    @app.get("/sw.js")
+    def service_worker():
+        # Served from the root so it can cover every page. Its text changes with each deploy (the version),
+        # which is how phones learn there is an update.
+        shell = [p for p in APP_PAGES] + [a for name in set(APP_PAGES.values()) for a in speed.assets_in(page_html(name))]
+        js = speed.SERVICE_WORKER.replace("__VERSION__", version).replace("__SHELL__", json.dumps(sorted(set(shell))))
+        resp = app.response_class(js, mimetype="application/javascript")
+        resp.headers["Cache-Control"] = "no-cache"
+        resp.headers["Service-Worker-Allowed"] = "/"
+        return resp
 
     @app.get("/manifest.webmanifest")
     def manifest():

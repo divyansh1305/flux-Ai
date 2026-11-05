@@ -1,3 +1,5 @@
+/* Signing in starts fresh: forget numbers this browser kept from any earlier session. */
+try { Object.keys(localStorage).filter((k) => k.startsWith("fluxc:")).forEach((k) => localStorage.removeItem(k)); } catch (e) { /* ignore */ }
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);

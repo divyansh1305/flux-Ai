@@ -50,3 +50,12 @@ def test_static_files_are_versioned_cached_and_compressed(client):
     assert b".btn" in gzip.decompress(r.data)
     # Without the version (or with an old one) the browser must re-check, so updates show up at once.
     assert client.get("/static/css/app.css?v=old").headers["Cache-Control"] == "no-cache"
+
+
+def test_service_worker_lists_the_app_shell(client):
+    r = client.get("/sw.js")
+    assert r.status_code == 200 and r.mimetype == "application/javascript"
+    js = r.get_data(as_text=True)
+    assert '"/app"' in js and '"/app/plans"' in js and "/static/js/core.js?v=" in js
+    assert "/api/" not in js.split("const SHELL")[1].split("\n")[0]  # data is never cached by the worker
+    assert r.headers["Cache-Control"] == "no-cache"

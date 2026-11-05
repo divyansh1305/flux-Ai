@@ -34,13 +34,16 @@
     async function load(append) {
       try {
         const query = qs({ size: 30 });
-        const pre = early && query === "page=1&size=30" ? await early : null;
+        const show = (r) => {
+          const rows = r.items.map((x) => txRow(x, deleteTx));
+          if (append) list.append(...rows); else list.replaceChildren(...rows);
+          if (!append && !r.items.length) list.replaceChildren(el("div", { class: "empty" }, el("b", null, "No transactions found"), "Try different filters, or add one."));
+          more.classList.toggle("hidden", !r.has_more);
+        };
+        const pre = query === "page=1&size=30" ? early : null;
         early = null;
-        const r = pre && pre.items ? pre : await api("/api/transactions?" + query);
-        const rows = r.items.map((x) => txRow(x, deleteTx));
-        if (append) list.append(...rows); else list.replaceChildren(...rows);
-        if (!append && !r.items.length) list.replaceChildren(el("div", { class: "empty" }, el("b", null, "No transactions found"), "Try different filters, or add one."));
-        more.classList.toggle("hidden", !r.has_more);
+        if (!append && query === "page=1&size=30") await window.Flux.live("/api/transactions?" + query, show, pre);
+        else show(await api("/api/transactions?" + query));
       } catch (e) { err(e); }
     }
     function reload() { state.page = 1; load(false); }

@@ -168,15 +168,15 @@ def rate_limit(limit, window, scope=None, by="ip"):
 CSP = "; ".join(
     [
         "default-src 'self'",
-        "script-src 'self' https://accounts.google.com/gsi/client https://kite.trade",
+        "script-src 'self' https://accounts.google.com/gsi/client",
         "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style",
-        "img-src 'self' data: blob: https://*.googleusercontent.com https://kite.trade https://*.zerodha.com",
+        "img-src 'self' data: blob: https://*.googleusercontent.com",
         "font-src 'self'",
-        "connect-src 'self' https://accounts.google.com/gsi/ https://kite.trade",
-        "frame-src https://accounts.google.com/gsi/ https://kite.trade https://kite.zerodha.com",
+        "connect-src 'self' https://accounts.google.com/gsi/",
+        "frame-src https://accounts.google.com/gsi/",
         "frame-ancestors 'none'",
         "base-uri 'self'",
-        "form-action 'self' https://kite.trade https://kite.zerodha.com",
+        "form-action 'self'",
         "object-src 'none'",
     ]
 )

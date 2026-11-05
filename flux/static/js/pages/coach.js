@@ -32,8 +32,8 @@
       el("button", { class: "btn", onclick: () => download("/api/reports/monthly.pdf", "flux-monthly-report.pdf").catch(err) }, icon("download"), "Monthly report (PDF)")),
       el("div", { class: "grid g-main" }, top, coachCard));
 
-    async function load() {
-      const [ins, me] = await Promise.all([api("/api/insights"), api("/api/auth/me")]);
+    async function load() { await window.Flux.live("/api/insights", (ins) => paint(ins, window.Flux.config)); }
+    function paint(ins, me) {
       document.getElementById("ai-state").textContent = me.ai_available ? "AI coach on" : "Quick answers";
       const h = ins.health, f = ins.forecast, tm = ins.this_month, lm = ins.last_month;
       const scoreCard = el("div", { class: "card" }, el("div", { class: "card-head" }, el("h2", null, "Money health")),

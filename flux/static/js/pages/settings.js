@@ -81,7 +81,7 @@
             el("p", { class: "muted small" }, "This permanently deletes your account, payments, plans, budgets and goals, and removes Flux's access to your Gmail. It cannot be undone."), input),
             [{ label: "Cancel", value: null, cls: "ghost" }, { label: "Delete forever", submit: true, cls: "danger", value: () => input.value }]);
           if (v === null) return;
-          try { await api("/api/account", { method: "DELETE", body: { confirm: v } }); location.href = "/"; } catch (e) { err(e); }
+          try { await api("/api/account", { method: "DELETE", body: { confirm: v } }); window.Flux.cacheClear(); location.href = "/"; } catch (e) { err(e); }
         } }, icon("trash"), "Delete account")));
 
     // Automatic tracking — one personal link, a bank picker, copy buttons. Only real steps.

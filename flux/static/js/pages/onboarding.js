@@ -19,6 +19,7 @@
     async function finish(next) {
       try {
         await api("/api/account", { method: "PATCH", body: { onboarded: true } });
+        window.Flux.cacheClear();
         location.href = next;
       } catch (e) { err(e); }
     }

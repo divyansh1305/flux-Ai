@@ -42,9 +42,8 @@
     main.replaceChildren(pageHead("Goals", "Track what you're saving for. Money you set aside stays in your bank; Flux just stops counting it as spendable.",
       el("button", { class: "btn primary", onclick: goalModal }, icon("plus"), "New goal")), box);
 
-    async function load() {
-      const [goals, me] = await Promise.all([api("/api/goals"), api("/api/auth/me")]);
-      const u = me.user;
+    async function load() { await window.Flux.live("/api/goals", (goals) => paint(goals, window.Flux.user)); }
+    function paint(goals, u) {
       const autoGoal = goals.find((g) => g.id === u.autosave_goal_id);
       const modeText = u.autosave_mode === "off" ? "Automatic set-aside is off."
         : u.autosave_mode === "roundup" ? `Every expense rounds up to the next ₹${u.autosave_value}` : `${u.autosave_value}% of every expense`;
@@ -62,7 +61,7 @@
           el("button", { class: "btn sm primary", onclick: () => moveModal(g, false) }, "Add money"),
           g.saved > 0 ? el("button", { class: "btn sm", onclick: () => moveModal(g, true) }, "Withdraw") : null,
           g.id !== u.autosave_goal_id ? el("button", { class: "btn sm ghost", onclick: async () => {
-            try { await api("/api/account", { method: "PATCH", body: { autosave_goal_id: g.id } }); ok(`Set-asides now go to ${g.title}.`); load(); } catch (e) { err(e); }
+            try { await api("/api/account", { method: "PATCH", body: { autosave_goal_id: g.id } }); ok(`Set-asides now go to ${g.title}.`); window.Flux.user = { ...window.Flux.user, autosave_goal_id: g.id }; load(); } catch (e) { err(e); }
           } }, "Set aside here") : null,
           el("button", { class: "btn sm ghost", onclick: async () => {
             if (!(await confirmBox("Delete goal?", `${g.title} holds ${inr(g.saved)}. Deleting it returns that money to your balance.`, true))) return;

@@ -16,13 +16,13 @@
     const content = el("div", { class: "stack narrow", style: { gap: "18px" } });
     main.replaceChildren(content);
     const load = async () => {
-      const first = early ? await early : null;
+      const pre = early;
       early = null;
-      const d = first && first.safe ? first : await api("/api/dashboard");
-      content.replaceChildren(...build(d, user).filter(Boolean));
+      await window.Flux.live("/api/dashboard", (d) => content.replaceChildren(...build(d, user).filter(Boolean)), pre);
     };
     onRefresh(load);
     await load();
+    window.Flux.prefetch(["/api/meta", "/api/transactions?page=1&size=30", "/api/plans", "/api/insights", "/api/goals"]);
     const params = new URLSearchParams(location.search);
     if (params.get("gmail") === "connected") {
       window.Flux.ok("Gmail connected. Your bank payments from the last 30 days are being added.");
@@ -57,19 +57,21 @@
     } catch (e) { window.Flux.err(e); }
   }
 
-  async function act(key) {
-    try { await api("/api/checks/dismiss", { method: "POST", body: { key } }); window.Flux.refresh(); } catch (e) { window.Flux.err(e); }
+  async function act(key, card) {
+    if (card) card.remove();  // gone at once; the server catches up
+    try { await api("/api/checks/dismiss", { method: "POST", body: { key } }); window.Flux.refresh(); } catch (e) { window.Flux.err(e); window.Flux.refresh(); }
   }
 
   function checkCard(c) {
-    return el("div", { class: "notice " + (c.level === "caution" ? "caution" : "info"), style: { alignItems: "flex-start" } },
+    const card = el("div", { class: "notice " + (c.level === "caution" ? "caution" : "info"), style: { alignItems: "flex-start" } },
       icon(c.type === "refund" ? "repeat" : c.type === "price" ? "trend" : "alert"),
       el("div", { style: { flex: 1 } },
         el("b", null, c.title),
         el("div", { class: "small", style: { marginTop: "4px" } }, c.body),
         c.ref ? el("div", { class: "tiny faint", style: { marginTop: "4px" } }, "Bank reference: " + c.ref) : null,
         el("div", { class: "row", style: { gap: "8px", marginTop: "10px", flexWrap: "wrap" } },
-          c.actions.map((a, i) => el("button", { class: "btn sm" + (i === 0 ? "" : " ghost"), onclick: () => act(a.key) }, a.label)))));
+          c.actions.map((a, i) => el("button", { class: "btn sm" + (i === 0 ? "" : " ghost"), onclick: () => act(a.key, card) }, a.label)))));
+    return card;
   }
 
   function setupCard(s) {

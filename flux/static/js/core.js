@@ -126,7 +126,32 @@
     const type = res.headers.get("Content-Type") || "";
     const data = type.includes("application/json") ? await res.json() : await res.blob();
     if (!res.ok) throw new Error((data && data.error) || "Something went wrong.");
+    if (init.method !== "GET") cacheDrop("/api/auth/me");  // settings may have changed
     return data;
+  }
+
+  // ─── Instant screens: show the last numbers this phone saw, then swap in fresh ones ──
+  // Kept in this browser only, cleared on sign-out and on the sign-in page.
+  const CK = "fluxc:";
+  function cacheGet(path) { try { const v = localStorage.getItem(CK + path); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+  function cacheSet(path, data) { try { localStorage.setItem(CK + path, JSON.stringify(data)); } catch (e) { /* full or blocked */ } }
+  function cacheDrop(path) { try { localStorage.removeItem(CK + path); } catch (e) { /* ignore */ } }
+  function cacheClear() { try { Object.keys(localStorage).filter((k) => k.startsWith(CK)).forEach((k) => localStorage.removeItem(k)); } catch (e) { /* ignore */ } }
+  /* live(path, onData[, early]): calls onData(cached) at once if this phone has it, then onData(fresh) when the
+     server answers (only if something changed). `early` = a request already started for the same path. */
+  async function live(path, onData, early) {
+    const cached = cacheGet(path);
+    if (cached) { try { onData(cached, true); } catch (e) { cacheDrop(path); } }
+    let fresh = early ? await early : null;
+    if (!fresh || fresh.error) fresh = await api(path);
+    cacheSet(path, fresh);
+    if (!cached || JSON.stringify(cached) !== JSON.stringify(fresh)) onData(fresh, false);
+    return fresh;
+  }
+  // Fill the saved copies for other screens while the phone is idle, so their first open is instant too.
+  function prefetch(paths) {
+    const run = () => paths.reduce((p, path) => p.then(() => api(path).then((d) => cacheSet(path, d)).catch(() => {})), Promise.resolve());
+    if ("requestIdleCallback" in window) requestIdleCallback(run, { timeout: 3000 }); else setTimeout(run, 800);
   }
   async function download(path, filename) {
     const blob = await api(path);
@@ -178,6 +203,8 @@
   async function meta() {
     if (META) return META;
     try { const c = JSON.parse(sessionStorage.getItem("flux_meta") || "null"); if (c && c.build === BUILD) return (META = c.data); } catch (e) { /* storage blocked */ }
+    const pre = cacheGet("/api/meta");  // filled by prefetch from Home
+    if (pre && pre.expense_categories) return (META = pre);
     META = await api("/api/meta");
     try { sessionStorage.setItem("flux_meta", JSON.stringify({ build: BUILD, data: META })); } catch (e) { /* ignore */ }
     return META;
@@ -300,6 +327,7 @@
 
   async function logout() {
     try { await api("/api/auth/logout", { method: "POST", allow401: true }); } catch (e) { /* ignore */ }
+    cacheClear();
     location.href = "/login";
   }
 
@@ -308,9 +336,26 @@
     ? api("/api/auth/me", { allow401: true }).catch((e) => ({ error: e })) : null;
 
   async function boot(renderPage) {
-    const me = (mePromise && await mePromise) || await api("/api/auth/me", { allow401: true });
-    if (me.error) throw me.error;
-    if (!me.user) { location.href = "/login"; return; }
+    const cachedMe = cacheGet("/api/auth/me");
+    let me;
+    if (cachedMe && cachedMe.user) {
+      me = cachedMe;  // draw now; check with the server in the background
+      (mePromise || api("/api/auth/me", { allow401: true })).then((fresh) => {
+        if (!fresh || fresh.error) return;
+        if (!fresh.user) { cacheClear(); location.href = "/login"; return; }
+        cacheSet("/api/auth/me", fresh);
+        if (fresh.user.id !== cachedMe.user.id || fresh.user.onboarded !== cachedMe.user.onboarded) { location.reload(); return; }
+        USER = fresh.user; CONFIG = fresh;
+      });
+    } else {
+      me = (mePromise && await mePromise) || await api("/api/auth/me", { allow401: true });
+      if (me.error) throw me.error;
+      if (!me.user) { cacheClear(); location.href = "/login"; return; }
+      cacheSet("/api/auth/me", me);
+    }
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || ["localhost", "127.0.0.1"].includes(location.hostname))) {
+      try { navigator.serviceWorker.register("/sw.js").catch(() => {}); } catch (e) { /* not supported */ }
+    }
     USER = me.user;
     CONFIG = me;
     if (!USER.onboarded && location.pathname !== "/onboarding") { location.href = "/onboarding"; return; }
@@ -400,7 +445,7 @@
 
   window.Flux = {
     el, icon, api, download, toast, ok, err, modal, confirmBox, inr, inr0, dateFmt, todayISO, CAT_EMOJI, CAT_COLORS, avatar,
-    boot, pageHead, txRow, deleteTx, editTx, addTransactionModal, planModal, refresh, onRefresh, logout, meta,
+    boot, pageHead, txRow, deleteTx, editTx, addTransactionModal, planModal, live, prefetch, cacheClear, refresh, onRefresh, logout, meta,
     get user() { return USER; }, set user(u) { USER = u; }, get config() { return CONFIG; },
   };
 })();

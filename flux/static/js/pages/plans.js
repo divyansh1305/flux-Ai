@@ -43,17 +43,20 @@
     const title = el("div", { class: "tx-title", style: editable ? { cursor: "pointer" } : null, title: editable ? "Edit" : null,
       onclick: editable ? () => planModal(p) : null }, p.title);
     const sub = p.kind === "income" ? (p.sure ? "Coming in" : "Maybe (not counted)") : "Kept aside";
-    return el("div", { class: "tx", style: past || p.done ? { opacity: 0.6 } : null }, avatar(p.title),
+    const row = el("div", { class: "tx", style: past || p.done ? { opacity: 0.6 } : null }, avatar(p.title),
       el("div", { class: "tx-main" }, title, el("div", { class: "tx-sub" }, `${p.done ? "Done" : sub} · ${dateFmt(p.date)}`)),
       el("div", { class: "tx-amt" + (p.kind === "income" ? " green" : "") }, (p.kind === "income" ? "+" : "") + inr0(p.amount)),
       el("div", { class: "row", style: { gap: "2px" } },
         !p.done ? el("button", { class: "icon-btn", title: "Mark done", "aria-label": "Mark done", onclick: async () => {
-          try { await api(`/api/plans/${p.id}`, { method: "PATCH", body: { done: true } }); ok("Marked done."); window.Flux.refresh(); } catch (e) { err(e); }
+          row.style.opacity = "0.5";  // instant feedback; the list refreshes once the server confirms
+          try { await api(`/api/plans/${p.id}`, { method: "PATCH", body: { done: true } }); ok("Marked done."); window.Flux.refresh(); } catch (e) { row.style.opacity = ""; err(e); }
         } }, icon("check")) : null,
         el("button", { class: "icon-btn", title: "Delete", "aria-label": "Delete plan", onclick: async () => {
           if (!(await confirmBox("Delete plan?", `${p.title} · ${inr0(p.amount)}`, true))) return;
-          try { await api(`/api/plans/${p.id}`, { method: "DELETE" }); window.Flux.refresh(); } catch (e) { err(e); }
+          row.remove();
+          try { await api(`/api/plans/${p.id}`, { method: "DELETE" }); window.Flux.refresh(); } catch (e) { err(e); window.Flux.refresh(); }
         } }, icon("trash"))));
+    return row;
   }
 
   let early = api("/api/plans", { allow401: true }).catch(() => null);
@@ -62,10 +65,17 @@
     const box = el("div", { class: "stack narrow" });
     main.replaceChildren(pageHead("Plans", "Tell Flux what's coming, so today's number is real. Tap a plan to edit it.",
       el("button", { class: "btn primary", onclick: () => planModal() }, icon("plus"), "Add a plan")), box);
+    let me = { user: window.Flux.user };
+    let lastPlans = null;
     const load = async () => {
-      const pre = early ? await early : null;
+      const pre = early;
       early = null;
-      const [plans, me] = await Promise.all([Array.isArray(pre) ? pre : api("/api/plans"), api("/api/auth/me")]);
+      const meNow = api("/api/auth/me").then((m) => { me = m; }).catch(() => {});
+      await window.Flux.live("/api/plans", (plans) => { lastPlans = plans; draw(plans); }, pre);
+      await meNow;
+      if (lastPlans) draw(lastPlans);  // money setup shows what was just saved
+    };
+    const draw = (plans) => {
       const today = window.Flux.todayISO();
       const open = plans.filter((p) => !p.done && p.date >= today);
       const old = plans.filter((p) => p.done || p.date < today);
@@ -78,7 +88,7 @@
         old.length ? el("section", null, el("div", { class: "section-title" }, el("span", null, "Past and done")),
           el("div", { class: "card", style: { padding: "4px 20px" } }, el("div", { class: "tx-list" }, old.map((p) => planRow(p, true))))) : null,
         moneyCard(me.user, load)].filter(Boolean));
-      if (location.hash === "#money") setTimeout(() => document.getElementById("money").scrollIntoView({ behavior: "smooth" }), 50);
+      if (location.hash === "#money") setTimeout(() => { const m = document.getElementById("money"); if (m) m.scrollIntoView({ behavior: "smooth" }); }, 50);
     };
     onRefresh(load);
     await load();
