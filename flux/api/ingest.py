@@ -1,4 +1,4 @@
-"""Automatic transaction logging from bank SMS, without opening Flux.
+"""Automatic transaction logging from bank SMS, without opening Kitna.
 
 iPhone: a Shortcuts automation ("When I get a message containing 'debited'… → Get contents
 of URL") POSTs the SMS text here. Android: any SMS-forwarder app can do the same.
@@ -140,7 +140,7 @@ def ingest_row(user, row, source):
 
     analytics.track(user["id"], "auto_payment", source)
     sign = "-" if row["kind"] == "expense" else "+"
-    msg = f"Flux logged {sign}₹{row['amount']:,.2f} · {row['note']} ({row['category']})"
+    msg = f"Kitna logged {sign}₹{row['amount']:,.2f} · {row['note']} ({row['category']})"
     if res["autosaved"]:
         msg += f" · ₹{rupees(res['autosaved']):,.2f} set aside"
     return {"logged": True, "message": msg, "transaction_id": res["id"], "kind": row["kind"], "amount": row["amount"],
@@ -189,7 +189,7 @@ def _ingest_sms(user):
             db.commit()
         if watching:
             return jsonify({"logged": False, "watching": True,
-                            "reason": "Failed payment noted. Flux will watch for the money to come back."})
+                            "reason": "Failed payment noted. Kitna will watch for the money to come back."})
         return jsonify({"logged": False, "reason": "Not a bank transaction (OTPs and offers are ignored)."})
     out = ingest_row(user, row, "sms")
     db.commit()
@@ -199,7 +199,7 @@ def _ingest_sms(user):
 @bp.post("/ingest/notification")
 @rate_limit(120, 60, scope="ingest_notification", by="token")
 def ingest_notification():
-    """Called by the Flux Android companion app (NotificationListenerService)."""
+    """Called by the Kitna Android companion app (NotificationListenerService)."""
     from upi_parse import NOTIFICATION_PACKAGES, parse_notification
 
     from .. import clock

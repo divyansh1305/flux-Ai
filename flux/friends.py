@@ -3,9 +3,9 @@
 How it stays automatic:
   * Split a payment you made → one "they owe" row per friend, linked to that payment. Your budgets and
     "spent this month" then count only your share; your balance stays what the bank has.
-  * When money comes in (SMS, Gmail, Android notification, statement or by hand) Flux looks at the open rows:
+  * When money comes in (SMS, Gmail, Android notification, statement or by hand) Kitna looks at the open rows:
       - same amount (±₹1) AND the friend's name is in the payment → ticked off by itself, filed as "Paid back";
-      - same amount but no name (some banks hide it) → Flux asks "Was this from Rahul?" instead of guessing.
+      - same amount but no name (some banks hide it) → Kitna asks "Was this from Rahul?" instead of guessing.
   * Money you send to a friend you owe is matched the same way.
 """
 import re

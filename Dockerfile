@@ -1,4 +1,4 @@
-# Flux – production image.  docker build -t flux . && docker run -p 8000:8000 --env-file .env -v flux-data:/data flux
+# Kitna – production image.  docker build -t flux . && docker run -p 8000:8000 --env-file .env -v flux-data:/data flux
 FROM python:3.12-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \

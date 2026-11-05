@@ -1,5 +1,5 @@
 (function () {
-  const { el, icon, api, download, ok, err, modal, pageHead, logout } = window.Flux;
+  const { el, icon, api, download, ok, err, modal, pageHead, logout } = window.Kitna;
 
   async function render(main) {
     const [me, goals] = await Promise.all([api("/api/auth/me"), api("/api/goals")]);
@@ -43,7 +43,7 @@
       goals.map((g) => el("option", { value: g.id, selected: u.autosave_goal_id === g.id ? true : null }, g.title)));
     fillValues();
     const autosave = el("div", { class: "card" }, el("h2", null, "Set aside as you spend"),
-      el("p", { class: "small muted", style: { margin: "6px 0 14px" } }, "After each expense, Flux sets a little aside for your goal, only if you have it. The money stays in your bank account: Flux just stops counting it as spendable. To really save it, move it to a savings account or RD."),
+      el("p", { class: "small muted", style: { margin: "6px 0 14px" } }, "After each expense, Kitna sets a little aside for your goal, only if you have it. The money stays in your bank account: Kitna just stops counting it as spendable. To really save it, move it to a savings account or RD."),
       el("div", { class: "form" },
         el("label", { class: "field" }, "Mode", mode),
         el("label", { class: "field" }, "Amount", value), example,
@@ -59,29 +59,29 @@
     const langSel = el("select", { class: "input" }, [["en-IN", "English (India)"], ["hi-IN", "हिंदी / Hinglish"]].map(([v, l]) => el("option", { value: v, selected: u.voice_lang === v ? true : null }, l)));
     langSel.onchange = () => save({ voice_lang: langSel.value }, "Voice language updated. Reload to apply.");
     const wake = el("input", { type: "checkbox", checked: V && V.wakeOn ? true : null, disabled: V && V.supported ? null : true });
-    wake.onchange = () => { V.setWake(wake.checked); ok(wake.checked ? 'Say "Hey Flux" any time while Flux is open.' : "Wake word off."); };
+    wake.onchange = () => { V.setWake(wake.checked); ok(wake.checked ? 'Say "Hey Kitna" any time while Kitna is open.' : "Wake word off."); };
     const voiceCard = el("div", { class: "card" }, el("h2", null, "Voice assistant"),
       el("div", { class: "form", style: { marginTop: "14px" } },
         el("label", { class: "field" }, "Language I'll speak", langSel),
-        el("label", { class: "row small", style: { cursor: "pointer" } }, wake, el("span", null, el("b", null, '"Hey Flux" wake word'), el("br"),
-          el("span", { class: "muted" }, "Listens for “Hey Flux” while this tab is open. Audio is processed by your browser's speech service; Flux only receives the text."))),
+        el("label", { class: "row small", style: { cursor: "pointer" } }, wake, el("span", null, el("b", null, '"Hey Kitna" wake word'), el("br"),
+          el("span", { class: "muted" }, "Listens for “Hey Kitna” while this tab is open. Audio is processed by your browser's speech service; Kitna only receives the text."))),
         !(V && V.supported) ? el("div", { class: "notice caution" }, "Your browser doesn't support voice input. Use Chrome, Edge or Safari. Typing commands still works.") : null,
         el("div", null, el("button", { class: "btn", onclick: () => V && V.open(true) }, icon("mic"), "Try it now"))));
 
     // Data & privacy
     const data = el("div", { class: "card", id: "data" }, el("h2", null, "Your data"),
-      el("p", { class: "small muted", style: { margin: "6px 0 14px" } }, "You own your data. See exactly what Flux has, download it, or delete your account permanently."),
+      el("p", { class: "small muted", style: { margin: "6px 0 14px" } }, "You own your data. See exactly what Kitna has, download it, or delete your account permanently."),
       el("div", { class: "row wrap" },
-        el("a", { class: "btn", href: "/app/privacy-center" }, icon("eye"), "What Flux knows"),
-        el("button", { class: "btn", onclick: () => download("/api/account/export", "flux-my-data.json").catch(err) }, icon("download"), "Download my data"),
+        el("a", { class: "btn", href: "/app/privacy-center" }, icon("eye"), "What Kitna knows"),
+        el("button", { class: "btn", onclick: () => download("/api/account/export", "kitna-my-data.json").catch(err) }, icon("download"), "Download my data"),
         el("button", { class: "btn", onclick: logout }, icon("out"), "Sign out"),
         el("button", { class: "btn danger", onclick: async () => {
           const input = el("input", { class: "input", placeholder: "Type DELETE" });
           const v = await modal("Delete account?", el("div", { class: "form" },
-            el("p", { class: "muted small" }, "This permanently deletes your account, payments, plans, budgets and goals, and removes Flux's access to your Gmail. It cannot be undone."), input),
+            el("p", { class: "muted small" }, "This permanently deletes your account, payments, plans, budgets and goals, and removes Kitna's access to your Gmail. It cannot be undone."), input),
             [{ label: "Cancel", value: null, cls: "ghost" }, { label: "Delete forever", submit: true, cls: "danger", value: () => input.value }]);
           if (v === null) return;
-          try { await api("/api/account", { method: "DELETE", body: { confirm: v } }); window.Flux.cacheClear(); location.href = "/"; } catch (e) { err(e); }
+          try { await api("/api/account", { method: "DELETE", body: { confirm: v } }); window.Kitna.cacheClear(); location.href = "/"; } catch (e) { err(e); }
         } }, icon("trash"), "Delete account")));
 
     // Automatic tracking — one personal link, a bank picker, copy buttons. Only real steps.
@@ -104,18 +104,18 @@
     }
 
     async function gmailBlock() {
-      if (!(window.Flux.config.features || {}).gmail) return null;
+      if (!(window.Kitna.config.features || {}).gmail) return null;
       const g = await api("/api/gmail");
       if (!g.connected) {
         return el("div", { class: "notice info", style: { flexDirection: "column", alignItems: "stretch", gap: "10px" } },
-          el("div", null, el("b", null, "Easiest: connect Gmail. "), "Most banks email you for every payment. Flux reads only those alert emails (read-only: it can't send, delete or change anything) and adds the payments by itself. Works on iPhone and Android."),
+          el("div", null, el("b", null, "Easiest: connect Gmail. "), "Most banks email you for every payment. Kitna reads only those alert emails (read-only: it can't send, delete or change anything) and adds the payments by itself. Works on iPhone and Android."),
           el("div", null, el("a", { class: "btn primary", href: "/gmail/connect" }, "Connect Gmail")),
-          el("div", { class: "tiny faint" }, "Google will say \"Google hasn't verified this app\" because Flux is new. Tap Continue. You can disconnect any time."));
+          el("div", { class: "tiny faint" }, "Google will say \"Google hasn't verified this app\" because Kitna is new. Tap Continue. You can disconnect any time."));
       }
-      const when = g.last_sync_at ? window.Flux.dateFmt(g.last_sync_at.slice(0, 10)) + " " + g.last_sync_at.slice(11, 16) + " UTC" : "not yet";
+      const when = g.last_sync_at ? window.Kitna.dateFmt(g.last_sync_at.slice(0, 10)) + " " + g.last_sync_at.slice(11, 16) + " UTC" : "not yet";
       if (g.needs_reconnect) {
         return el("div", { class: "notice caution", style: { flexDirection: "column", alignItems: "stretch", gap: "10px" } },
-          el("div", null, el("b", null, "Gmail needs to be reconnected. "), `Google stopped sharing ${g.email}'s bank emails with Flux, so new email payments aren't coming in.`),
+          el("div", null, el("b", null, "Gmail needs to be reconnected. "), `Google stopped sharing ${g.email}'s bank emails with Kitna, so new email payments aren't coming in.`),
           el("div", null, el("a", { class: "btn primary", href: "/gmail/connect" }, "Reconnect Gmail")));
       }
       return el("div", { class: "notice ok", style: { flexDirection: "column", alignItems: "stretch", gap: "8px" } },
@@ -136,7 +136,7 @@
       const [st, gm] = await Promise.all([api("/api/ingest/token"), gmailBlock()]);
       const kids = [];
       kids.push(el("p", { class: "small muted", style: { margin: 0 } },
-        "Flux reads only your bank's payment messages, never your chats or OTPs, and never your bank password."));
+        "Kitna reads only your bank's payment messages, never your chats or OTPs, and never your bank password."));
       if (gm) {
         kids.push(gm);
         kids.push(el("div", { class: "small muted", style: { marginTop: "4px" } }, "Or set up your phone:"));
@@ -171,10 +171,10 @@
           ["Search ", el("b", null, "Get Contents of URL"), " and add it. Tap ", el("b", null, "URL"), " and paste your personal link."],
           ["Tap the small ", el("b", null, "›"), " on that block. Set ", el("b", null, "Method"), " to ", el("b", null, "POST"), ", ", el("b", null, "Request Body"), " to ", el("b", null, "File"), ", then tap ", el("b", null, "File"), " and pick ", el("b", null, "Shortcut Input"), ". Tap ", el("b", null, "Done"), "."],
           ["Do steps 1–4 once more with the word ", el("code", null, words[1]), " ", copy(words[1], "Word"), " so money you receive is added too."],
-          ["Test it: send ₹1 by UPI. It shows up in Flux under Recent within a few seconds."],
+          ["Test it: send ₹1 by UPI. It shows up in Kitna under Recent within a few seconds."],
         ]));
       } else {
-        const apk = (window.Flux.config.features || {}).android_apk;
+        const apk = (window.Kitna.config.features || {}).android_apk;
         if (!apk) {
           kids.push(el("div", { class: "notice info" }, icon("info"), el("div", null,
             el("b", null, "Android app: coming soon. "), "Until then, ",
@@ -186,14 +186,14 @@
               const r = await api("/api/ingest/token", { method: "POST" });
               location.href = `fluxapp://connect?server=${encodeURIComponent(r.server)}&token=${encodeURIComponent(r.token)}`;
             } catch (e) { err(e); }
-          } }, "Link the Flux app");
+          } }, "Link the Kitna Companion app");
           kids.push(el("p", { class: "small", style: { margin: 0 } },
-            "The Flux app logs every GPay, PhonePe, Paytm and bank payment by itself. It reads only payment notifications, never chats or OTPs, and has no SMS permission."));
+            "The Kitna Companion app logs every GPay, PhonePe, Paytm and bank payment by itself. It reads only payment notifications, never chats or OTPs, and has no SMS permission."));
           kids.push(numbered([
-            ["Download the app ", el("a", { class: "btn sm", href: apk }, icon("download"), "Flux for Android"), ". Open the file and allow your browser to install it (Android asks once)."],
+            ["Download the app ", el("a", { class: "btn sm", href: apk }, icon("download"), "Kitna for Android"), ". Open the file and allow your browser to install it (Android asks once)."],
             ["Come back to this page on the same phone and tap ", linkApp, ". It opens the app and links your account."],
-            ["In the app: tick the box, tap ", el("b", null, "Open Notification access settings"), ", choose Flux Companion and allow it. If Android says \"Restricted setting\", the app shows you the one extra step."],
-            ["Test it: pay ₹1 by UPI. It appears in Flux under Recent within a minute."],
+            ["In the app: tick the box, tap ", el("b", null, "Open Notification access settings"), ", choose Kitna Companion and allow it. If Android says \"Restricted setting\", the app shows you the one extra step."],
+            ["Test it: pay ₹1 by UPI. It appears in Kitna under Recent within a minute."],
           ]));
           if (!isAndroid) kids.push(el("div", { class: "tiny faint" }, "Open this page on your Android phone to do these steps."));
         }
@@ -229,17 +229,17 @@
         ok(contrib.checked ? "Thanks! Masked copies of new auto-logged messages will be kept for you to export." : "Turned off. Saved samples deleted.");
       } catch (e) { err(e); }
     };
-    const learnCard = el("div", { class: "card", style: { gridColumn: "1 / -1" } }, el("h2", null, "What Flux has learned"),
+    const learnCard = el("div", { class: "card", style: { gridColumn: "1 / -1" } }, el("h2", null, "What Kitna has learned"),
       el("div", { style: { marginTop: "12px" } }, rulesBox),
       el("hr", { style: { border: 0, borderTop: "1px solid var(--line)", margin: "16px 0" } }),
       el("label", { class: "row", style: { gap: "10px", alignItems: "flex-start" } }, contrib,
         el("span", { class: "small" }, el("b", null, "Help improve accuracy (optional). "),
           el("span", { class: "muted" }, "Keep a masked copy of each auto-logged message: names, phone numbers, account numbers and references are removed. Nothing is sent anywhere. You can download the file and choose to share it."))),
-      el("div", { style: { marginTop: "10px" } }, el("button", { class: "btn sm", onclick: () => download("/api/samples/export", "flux-parser-samples.jsonl").catch(err) }, "Download my masked samples")));
+      el("div", { style: { marginTop: "10px" } }, el("button", { class: "btn sm", onclick: () => download("/api/samples/export", "kitna-parser-samples.jsonl").catch(err) }, "Download my masked samples")));
     drawRules().catch(err);
 
     // Reminders on this phone
-    const P = window.Flux.push;
+    const P = window.Kitna.push;
     const KIND_TEXT = {
       refunds: ["Late refunds", "A failed payment's money hasn't come back by the RBI deadline."],
       checks: ["Double charges and price rises", "The same payment twice, or a subscription that got more expensive."],
@@ -254,9 +254,9 @@
       try { r = await api("/api/reminders"); } catch (e) { remindBox.replaceChildren(el("p", { class: "small muted" }, e.message)); return; }
       const sub = await P.current();
       const state = sub ? el("div", { class: "notice ok" }, icon("check"), el("div", null, el("b", null, "On for this phone. "), "At most 3 a day."))
-        : P.needsHomeScreen() ? el("div", { class: "notice info" }, icon("info"), el("div", null, el("b", null, "On iPhone: "), "tap Share → Add to Home Screen, open Flux from the Home Screen, then come back here. (iOS 16.4 or newer.)"))
-        : !P.supported() ? el("div", { class: "notice caution" }, icon("alert"), el("div", null, "This browser can't show notifications. Use Chrome on Android, or Flux from the iPhone Home Screen. Everything still shows under the bell icon in Flux."))
-        : Notification.permission === "denied" ? el("div", { class: "notice caution" }, icon("alert"), el("div", null, "Notifications are blocked for Flux. Allow them in your browser's site settings, then turn reminders on."))
+        : P.needsHomeScreen() ? el("div", { class: "notice info" }, icon("info"), el("div", null, el("b", null, "On iPhone: "), "tap Share → Add to Home Screen, open Kitna from the Home Screen, then come back here. (iOS 16.4 or newer.)"))
+        : !P.supported() ? el("div", { class: "notice caution" }, icon("alert"), el("div", null, "This browser can't show notifications. Use Chrome on Android, or Kitna from the iPhone Home Screen. Everything still shows under the bell icon in Kitna."))
+        : Notification.permission === "denied" ? el("div", { class: "notice caution" }, icon("alert"), el("div", null, "Notifications are blocked for Kitna. Allow them in your browser's site settings, then turn reminders on."))
         : null;
       const btn = sub
         ? el("button", { class: "btn sm ghost", onclick: async () => { try { await P.disable(); ok("Reminders off for this phone."); drawRemind(); } catch (e) { err(e); } } }, "Turn off on this phone")
@@ -288,7 +288,7 @@
     const setLang = async (lang) => {
       if (u.lang === lang) return;
       await save({ lang }, lang === "hinglish" ? "Hinglish on." : "English on.");
-      window.Flux.cacheClear();
+      window.Kitna.cacheClear();
       location.reload();
     };
     bEn.onclick = () => setLang("en");
@@ -307,5 +307,5 @@
     if (location.hash) { const t = document.querySelector(location.hash); if (t) setTimeout(() => t.scrollIntoView({ behavior: "smooth", block: "start" }), 60); }
   }
 
-  document.addEventListener("DOMContentLoaded", () => window.Flux.boot(render));
+  document.addEventListener("DOMContentLoaded", () => window.Kitna.boot(render));
 })();

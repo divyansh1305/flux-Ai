@@ -1,6 +1,6 @@
 """Reminders: the few things worth interrupting someone for, sent to their phone once a day.
 
-What Flux sends (each one can be turned off in Settings):
+What Kitna sends (each one can be turned off in Settings):
   refunds  - a failed payment's money is past the RBI deadline (T+1 / T+5): ask the bank, ₹100/day applies
   checks   - a double charge or a subscription price rise was found
   bills    - a bill, subscription or your own plan is due tomorrow

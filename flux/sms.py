@@ -1,4 +1,4 @@
-"""Bank SMS -> Flux row, powered by the open-source `upi-parse` library."""
+"""Bank SMS -> Kitna row, powered by the open-source `upi-parse` library."""
 from upi_parse import parse_sms as _parse_sms
 from upi_parse import split_messages  # noqa: F401  (re-exported)
 

@@ -1,12 +1,12 @@
 {
-  "name": "Flux — know what you can spend today",
-  "short_name": "Flux",
+  "name": "Kitna — know what you can spend today",
+  "short_name": "Kitna",
   "description": "Know what you can safely spend today. Payments log themselves.",
   "start_url": "/app",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f6f4ef",
-  "theme_color": "#1f6b57",
+  "theme_color": "#34378a",
   "icons": [
     {
       "src": "/static/img/icon.svg",

@@ -1,4 +1,4 @@
-/* Flux core: safe DOM helpers, API client, app shell, toasts, modals.
+/* Kitna core: safe DOM helpers, API client, app shell, toasts, modals.
    Rule: user data is ALWAYS inserted with textContent (via el()), never innerHTML. */
 (function () {
   "use strict";
@@ -102,7 +102,7 @@
     const m = String(name || "").match(/[A-Za-z0-9\u0900-\u097F]/);
     return el("div", { class: "tx-icon " + tintFor(name), "aria-hidden": "true" }, ic ? icon(ic) : (m ? m[0].toUpperCase() : "•"));
   }
-  const CAT_COLORS = ["#2f7d67", "#d0913a", "#4f7cc4", "#b9638a", "#7a6ec9", "#8f9d45", "#a39d92", "#c8c2b6"];
+  const CAT_COLORS = ["#34378a", "#d0913a", "#4f7cc4", "#b9638a", "#7a6ec9", "#8f9d45", "#a39d92", "#c8c2b6"];
 
   // ─── API client ───────────────────────────────────────────
   function csrf() {
@@ -299,8 +299,8 @@
       sureRow.style.display = kind === "income" ? "" : "none";
       title.placeholder = kind === "income" ? "Client payment, pocket money" : "Dinner on Friday";
       hint.textContent = kind === "income"
-        ? "Sure money counts in today's number. If you're not sure, Flux shows it separately and never counts on it."
-        : "Flux keeps this aside until the day, so today's number is real. It's not a payment: nothing leaves your bank.";
+        ? "Sure money counts in today's number. If you're not sure, Kitna shows it separately and never counts on it."
+        : "Kitna keeps this aside until the day, so today's number is real. It's not a payment: nothing leaves your bank.";
     };
     bS.onclick = () => { kind = "spend"; paint(); };
     bI.onclick = () => { kind = "income"; paint(); };
@@ -395,10 +395,10 @@
       const nav = el("nav", { class: "nav", "aria-label": "Main" }, NAV.filter(([href]) => featureOn(href)).map(([href, ic, label]) =>
         el("a", { href, class: path === href ? "active" : null, "aria-current": path === href ? "page" : null }, icon(ic), el("span", null, label))));
       const top = el("header", { class: "topbar" }, el("div", { class: "topbar-in" },
-        el("a", { href: "/app", class: "logo" }, el("span", { class: "logo-mark" }, "F"), "Flux"),
+        el("a", { href: "/app", class: "logo" }, el("img", { class: "logo-mark", src: "/static/img/icon.svg", alt: "" }), "Kitna"),
         nav,
         el("div", { class: "top-actions" },
-          (CONFIG.features || {}).admin ? el("a", { href: "/app/admin", class: "icon-link" + (path === "/app/admin" ? " active" : ""), title: "Flux numbers (only you can see this)", "aria-label": "Flux numbers" }, icon("trend")) : null,
+          (CONFIG.features || {}).admin ? el("a", { href: "/app/admin", class: "icon-link" + (path === "/app/admin" ? " active" : ""), title: "Kitna numbers (only you can see this)", "aria-label": "Kitna numbers" }, icon("trend")) : null,
           bell,
           el("a", { href: "/app/import", class: "icon-link" + (path === "/app/import" ? " active" : ""), title: "Import statement or SMS", "aria-label": "Import" }, icon("upload")),
           el("a", { href: "/app/settings", class: "icon-link" + (path === "/app/settings" ? " active" : ""), title: "Settings", "aria-label": "Settings" }, icon("gear")),
@@ -452,7 +452,7 @@
     const who = () => (note.value || "").split("·")[0].trim() || "this merchant";
     const rememberText = el("span", null, `Always use this category for ${who()}`);
     note.addEventListener("input", () => { rememberText.textContent = `Always use this category for ${who()}`; });
-    const hint = t.auto_category && t.auto_category !== t.category ? el("p", { class: "tiny faint" }, `Flux first filed this under ${t.auto_category}.`) : null;
+    const hint = t.auto_category && t.auto_category !== t.category ? el("p", { class: "tiny faint" }, `Kitna first filed this under ${t.auto_category}.`) : null;
     const body = el("div", { class: "form" },
       el("p", { class: "muted small", style: { margin: 0 } }, `${inr(Math.abs(t.amount))} · ${dateFmt(t.date)}`),
       el("label", { class: "field" }, "Category", cat),
@@ -508,7 +508,7 @@
       el("label", { class: "field" }, "Who was it with?", names),
       el("label", { class: "row", style: { gap: "8px", alignItems: "center" } }, me, el("span", null, "I'm paying a share too")),
       list, mine,
-      el("p", { class: "tiny faint" }, "When they pay you back on UPI, Flux ticks them off by itself."));
+      el("p", { class: "tiny faint" }, "When they pay you back on UPI, Kitna ticks them off by itself."));
     const v = await modal("Split with friends", body, [
       { label: "Cancel", value: null, cls: "ghost" },
       { label: "Split", submit: true, cls: "primary", value: () => rows.map((r) => ({ name: r.name, amount: r.input.value })) },
@@ -559,10 +559,10 @@
       try { const reg = await navigator.serviceWorker.ready; return await reg.pushManager.getSubscription(); } catch (e) { return null; }
     },
     async enable() {
-      if (pushApi.needsHomeScreen()) throw new Error("On iPhone, first add Flux to your Home Screen (Share → Add to Home Screen), open it from there, then turn reminders on.");
-      if (!pushApi.supported()) throw new Error("This browser can't show notifications. Try Chrome on Android, or Flux from the iPhone Home Screen.");
+      if (pushApi.needsHomeScreen()) throw new Error("On iPhone, first add Kitna to your Home Screen (Share → Add to Home Screen), open it from there, then turn reminders on.");
+      if (!pushApi.supported()) throw new Error("This browser can't show notifications. Try Chrome on Android, or Kitna from the iPhone Home Screen.");
       const perm = await Notification.requestPermission();
-      if (perm !== "granted") throw new Error("Notifications are blocked for Flux. Allow them in your phone's settings for this site, then try again.");
+      if (perm !== "granted") throw new Error("Notifications are blocked for Kitna. Allow them in your phone's settings for this site, then try again.");
       try { await navigator.serviceWorker.register("/sw.js"); } catch (e) { /* already registered */ }
       const reg = await navigator.serviceWorker.ready;
       const info = await api("/api/reminders");
@@ -602,7 +602,7 @@
     await modal("Reminders", body);
   }
 
-  window.Flux = {
+  window.Kitna = {
     el, icon, api, download, toast, ok, err, modal, confirmBox, inr, inr0, dateFmt, todayISO, CAT_EMOJI, CAT_COLORS, avatar,
     boot, pageHead, txRow, deleteTx, editTx, addTransactionModal, planModal, splitModal, friendModal, push: pushApi, live, prefetch, cacheClear, refresh, onRefresh, logout, meta,
     get user() { return USER; }, set user(u) { USER = u; }, get config() { return CONFIG; },

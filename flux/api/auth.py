@@ -91,7 +91,7 @@ def request_otp():
         raise ApiError("Email sign-in isn't configured on this server.", 503)
     # Development only: print to the server terminal. The code is NEVER sent to the browser.
     log.warning("DEV MODE sign-in code for %s: %s", email, code)
-    print(f"\n  [Flux dev] Sign-in code for {email}: {code}\n", flush=True)
+    print(f"\n  [Kitna dev] Sign-in code for {email}: {code}\n", flush=True)
     return jsonify({"sent": True, "dev_mode": True})
 
 
@@ -154,7 +154,7 @@ def google_login():
     db = get_db()
     user = db.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
     if user is None:
-        name = clean_text(info.get("name") or email.split("@")[0], "Name", 60) or "Flux user"
+        name = clean_text(info.get("name") or email.split("@")[0], "Name", 60) or "Kitna user"
         cur = db.execute("INSERT INTO users (email, name) VALUES (?, ?)", (email, name))
         analytics.track(cur.lastrowid, "signed_up", "google")
         db.commit()
@@ -260,7 +260,7 @@ def update_account():
                 raise ApiError(f"{label} looks too large.")
             fields[key] = v
     if data.get("current_balance") not in (None, ""):
-        # "About how much is in your bank right now?" -> the opening balance that makes Flux show that amount.
+        # "About how much is in your bank right now?" -> the opening balance that makes Kitna show that amount.
         from ..finance import balance, opening_balance
 
         try:
@@ -272,7 +272,7 @@ def update_account():
         fields["opening_balance"] = target - (balance(u["id"]) - opening_balance(u["id"]))
     if "onboarded" in data:
         if data["onboarded"] and not (fields.get("adult_confirmed") or u["adult_confirmed"]):
-            raise ApiError("Flux is for people aged 18 or older. Please confirm your age to continue.")
+            raise ApiError("Kitna is for people aged 18 or older. Please confirm your age to continue.")
         fields["onboarded"] = 1 if data["onboarded"] else 0
     if fields.get("adult_confirmed") and not u["adult_confirmed"]:
         analytics.track(u["id"], "setup_step", "age")
@@ -318,7 +318,7 @@ def export_account():
                     "masked_samples": samples, "plans": plans, "usage_events": events, "friends": owed,
                     "reminders": notes, "phones_with_reminders": phones,
                     "goals": goals_with_progress(u["id"], include_archived=True)})
-    resp.headers["Content-Disposition"] = "attachment; filename=flux-my-data.json"
+    resp.headers["Content-Disposition"] = "attachment; filename=kitna-my-data.json"
     return resp
 
 
@@ -331,7 +331,7 @@ def delete_account():
     db = get_db()
     from .. import gmail
 
-    gmail.disconnect(uid)  # also revokes Flux's access at Google, not just our copy of the token
+    gmail.disconnect(uid)  # also revokes Kitna's access at Google, not just our copy of the token
     db.execute("DELETE FROM users WHERE id = ?", (uid,))  # cascades to all user data
     db.commit()
     session.clear()
@@ -341,7 +341,7 @@ def delete_account():
 @bp.get("/account/knows")
 @login_required
 def what_flux_knows():
-    """Plain answer to "what does Flux have about me?": every source and every kind of record, counted."""
+    """Plain answer to "what does Kitna have about me?": every source and every kind of record, counted."""
     from .. import gmail
 
     u = current_user()

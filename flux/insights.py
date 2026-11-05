@@ -163,7 +163,7 @@ def safe_to_spend(user_id, user=None):
     has_money = avail > 0 or plans_in > 0
     over_budget = [b["category"] for b in budget_status(user_id, today) if b["state"] == "over"]
     if not has_money:
-        status, message = "setup", "Add your money in (salary, pocket money) or confirm your bank balance, and Flux works out today's number."
+        status, message = "setup", "Add your money in (salary, pocket money) or confirm your bank balance, and Kitna works out today's number."
     elif pool <= 0:
         status, message = "stop", "Bills, plans and your cushion need everything you have until your next money. Only spend on essentials."
     elif left_today <= 0:
@@ -211,7 +211,7 @@ def cashback_report(user_id, days=90):
     cb_total, cb_count = cashback[0], cashback[1]
     rate = cb_total / spend * 100 if spend else 0
     if cb_count == 0:
-        verdict = "No cashback seen yet. When cashback credits arrive by SMS, Flux compares them with your spending."
+        verdict = "No cashback seen yet. When cashback credits arrive by SMS, Kitna compares them with your spending."
     else:
         verdict = (f"You received ₹{rupees(cb_total):,.0f} cashback on ₹{rupees(spend):,.0f} of everyday spending "
                    f"({rate:.2f}% back).")

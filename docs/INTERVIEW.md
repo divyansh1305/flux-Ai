@@ -1,15 +1,18 @@
-# Explaining Flux in an interview
+> Kitna was called Flux until November 2026. The rebuild started from an earlier prototype; the name changed once the
+> product settled on one question: "how much can I spend today?".
+
+# Explaining Kitna in an interview
 
 ## The 60-second pitch (8–10 lines)
 
 1. **Problem:** UPI made paying effortless. Young Indians' money is now spread across GPay, PhonePe, bank SMS and statements, and no app gives one number they can trust.
-2. **What I built:** Flux, an automatic money tracker that logs every UPI and bank payment by itself and keeps a ledger that is actually *correct*.
+2. **What I built:** Kitna, an automatic money tracker that logs every UPI and bank payment by itself and keeps a ledger that is actually *correct*.
 3. **Capture:** an Android companion app I wrote in Kotlin reads payment notifications, filters on the phone, and sends only completed payments. iPhone users forward bank SMS through a Shortcuts automation.
 4. **Parsing:** I extracted the parsing into an open-source library, `upi-parse`. On 38 messages from 9 banks it had never seen, it scored 96.6% on direction and 100% on amount.
 5. **Correctness:** the same payment arrives up to four ways (UPI app notification, SMS, Gmail, statement). My ledger dedupes by UPI reference, or by amount ± 1 day from a *different channel*. It also reconciles against the "Avl Bal" the bank itself reports.
 6. **The useful number:** a *personal* safe-to-spend: money you have + sure income − bills − your plans − your cushion, divided by days until *your* payday. I built it after user research showed people want "what can I spend today", not charts.
-7. **Learning:** when a user fixes a category, Flux learns the merchant, re-files past entries and reports its *measured* accuracy from those corrections.
-8. **Real problems, real rupees:** Flux watches failed payments until the refund arrives (RBI's T+1/T+5 rules), flags double charges and subscription price rises. I deliberately cut Pay and Invest because they weren't real for users yet, and made Flux 18+ to comply with India's DPDP rules.
+7. **Learning:** when a user fixes a category, Kitna learns the merchant, re-files past entries and reports its *measured* accuracy from those corrections.
+8. **Real problems, real rupees:** Kitna watches failed payments until the refund arrives (RBI's T+1/T+5 rules), flags double charges and subscription price rises. I deliberately cut Pay and Invest because they weren't real for users yet, and made Kitna 18+ to comply with India's DPDP rules.
 9. **Production:** request IDs, JSON logs, Prometheus metrics, Docker, gunicorn. A load test ran at 228 req/s with p95 of 116 ms and zero errors on 2 vCPUs, and it caught three real bugs.
 10. **Quality:** 172 tests in CI, including a regression test for every bug I found.
 
@@ -42,7 +45,7 @@ Every source is mapped to an *origin* (which app or channel saw it). If two reco
 The load test found that second bug: the metrics showed 5 "duplicates" that weren't.
 
 **"How do you know your balance is right?"**
-Bank SMS and notifications usually include "Avl Bal". I store that as a snapshot linked to the transaction. Reconciliation compares Flux's balance with the latest bank balance and flags drift above ₹1. That means a payment was missed (for example cash, or a disabled notification), and the user is told to add it. There's also a double-entry projection (`/api/ledger`) whose trial balance must sum to zero.
+Bank SMS and notifications usually include "Avl Bal". I store that as a snapshot linked to the transaction. Reconciliation compares Kitna's balance with the latest bank balance and flags drift above ₹1. That means a payment was missed (for example cash, or a disabled notification), and the user is told to add it. There's also a double-entry projection (`/api/ledger`) whose trial balance must sum to zero.
 
 **"Why notifications and not SMS on Android?"**
 Google Play restricts READ_SMS to default SMS apps. Notification access is allowed when it is the core feature and there's a prominent disclosure, which is exactly what the first screen does. Filtering happens on the phone, so OTPs and chats never leave it. The token is encrypted with an Android Keystore key and excluded from backups.
@@ -62,8 +65,8 @@ SQLite in WAL mode handles this load on one box, and it keeps the system simple.
 - Run more gunicorn workers behind a load balancer.
 - Turn ingest into a queue (SQS or Kafka) so parsing is async and retries are idempotent. Dedupe is already idempotent.
 
-**"Can Flux move money?"**
-No, by design. Moving money needs NPCI/RBI licences and it would pull Flux towards lending, which is what users told us they don't want. I had a Scan & Pay prototype but removed it: anything in the app has to really work.
+**"Can Kitna move money?"**
+No, by design. Moving money needs NPCI/RBI licences and it would pull Kitna towards lending, which is what users told us they don't want. I had a Scan & Pay prototype but removed it: anything in the app has to really work.
 
 **"How does voice work?"**
 - Web Speech API → text → a rule parser in English, Hindi and Hinglish, taking about 1 ms.

@@ -104,7 +104,7 @@ def opening_balance(user_id):
 
 def balance(user_id):
     """Spendable money = opening balance + income - expenses - money in goals - money invested (at cost).
-    The opening balance is what was in the bank before Flux started; it is not income, so it never
+    The opening balance is what was in the bank before Kitna started; it is not income, so it never
     inflates spending or savings-rate statistics."""
     return (opening_balance(user_id) + _sum(user_id, "income") - _sum(user_id, "expense") - _sum(user_id, "saving")
             - invested_cost(user_id))
@@ -193,7 +193,7 @@ def add_transaction(user, kind, amount, category, note="", day=None, source="man
                 reminders.notify_now(user["id"], {
                     "kind": "friends", "key": f"paid-back:{closed['id']}", "url": "/app/friends",
                     "title": f"{first} ne {amt} wapas kar diye" if hi else f"{first} paid you back {amt}",
-                    "body": "Flux ne list se hata diya." if hi else "Ticked off your list. Nothing to do."})
+                    "body": "Kitna ne list se hata diya." if hi else "Ticked off your list. Nothing to do."})
 
     if kind == "expense" and autosave:
         goal_id_auto = user["autosave_goal_id"]
@@ -504,7 +504,7 @@ def merchant_key(note):
 
 
 def rule_category(user_id, note, kind):
-    """The category this user told Flux to always use for this merchant, if any (and valid for `kind`)."""
+    """The category this user told Kitna to always use for this merchant, if any (and valid for `kind`)."""
     key = merchant_key(note)
     if not key:
         return None

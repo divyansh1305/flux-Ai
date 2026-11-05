@@ -1,4 +1,4 @@
--- Flux database schema (SQLite).
+-- Kitna database schema (SQLite).
 -- All money is stored as INTEGER paise (₹1 = 100) to avoid floating-point errors.
 
 PRAGMA foreign_keys = ON;
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
     ref             TEXT,           -- bank/UPI reference (UTR/RRN): exact key for cross-source de-duplication
     origin          TEXT,           -- finer than source: which app/channel saw it (e.g. com.phonepe.app, sms). Dedupe compares this.
-    auto_category   TEXT            -- what Flux assigned automatically; differs from `category` once the user corrects it
+    auto_category   TEXT            -- what Kitna assigned automatically; differs from `category` once the user corrects it
 );
 
 CREATE INDEX IF NOT EXISTS idx_tx_user_date ON transactions(user_id, date);
@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS ingest_tokens (
 );
 
 -- Balances the bank itself reported ("Avl Bal" in SMS / statement closing balance).
--- Used to show the real bank balance and to detect transactions Flux missed.
+-- Used to show the real bank balance and to detect transactions Kitna missed.
 CREATE TABLE IF NOT EXISTS balance_snapshots (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -208,7 +208,7 @@ CREATE TABLE IF NOT EXISTS dismissed_checks (
     PRIMARY KEY (user_id, check_key)
 );
 
--- Product events: what people DO in Flux (never amounts, merchants or message text). Used only in totals
+-- Product events: what people DO in Kitna (never amounts, merchants or message text). Used only in totals
 -- to improve the app. Deleted with the account; purged after 13 months (daily_stats keeps the totals).
 CREATE TABLE IF NOT EXISTS events (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -248,7 +248,7 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
 );
 CREATE INDEX IF NOT EXISTS idx_push_user ON push_subscriptions(user_id);
 
--- Every reminder Flux made, so the same one is never sent twice and people without push still see it in the app.
+-- Every reminder Kitna made, so the same one is never sent twice and people without push still see it in the app.
 CREATE TABLE IF NOT EXISTS notifications (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

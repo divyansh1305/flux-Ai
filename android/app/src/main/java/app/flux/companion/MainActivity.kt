@@ -22,7 +22,7 @@ import java.util.concurrent.Executors
 /**
  * One screen, built in code (no layout XML to keep the app tiny):
  *   1. Prominent disclosure + explicit consent (Google Play User Data policy).
- *   2. Link the account: one tap on "Link the Flux app" in Flux web (a fluxapp://connect link), or paste by hand.
+ *   2. Link the account: one tap on "Link the Kitna Companion app" in Kitna web (a fluxapp://connect link), or paste by hand.
  *   3. Button to open Settings → Notification access.
  *   4. Status: access granted? connected? items waiting?
  */
@@ -36,7 +36,7 @@ class MainActivity : Activity() {
     private val card = Color.parseColor("#FFFFFF")
     private val fg = Color.parseColor("#1D1C1A")
     private val muted = Color.parseColor("#5F5B54")
-    private val accent = Color.parseColor("#1F6B57")
+    private val accent = Color.parseColor("#34378A")
     private var linkMessage: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,20 +53,20 @@ class MainActivity : Activity() {
         render()
     }
 
-    /** fluxapp://connect?server=…&token=… from the Flux website. Only the official server is accepted, so a
+    /** fluxapp://connect?server=…&token=… from the Kitna website. Only the official server is accepted, so a
      *  link from anywhere else can never point this phone's payments at someone else's server. */
     private fun handleLink(intent: Intent?) {
         val data: Uri = intent?.data ?: return
         if (data.scheme != "fluxapp" || data.host != "connect") return
         val server = data.getQueryParameter("server")?.trim()?.trimEnd('/') ?: ""
         val token = data.getQueryParameter("token")?.trim() ?: ""
-        if (server != OFFICIAL_SERVER || !token.startsWith("flx_") || token.length > 200) {
-            linkMessage = "That link didn't come from Flux, so nothing was changed."
+        if (server !in OFFICIAL_SERVERS || !token.startsWith("flx_") || token.length > 200) {
+            linkMessage = "That link didn't come from Kitna, so nothing was changed."
             return
         }
         store.serverUrl = server
         store.token = token
-        linkMessage = "Phone linked to your Flux account. Last step: turn on notification access below."
+        linkMessage = "Phone linked to your Kitna account. Last step: turn on notification access below."
         io.execute {
             val msg = Uploader(this).ping(server, token)
             runOnUiThread { linkMessage = msg; if (::status.isInitialized) refreshStatus() }
@@ -84,24 +84,24 @@ class MainActivity : Activity() {
             setPadding(dp(20), dp(28), dp(20), dp(28))
             setBackgroundColor(bg)
         }
-        root.addView(text("Flux Companion", 26f, fg, bold = true))
-        root.addView(text("Logs your UPI and bank payments into Flux automatically.", 15f, muted).apply { pad(top = 6) })
+        root.addView(text("Kitna Companion", 26f, fg, bold = true))
+        root.addView(text("Logs your UPI and bank payments into Kitna automatically.", 15f, muted).apply { pad(top = 6) })
 
         // 1. Disclosure – shown before any access is requested
         root.addView(section("What this app reads"))
         root.addView(text(
-            "• Flux Companion reads the text of notifications from payment and bank apps only " +
+            "• Kitna Companion reads the text of notifications from payment and bank apps only " +
                 "(Google Pay, PhonePe, Paytm, BHIM, CRED, Amazon Pay, bank apps, and bank SMS shown by your Messages app).\n" +
                 "• It keeps only notifications that look like a completed payment: an amount plus words like " +
                 "\"debited\", \"paid\" or \"received\". OTPs, chats, offers and reminders are ignored on your phone and never sent.\n" +
-                "• The matched text is sent over HTTPS to your own Flux account, to add the transaction to your ledger.\n" +
+                "• The matched text is sent over HTTPS to your own Kitna account, to add the transaction to your ledger.\n" +
                 "• Nothing is sold, shared or used for ads. Turn it off any time in Settings → Notification access, " +
-                "or revoke the token in Flux.",
+                "or revoke the token in Kitna.",
             14f, fg
         ).apply { boxed() })
 
         val consent = CheckBox(this).apply {
-            text = "I understand and allow Flux Companion to read payment notifications"
+            text = "I understand and allow Kitna Companion to read payment notifications"
             setTextColor(fg)
             isChecked = store.consented
             buttonTintList = android.content.res.ColorStateList.valueOf(accent)
@@ -110,14 +110,14 @@ class MainActivity : Activity() {
         root.addView(consent.apply { pad(top = 10) })
 
         // 2. Link account
-        root.addView(section("Link your Flux account"))
-        root.addView(text("Easiest: open Flux in your browser → Settings → Android → \"Link the Flux app\". It opens this app and links it by itself.", 14f, muted))
-        root.addView(button("Open Flux in the browser", secondary = true) {
+        root.addView(section("Link your Kitna account"))
+        root.addView(text("Easiest: open Kitna in your browser → Settings → Android → \"Link the Kitna Companion app\". It opens this app and links it by itself.", 14f, muted))
+        root.addView(button("Open Kitna in the browser", secondary = true) {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("$OFFICIAL_SERVER/app/settings#auto")))
         })
         root.addView(text("Or paste it by hand:", 13f, muted).apply { pad(top = 14) })
         val server = input(OFFICIAL_SERVER, store.serverUrl, InputType.TYPE_TEXT_VARIATION_URI)
-        val token = input("flx_… token from Flux → Settings → Auto-log", "", InputType.TYPE_TEXT_VARIATION_PASSWORD)
+        val token = input("flx_… token from Kitna → Settings → Auto-log", "", InputType.TYPE_TEXT_VARIATION_PASSWORD)
         if (store.token != null) token.hint = "Token saved (paste a new one to replace)"
         root.addView(server)
         root.addView(token.apply { pad(top = 8) })
@@ -137,7 +137,7 @@ class MainActivity : Activity() {
 
         // 3. Notification access
         root.addView(section("Turn it on"))
-        root.addView(text("On the next screen, tap Flux Companion and allow it.", 14f, muted))
+        root.addView(text("On the next screen, tap Kitna Companion and allow it.", 14f, muted))
         root.addView(button("Open Notification access settings") {
             if (!store.consented) { status.text = "Please tick the consent box first"; return@button }
             startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
@@ -154,7 +154,7 @@ class MainActivity : Activity() {
             store.token = null
             store.consented = false
             consent.isChecked = false
-            status.text = "Unlinked. Also revoke the token in Flux if you lost this phone."
+            status.text = "Unlinked. Also revoke the token in Kitna if you lost this phone."
         })
 
         // 4. Status
@@ -209,6 +209,8 @@ class MainActivity : Activity() {
 
     companion object {
         const val OFFICIAL_SERVER = "https://fluxai.pythonanywhere.com"
+        /** The current address, plus the planned kitna address, so a move needs no app update. */
+        val OFFICIAL_SERVERS = setOf(OFFICIAL_SERVER, "https://kitna.pythonanywhere.com")
     }
 
     private fun View.pad(top: Int = 0, bottom: Int = 0) {

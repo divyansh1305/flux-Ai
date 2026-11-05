@@ -9,7 +9,7 @@
                   Protected by METRICS_TOKEN (Bearer). Without a token it is only served
                   outside production.
 
-Counters are per process. Flux runs one gunicorn worker (SQLite has one writer anyway), so
+Counters are per process. Kitna runs one gunicorn worker (SQLite has one writer anyway), so
 this is the whole picture; with more workers you'd switch to prometheus_client multiprocess mode.
 """
 import json

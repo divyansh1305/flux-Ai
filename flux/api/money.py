@@ -111,7 +111,7 @@ def delete_transaction(tx_id):
 @login_required
 @rate_limit(120, 60, scope="tx_edit")
 def edit_transaction(tx_id):
-    """Fix a category or note. With remember=true, Flux uses this category for the merchant from now on
+    """Fix a category or note. With remember=true, Kitna uses this category for the merchant from now on
     and re-files earlier automatic entries for it that the user hasn't touched."""
     u = current_user()
     db = get_db()
@@ -137,7 +137,7 @@ def edit_transaction(tx_id):
     if data.get("remember") is True and "category" in fields:
         key = finance.merchant_key(note)
         if not key:
-            raise ApiError("Add a merchant name in the note so Flux knows what to remember.")
+            raise ApiError("Add a merchant name in the note so Kitna knows what to remember.")
         db.execute("INSERT INTO merchant_rules (user_id, merchant_key, category) VALUES (?,?,?)"
                    " ON CONFLICT(user_id, merchant_key) DO UPDATE SET category = excluded.category",
                    (u["id"], key, fields["category"]))
@@ -175,7 +175,7 @@ def delete_rule(rule_id):
 @login_required
 def export_samples():
     """Opt-in: masked messages + the category the user kept, as JSONL test cases for upi-parse.
-    The file is downloaded by the user; nothing is sent anywhere by Flux."""
+    The file is downloaded by the user; nothing is sent anywhere by Kitna."""
     rows = get_db().execute(
         "SELECT s.source, s.masked_text, t.kind, t.amount, t.category, t.auto_category, t.date FROM parse_samples s"
         " JOIN transactions t ON t.id = s.transaction_id WHERE s.user_id = ? ORDER BY s.id", (current_user()["id"],)).fetchall()
@@ -184,7 +184,7 @@ def export_samples():
                                       "amount": f"{r['amount'] / 100:.2f}", "category": r["category"]},
                          "flux_predicted_category": r["auto_category"]}, ensure_ascii=False) for r in rows]
     resp = Response("\n".join(lines) + ("\n" if lines else ""), mimetype="application/x-ndjson")
-    resp.headers["Content-Disposition"] = "attachment; filename=flux-parser-samples.jsonl"
+    resp.headers["Content-Disposition"] = "attachment; filename=kitna-parser-samples.jsonl"
     return resp
 
 
@@ -233,11 +233,11 @@ def setup_status(uid):
     gap = ledger.bank_gap(uid)
     u = db.execute("SELECT income_pattern, cushion FROM users WHERE id = ?", (uid,)).fetchone()
     steps = [
-        {"key": "auto", "title": "Connect your payments", "sub": "Gmail on iPhone, the Flux app on Android",
+        {"key": "auto", "title": "Connect your payments", "sub": "Gmail on iPhone, the Kitna Companion app on Android",
          "done": has_auto, "href": "/app/settings#auto"},
-        {"key": "income", "title": "Tell Flux when money comes in", "sub": "So today's number lasts until then",
+        {"key": "income", "title": "Tell Kitna when money comes in", "sub": "So today's number lasts until then",
          "done": bool(u and u["income_pattern"] != "unset"), "href": "/app/plans#money"},
-        {"key": "bank", "title": "Match Flux with your bank", "done": bool(has_bank and gap is not None and abs(gap) < 1),
+        {"key": "bank", "title": "Match Kitna with your bank", "done": bool(has_bank and gap is not None and abs(gap) < 1),
          "sub": "One tap, after your first bank message arrives" if not has_bank else "Your bank balance is ready to match",
          "action": "align" if has_bank else None},
         {"key": "plan", "title": "Add a plan", "sub": "Like \"Dinner Friday ₹2,000\", so it's kept aside",
@@ -445,12 +445,12 @@ def ledger_view():
 @login_required
 @rate_limit(10, 600, scope="ledger_align")
 def ledger_align():
-    """"Match my bank": set the opening balance so Flux agrees with the bank's latest reported balance."""
+    """"Match my bank": set the opening balance so Kitna agrees with the bank's latest reported balance."""
     from .. import ledger
 
     uid = current_user()["id"]
     out = ledger.align_to_bank(uid)
     if out is None:
-        raise ApiError("Flux hasn't seen a bank balance yet. It reads it from bank SMS (\"Avl Bal\") or statements.")
+        raise ApiError("Kitna hasn't seen a bank balance yet. It reads it from bank SMS (\"Avl Bal\") or statements.")
     get_db().commit()
     return jsonify({**out, "balance": rupees(finance.balance(uid))})

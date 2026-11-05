@@ -18,6 +18,6 @@ keepalive = 5
 # Turn it on only with workers >= 2, e.g. MAX_REQUESTS=50000.
 max_requests = int(os.environ.get("MAX_REQUESTS", "0"))
 max_requests_jitter = max_requests // 10
-accesslog = None        # Flux writes its own structured access log (flux.observability)
+accesslog = None        # Kitna writes its own structured access log (flux.observability)
 errorlog = "-"
 forwarded_allow_ips = "*"   # behind Render's / Docker's proxy; ProxyFix trusts one hop

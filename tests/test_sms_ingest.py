@@ -90,7 +90,7 @@ def test_auto_ingest_logs_sms_without_session(app, client, user):
     phone = app.test_client()  # no cookies, no CSRF: just like iPhone Shortcuts
     sms = "Rs.250.00 debited from A/c XX1234 on 01-11-26 to VPA swiggy@icici (UPI Ref No 512345678901)."
     r = phone.post("/api/ingest/sms", json={"text": sms}, headers={"Authorization": f"Bearer {token}"}).json
-    assert r["logged"] and r["amount"] == 250 and r["category"] == "Food & Dining" and "Flux logged" in r["message"]
+    assert r["logged"] and r["amount"] == 250 and r["category"] == "Food & Dining" and "Kitna logged" in r["message"]
     again = phone.post("/api/ingest/sms", json={"text": sms}, headers={"Authorization": f"Bearer {token}"}).json
     assert not again["logged"] and "Already" in again["reason"]
     otp = phone.post("/api/ingest/sms", data="Your OTP is 123456", headers={"Authorization": f"Bearer {token}"}).json

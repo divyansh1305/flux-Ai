@@ -46,7 +46,7 @@ class GmailError(Exception):
 
 
 class GmailReconnect(GmailError):
-    """Google no longer accepts Flux's token (user removed access, or an app in Testing mode hit its 7-day limit)."""
+    """Google no longer accepts Kitna's token (user removed access, or an app in Testing mode hit its 7-day limit)."""
 
 
 def configured():
@@ -96,7 +96,7 @@ def exchange_code(code, redirect_uri):
     if "gmail.readonly" not in data.get("scope", ""):
         raise GmailError("Gmail permission wasn't given. Please tick the Gmail box on Google's screen.")
     if not data.get("refresh_token"):
-        raise GmailError("Google didn't return a long-term token. Disconnect Flux in your Google account and try again.")
+        raise GmailError("Google didn't return a long-term token. Disconnect Kitna in your Google account and try again.")
     return data
 
 
@@ -260,7 +260,7 @@ def sync(user, force=False, min_minutes=10):
         return {"connected": True, "error": str(e), "logged": 0, "needs_reconnect": isinstance(e, GmailReconnect)}
     except requests.RequestException:
         log.exception("Gmail sync network error")
-        return {"connected": True, "error": "Couldn't reach Gmail right now. Flux will try again later.", "logged": 0}
+        return {"connected": True, "error": "Couldn't reach Gmail right now. Kitna will try again later.", "logged": 0}
 
 
 def sync_all():

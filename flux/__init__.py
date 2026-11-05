@@ -1,4 +1,4 @@
-"""Flux — know what you can spend today."""
+"""Kitna — know what you can spend today."""
 import json
 import os
 

@@ -1,4 +1,4 @@
-"""Money checks: real problems Flux can spot in a user's own payments, shown only to that user.
+"""Money checks: real problems Kitna can spot in a user's own payments, shown only to that user.
 
   * Failed payment watch - the bank said a payment failed, so money may have left the account and must
     come back. RBI's failed-transaction rules (TAT circular, 2019): a failed UPI transfer is reversed by
@@ -108,7 +108,7 @@ def refund_checks(user_id):
         body = (f"Your bank said this payment failed. If the money left your account, it must come back: by {_fmt(transfer_by)} "
                 f"for a UPI transfer to a person, or by {_fmt(shop_by)} for a payment to a shop. ")
         body += ("It's past that date: ask your bank for the reversal and the ₹100-a-day delay compensation under RBI rules."
-                 if late else "Flux closes this by itself when the refund SMS or email arrives.")
+                 if late else "Kitna closes this by itself when the refund SMS or email arrives.")
         out.append({"key": f"refund:{w['id']}", "type": "refund", "level": "caution" if late else "info",
                     "title": f"Watching ₹{rupees(w['amount']):,.0f}{to} from {_fmt(d)}", "body": body,
                     "ref": w["ref"], "actions": [{"label": "It's back", "key": f"refund:{w['id']}:back"},
@@ -133,7 +133,7 @@ def double_charges(user_id, days=14):
         name = items[0]["note"]
         out.append({"key": f"double:{items[0]['id']}:{items[1]['id']}", "type": "double", "level": "caution",
                     "title": f"Charged twice? ₹{rupees(amount):,.0f} to {name} on {_fmt(day)}",
-                    "body": f"Flux saw {len(items)} payments of the same amount to {name} on the same day, with different bank "
+                    "body": f"Kitna saw {len(items)} payments of the same amount to {name} on the same day, with different bank "
                             "references. If you only paid once, ask the merchant or your bank for a refund.",
                     "actions": [{"label": "That's right", "key": f"double:{items[0]['id']}:{items[1]['id']}"}]})
     return out

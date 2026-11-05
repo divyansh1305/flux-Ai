@@ -6,7 +6,7 @@ noise (case changes, line breaks, extra words, masked digits) to keep the test h
 
 Every record: {"kind": "sms"|"notification"|"narration", "text"/"title"/"body"/"narration",
                "label": {"is_txn", "direction", "amount", "merchant", "category", "reference", "balance"}}
-Real-world accuracy must still be measured on real, consented data (see contribute tool in Flux).
+Real-world accuracy must still be measured on real, consented data (see contribute tool in Kitna).
 """
 import json
 import random

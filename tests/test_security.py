@@ -1,4 +1,4 @@
-"""Regression tests: one for each security hole found in the original Flux code."""
+"""Regression tests: one for each security hole found in the original Kitna code."""
 import base64
 import json
 

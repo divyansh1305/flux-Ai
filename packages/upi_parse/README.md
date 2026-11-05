@@ -52,7 +52,7 @@ Measured with `python benchmarks/evaluate.py <file>`:
 | Held-out v1, after fixing the failures it revealed | 100% / 100% | 100% | 100% | 100% | 100% | 100% | 100% |
 | Synthetic v1 (1,220 generated messages: 10 banks, 4 UPI apps, statements, 160 tricky negatives) | 100% / 100% | 100% | 100% | 100% | 100% | 100% | 100% |
 
-**Read this table correctly:** the first-run held-out row is the only true out-of-sample number. Both sets have since influenced the rules, so they are now regression tests, not accuracy claims. Real-world accuracy has to be measured on real, consented messages; the Flux app has a contribution tool for that, and its results will be published here.
+**Read this table correctly:** the first-run held-out row is the only true out-of-sample number. Both sets have since influenced the rules, so they are now regression tests, not accuracy claims. Real-world accuracy has to be measured on real, consented messages; the Kitna app has a contribution tool for that, and its results will be published here.
 
 ## Development
 ```bash

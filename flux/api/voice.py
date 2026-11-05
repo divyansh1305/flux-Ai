@@ -217,7 +217,7 @@ def execute(cmd):
             out.update(reply=f"Removed the {inr(rupees(abs(row['amount'])))} {row['category']} entry.", refresh=True)
 
     elif intent == "pay":
-        out["reply"] = ("Flux doesn't send money. Pay in your usual UPI app, and the payment shows up here "
+        out["reply"] = ("Kitna doesn't send money. Pay in your usual UPI app, and the payment shows up here "
                         "automatically.")
 
     elif intent == "navigate":

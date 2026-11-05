@@ -1,4 +1,4 @@
-"""Product analytics: what people do in Flux, counted so we can make it better.
+"""Product analytics: what people do in Kitna, counted so we can make it better.
 
 Rules (also in the privacy page):
   * Events say WHAT happened ("plan_added", "screen_opened: home"), never amounts, merchants or message text.
@@ -13,7 +13,7 @@ from .db import get_db
 
 log = logging.getLogger("flux.analytics")
 
-# Every event name Flux records, and the values its `prop` may take ("" = no value). Anything else is refused,
+# Every event name Kitna records, and the values its `prop` may take ("" = no value). Anything else is refused,
 # so a bug (or a crafted request) can never put personal data into this table.
 EVENTS = {
     "signed_up": {"email", "google"},

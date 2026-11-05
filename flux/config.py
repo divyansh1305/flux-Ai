@@ -65,7 +65,7 @@ class Config:
 
         # Android companion app download (built by .github/workflows/android.yml). Empty = hide the download.
         self.ANDROID_APK_URL = os.environ.get(
-            "ANDROID_APK_URL", "https://github.com/divyansh1305/flux-Ai/releases/download/android-latest/flux-android.apk")
+            "ANDROID_APK_URL", "https://github.com/divyansh1305/flux-Ai/releases/download/android-latest/kitna-android.apk")
 
         # Who may open the private numbers page (/app/admin): comma-separated sign-in emails.
         self.ADMIN_EMAILS = os.environ.get("ADMIN_EMAILS", "")

@@ -144,9 +144,9 @@ def subscribe():
     analytics.track(uid, "reminders_on", "")
     nid = reminders.queue(uid, {"kind": "morning", "key": f"hello:{endpoint[-40:]}", "url": "/app/settings",
                                 "title": "Reminders are on" if current_user()["lang"] != "hinglish" else "Reminders chalu",
-                                "body": "Flux will tell you about bills, late refunds and money friends owe you."
+                                "body": "Kitna will tell you about bills, late refunds and money friends owe you."
                                 if current_user()["lang"] != "hinglish" else
-                                "Bills, late refund aur doston ke paise: Flux yaad dilayega."})
+                                "Bills, late refund aur doston ke paise: Kitna yaad dilayega."})
     db.commit()
     reached = reminders.push(uid, nid) if nid else 0
     return jsonify({"ok": True, "test_sent": reached > 0})

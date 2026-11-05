@@ -1,9 +1,9 @@
 (function () {
-  const { el, icon, api, ok, err, inr, pageHead, CAT_EMOJI } = window.Flux;
+  const { el, icon, api, ok, err, inr, pageHead, CAT_EMOJI } = window.Kitna;
 
   async function render(main) {
     const area = el("div", { class: "stack" });
-    main.replaceChildren(pageHead("Import bank statement", "Upload the PDF your bank emails you, or a CSV. Flux sorts every transaction for you."), area);
+    main.replaceChildren(pageHead("Import bank statement", "Upload the PDF your bank emails you, or a CSV. Kitna sorts every transaction for you."), area);
     showUpload();
 
     function showUpload() {
@@ -18,7 +18,7 @@
       input.onchange = () => input.files[0] && upload(input.files[0]);
       area.replaceChildren(drop,
         el("a", { href: "/app/share", class: "card tap row", style: { gap: "14px" } }, el("div", { class: "feature" }, el("div", { class: "ico", style: { margin: 0 } }, icon("chat"))),
-          el("div", { style: { flex: 1 } }, el("h3", null, "Got bank SMS instead?"), el("div", { class: "small muted" }, "Paste or share your debit/credit alerts and Flux adds them.")),
+          el("div", { style: { flex: 1 } }, el("h3", null, "Got bank SMS instead?"), el("div", { class: "small muted" }, "Paste or share your debit/credit alerts and Kitna adds them.")),
           el("span", { class: "link" }, "Track from SMS →")),
         el("div", { class: "grid g-2" },
         el("div", { class: "card" }, el("h3", null, "Where to find your statement"),
@@ -105,5 +105,5 @@
     }
   }
 
-  document.addEventListener("DOMContentLoaded", () => window.Flux.boot(render));
+  document.addEventListener("DOMContentLoaded", () => window.Kitna.boot(render));
 })();

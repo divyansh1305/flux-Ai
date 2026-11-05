@@ -23,7 +23,7 @@ def _template(title, body_html, code=None):
 <h1 style="font-size:20px;margin:0 0 12px">{html.escape(title)}</h1>
 {code_block}
 <div style="font-size:14px;line-height:1.6;color:#a0a0b8">{body_html}</div>
-<p style="font-size:11px;color:#60607a;margin-top:32px">Flux · Spend smarter, save automatically</p>
+<p style="font-size:11px;color:#60607a;margin-top:32px">Kitna · Spend smarter, save automatically</p>
 </div></body></html>"""
 
 
@@ -33,7 +33,7 @@ def send_email(to, subject, text, html_body):
         return False
     msg = EmailMessage()
     msg["Subject"] = subject
-    msg["From"] = f"Flux <{cfg['MAIL_SENDER']}>"
+    msg["From"] = f"Kitna <{cfg['MAIL_SENDER']}>"
     msg["To"] = to
     msg.set_content(text)
     msg.add_alternative(html_body, subtype="html")
@@ -49,5 +49,5 @@ def send_email(to, subject, text, html_body):
 
 def send_otp(to, code, minutes):
     body = f"Enter this code to sign in. It expires in {minutes} minutes.<br>If you didn't ask for it, you can ignore this email."
-    return send_email(to, "Your Flux sign-in code", f"Your Flux code is {code}. It expires in {minutes} minutes.",
+    return send_email(to, "Your Kitna sign-in code", f"Your Kitna code is {code}. It expires in {minutes} minutes.",
                       _template("Your sign-in code", body, code))

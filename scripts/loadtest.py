@@ -1,4 +1,4 @@
-"""Load test for Flux – realistic traffic mix against a real gunicorn server.
+"""Load test for Kitna – realistic traffic mix against a real gunicorn server.
 
     # terminal 1
     SECRET_KEY=$(python -c 'import secrets;print(secrets.token_hex(32))') DATABASE_PATH=/tmp/flux-load.db \

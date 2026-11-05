@@ -1,6 +1,6 @@
-/* Auto-track from bank SMS: paste alerts, or on Android share an SMS straight to Flux (PWA share target). */
+/* Auto-track from bank SMS: paste alerts, or on Android share an SMS straight to Kitna (PWA share target). */
 (function () {
-  const { el, icon, api, ok, err, inr, pageHead, CAT_EMOJI } = window.Flux;
+  const { el, icon, api, ok, err, inr, pageHead, CAT_EMOJI } = window.Kitna;
   const SAMPLE = "Rs.250.00 debited from A/c XX1234 on 01-11-26 to VPA swiggy@icici (UPI Ref No 512345678901).\n\n" +
     "Sent Rs.180.00 From HDFC Bank A/C *1234 To UBER INDIA On 01/11/26 Ref 512345678902";
 
@@ -8,7 +8,7 @@
     const params = new URLSearchParams(location.search);
     const shared = [params.get("title"), params.get("text"), params.get("url")].filter(Boolean).join("\n").trim();
     const area = el("div", { class: "stack" });
-    main.replaceChildren(pageHead("Track from SMS", "Paste your bank's debit/credit SMS. Flux reads amount, merchant and date, and ignores OTPs and offers."), area);
+    main.replaceChildren(pageHead("Track from SMS", "Paste your bank's debit/credit SMS. Kitna reads amount, merchant and date, and ignores OTPs and offers."), area);
     showInput(shared);
     if (shared) parse(shared);
 
@@ -22,10 +22,10 @@
             el("button", { class: "btn ghost", onclick: () => { ta.value = SAMPLE; } }, "Try a sample"))),
         el("div", { class: "card" }, el("h3", null, "Fastest on Android"),
           el("ol", { class: "small muted", style: { paddingLeft: "18px", margin: "10px 0 0", lineHeight: 1.9 } },
-            el("li", null, "Install Flux: browser menu → “Add to Home screen”"),
-            el("li", null, "Long-press a bank SMS → Share → Flux"),
+            el("li", null, "Install Kitna: browser menu → “Add to Home screen”"),
+            el("li", null, "Long-press a bank SMS → Share → Kitna"),
             el("li", null, "Confirm, done. No typing.")),
-          el("p", { class: "tiny faint", style: { marginTop: "12px" } }, "Flux only sees messages you choose to share. It never reads your inbox."),
+          el("p", { class: "tiny faint", style: { marginTop: "12px" } }, "Kitna only sees messages you choose to share. It never reads your inbox."),
           el("a", { class: "link", href: "/app/settings", style: { display: "inline-block", marginTop: "10px" } }, "iPhone: make it fully automatic →"))));
     }
 
@@ -48,7 +48,7 @@
           cats.map((c) => el("option", { value: c, selected: c === row.category ? true : null }, c)));
         sel.onchange = () => (row.category = sel.value);
         list.appendChild(el("div", { class: "tx", style: { opacity: row.duplicate ? 0.5 : 1 } }, cb,
-          window.Flux.avatar(row.note || row.category),
+          window.Kitna.avatar(row.note || row.category),
           el("div", { class: "tx-main" }, el("div", { class: "tx-title" }, row.note), el("div", { class: "tx-sub" }, row.date, row.duplicate ? " · already added" : "")),
           sel, el("div", { class: "tx-amt " + (row.kind === "income" ? "green" : "") }, (row.kind === "income" ? "+" : "-") + inr(row.amount))));
       });
@@ -65,10 +65,10 @@
               ok(`Added ${c.imported} transaction(s).`);
               location.href = "/app";
             } catch (e) { err(e); }
-          } }, icon("check"), "Add to Flux"),
+          } }, icon("check"), "Add to Kitna"),
           el("button", { class: "btn ghost", onclick: () => showInput(text) }, "Back"))));
     }
   }
 
-  document.addEventListener("DOMContentLoaded", () => window.Flux.boot(render));
+  document.addEventListener("DOMContentLoaded", () => window.Kitna.boot(render));
 })();

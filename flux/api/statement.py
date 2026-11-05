@@ -11,7 +11,7 @@ bp = Blueprint("statement", __name__, url_prefix="/api/import")
 
 MAX_ROWS = 3000
 def parse_statement(text):
-    """CSV statement -> Flux rows, using the open-source upi-parse statement parser."""
+    """CSV statement -> Kitna rows, using the open-source upi-parse statement parser."""
     from upi_parse import StatementError, parse_statement_csv
 
     try:

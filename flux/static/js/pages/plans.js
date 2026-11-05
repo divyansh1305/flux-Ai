@@ -1,6 +1,6 @@
 /* Plans: money you expect to spend or receive, plus the three answers that shape "safe to spend". */
 (function () {
-  const { el, icon, api, ok, err, inr0, pageHead, planModal, confirmBox, onRefresh, avatar, dateFmt } = window.Flux;
+  const { el, icon, api, ok, err, inr0, pageHead, planModal, confirmBox, onRefresh, avatar, dateFmt } = window.Kitna;
 
   function moneyCard(u, onSaved) {
     let pattern = u.income_pattern === "unset" ? "monthly" : u.income_pattern;
@@ -26,7 +26,7 @@
         dayRow,
         el("label", { class: "field" }, "About how much? (₹)", expected),
         el("div", { class: "field" }, el("span", null, "Safety cushion (₹)"), cushion, cushionPick,
-          el("div", { class: "tiny faint" }, "Money Flux never counts as spendable. For emergencies.")),
+          el("div", { class: "tiny faint" }, "Money Kitna never counts as spendable. For emergencies.")),
         el("div", null, el("button", { class: "btn primary", onclick: async () => {
           try {
             const body = { income_pattern: pattern, expected_income: Number(expected.value) || 0, cushion: Number(cushion.value) || 0 };
@@ -49,12 +49,12 @@
       el("div", { class: "row", style: { gap: "2px" } },
         !p.done ? el("button", { class: "icon-btn", title: "Mark done", "aria-label": "Mark done", onclick: async () => {
           row.style.opacity = "0.5";  // instant feedback; the list refreshes once the server confirms
-          try { await api(`/api/plans/${p.id}`, { method: "PATCH", body: { done: true } }); ok("Marked done."); window.Flux.refresh(); } catch (e) { row.style.opacity = ""; err(e); }
+          try { await api(`/api/plans/${p.id}`, { method: "PATCH", body: { done: true } }); ok("Marked done."); window.Kitna.refresh(); } catch (e) { row.style.opacity = ""; err(e); }
         } }, icon("check")) : null,
         el("button", { class: "icon-btn", title: "Delete", "aria-label": "Delete plan", onclick: async () => {
           if (!(await confirmBox("Delete plan?", `${p.title} · ${inr0(p.amount)}`, true))) return;
           row.remove();
-          try { await api(`/api/plans/${p.id}`, { method: "DELETE" }); window.Flux.refresh(); } catch (e) { err(e); window.Flux.refresh(); }
+          try { await api(`/api/plans/${p.id}`, { method: "DELETE" }); window.Kitna.refresh(); } catch (e) { err(e); window.Kitna.refresh(); }
         } }, icon("trash"))));
     return row;
   }
@@ -63,20 +63,20 @@
 
   async function render(main) {
     const box = el("div", { class: "stack narrow" });
-    main.replaceChildren(pageHead("Plans", "Tell Flux what's coming, so today's number is real. Tap a plan to edit it.",
+    main.replaceChildren(pageHead("Plans", "Tell Kitna what's coming, so today's number is real. Tap a plan to edit it.",
       el("button", { class: "btn primary", onclick: () => planModal() }, icon("plus"), "Add a plan")), box);
-    let me = { user: window.Flux.user };
+    let me = { user: window.Kitna.user };
     let lastPlans = null;
     const load = async () => {
       const pre = early;
       early = null;
       const meNow = api("/api/auth/me").then((m) => { me = m; }).catch(() => {});
-      await window.Flux.live("/api/plans", (plans) => { lastPlans = plans; draw(plans); }, pre);
+      await window.Kitna.live("/api/plans", (plans) => { lastPlans = plans; draw(plans); }, pre);
       await meNow;
       if (lastPlans) draw(lastPlans);  // money setup shows what was just saved
     };
     const draw = (plans) => {
-      const today = window.Flux.todayISO();
+      const today = window.Kitna.todayISO();
       const open = plans.filter((p) => !p.done && p.date >= today);
       const old = plans.filter((p) => p.done || p.date < today);
       const list = el("div", { class: "card", style: { padding: "4px 20px" } }, open.length
@@ -94,5 +94,5 @@
     await load();
   }
 
-  document.addEventListener("DOMContentLoaded", () => window.Flux.boot(render));
+  document.addEventListener("DOMContentLoaded", () => window.Kitna.boot(render));
 })();

@@ -72,12 +72,12 @@ self.addEventListener("fetch", (e) => {
 // Reminders: the server encrypts each message for this phone only; the push service can't read it.
 self.addEventListener("push", (e) => {
   let d = {};
-  try { d = e.data ? e.data.json() : {}; } catch (err) { d = { title: "Flux", body: e.data ? e.data.text() : "" }; }
+  try { d = e.data ? e.data.json() : {}; } catch (err) { d = { title: "Kitna", body: e.data ? e.data.text() : "" }; }
   const url = new URL(d.url || "/app", location.origin);
-  if (url.origin !== location.origin) url.href = location.origin + "/app";  // only ever open Flux itself
+  if (url.origin !== location.origin) url.href = location.origin + "/app";  // only ever open Kitna itself
   url.searchParams.set("from", "push");
   if (d.tag) url.searchParams.set("k", d.tag);
-  e.waitUntil(self.registration.showNotification(d.title || "Flux", {
+  e.waitUntil(self.registration.showNotification(d.title || "Kitna", {
     body: d.body || "", tag: d.tag ? "flux-" + d.tag + "-" + (d.id || "") : undefined,
     icon: "/static/img/icon-192.png", badge: "/static/img/badge-96.png", data: { url: url.pathname + url.search },
   }));

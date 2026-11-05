@@ -1,6 +1,6 @@
-# Flux Companion (Android)
+# Kitna Companion (Android)
 
-A tiny Android app (about 440 lines of Kotlin, no third-party libraries) that logs your UPI and bank payments into Flux automatically. It reads **payment notifications**, so it needs no SMS permission.
+A tiny Android app (about 440 lines of Kotlin, no third-party libraries) that logs your UPI and bank payments into Kitna automatically. It reads **payment notifications**, so it needs no SMS permission.
 
 ```
 Payment app notification ──► NotificationListenerService
@@ -10,7 +10,7 @@ Payment app notification ──► NotificationListenerService
                       Uploader (retry queue, max 200)
                              │  HTTPS, Authorization: Bearer flx_…
                              ▼
-              POST /api/ingest/notification  (Flux server)
+              POST /api/ingest/notification  (Kitna server)
                              │  upi-parse → dedupe (UTR / amount±1 day) →
                              ▼  ledger + bank balance snapshot
                         Your dashboard
@@ -25,13 +25,13 @@ Payment app notification ──► NotificationListenerService
 
 ## Link it
 
-1. In Flux on the web, go to **Settings → Auto-log → Create token** and copy the `flx_…` token. It is shown only once.
+1. In Kitna on the web, go to **Settings → Auto-log → Create token** and copy the `flx_…` token. It is shown only once.
 2. In the app:
    - Read the disclosure and tick the consent box.
    - Paste your server URL (`https://…onrender.com`) and the token.
    - Tap **Save & test connection**. It should say "Connected as <name>".
-3. Tap **Open Notification access settings**, then turn on **Flux Companion**.
-4. Make a ₹1 UPI payment. It appears in Flux within a few seconds.
+3. Tap **Open Notification access settings**, then turn on **Kitna Companion**.
+4. Make a ₹1 UPI payment. It appears in Kitna within a few seconds.
 
 ## Security choices (good interview material)
 
@@ -41,7 +41,7 @@ Payment app notification ──► NotificationListenerService
 | Private chats or OTPs leaking | Allow-listed packages only, plus an on-device filter. Anything else never leaves the phone. The server checks the package list again. |
 | Duplicate entries (SMS + notification + retries) | The server dedupes by UPI reference, or by same amount within ±1 day from a different source. |
 | Offline | Payments are queued locally (max 200) and retried. 4xx responses are dropped, while 5xx and 429 responses are retried. |
-| Lost phone | Revoke the token in Flux. Tap **Unlink** in the app. |
+| Lost phone | Revoke the token in Kitna. Tap **Unlink** in the app. |
 | Cleartext traffic | `usesCleartextTraffic=false`, and only `https://` URLs are accepted. |
 
 ## Google Play notes
@@ -51,8 +51,8 @@ Payment app notification ──► NotificationListenerService
 - In the Play Console Data safety form, declare:
   - "Financial info → purchase history" is collected and sent to your server.
   - Data is encrypted in transit.
-  - Users can request deletion. Account deletion in Flux removes everything.
-- You also need a privacy policy URL. Flux serves one at `/privacy`.
+  - Users can request deletion. Account deletion in Kitna removes everything.
+- You also need a privacy policy URL. Kitna serves one at `/privacy`.
 
 ## Keep in sync
 

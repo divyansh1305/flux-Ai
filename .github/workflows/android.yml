@@ -1,5 +1,5 @@
-# Builds the Flux Android companion app on GitHub's servers and publishes it as a download:
-#   https://github.com/<owner>/<repo>/releases/download/android-latest/flux-android.apk
+# Builds the Kitna Android companion app on GitHub's servers and publishes it as a download:
+#   https://github.com/<owner>/<repo>/releases/download/android-latest/kitna-android.apk
 # It is a debug-signed build, which installs from a link (sideload). For Google Play, add a release key later.
 name: android
 on:
@@ -27,15 +27,15 @@ jobs:
       - name: Build
         run: gradle -p android assembleDebug --no-daemon
       - name: Rename
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk flux-android.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk kitna-android.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: flux-android
-          path: flux-android.apk
+          name: kitna-android
+          path: kitna-android.apk
       - name: Publish as the "android-latest" download
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view android-latest >/dev/null 2>&1 || gh release create android-latest --title "Flux Android app" \
-            --notes "Install on Android 8+. Open the file, allow installing from your browser, then open Flux Companion." --latest=false
-          gh release upload android-latest flux-android.apk --clobber
+          gh release view android-latest >/dev/null 2>&1 || gh release create android-latest --title "Kitna Android app" \
+            --notes "Install on Android 8+. Open the file, allow installing from your browser, then open Kitna Companion." --latest=false
+          gh release upload android-latest kitna-android.apk --clobber

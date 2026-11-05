@@ -1,16 +1,16 @@
 """Ledger integrity: cross-source de-duplication, bank-balance reconciliation, double-entry check.
 
 1. De-duplication
-   The same payment can reach Flux up to four ways: Scan & Pay, the bank's SMS, the UPI app's
+   The same payment can reach Kitna up to four ways: Scan & Pay, the bank's SMS, the UPI app's
    notification, and later the bank statement. `find_duplicate` recognises it:
      • exact:  same bank/UPI reference number (UTR/RRN)
      • fuzzy:  same direction + amount, logged from a *different* source within a short window
 2. Reconciliation
    Banks report "Avl Bal" in many SMS. Between two such reports, the change in the bank's
-   balance must equal the net of everything Flux logged in between. If not, Flux is missing
+   balance must equal the net of everything Kitna logged in between. If not, Kitna is missing
    a transaction (and we can say roughly how much).
 3. Double-entry projection
-   Every Flux record is projected into balanced journal lines (bank, goals, investments,
+   Every Kitna record is projected into balanced journal lines (bank, goals, investments,
    income, expense accounts). The trial balance must sum to zero, and the bank-minus-earmarks
    figure must equal the app's "available" balance. Tests assert both invariants.
 """
@@ -25,7 +25,7 @@ AUTO_SOURCES = ("sms", "upi", "notification", "import")
 
 
 # UPI apps the payer uses. A payment appears in exactly one of these, plus the bank's channels
-# (SMS, bank app, statement) and possibly Flux itself (Scan & Pay, voice, manual).
+# (SMS, bank app, statement) and possibly Kitna itself (Scan & Pay, voice, manual).
 PAYMENT_APPS = frozenset({
     "com.google.android.apps.nbu.paisa.user", "com.phonepe.app", "net.one97.paytm", "in.org.npci.upiapp",
     "in.amazon.mShop.android.shopping", "com.dreamplug.androidapp", "money.super.payments", "com.whatsapp",
@@ -84,12 +84,12 @@ def latest_bank_balance(user_id):
 
 
 def reconcile(user_id):
-    """Compare the two most recent bank-reported balances (same account) with what Flux logged in between."""
+    """Compare the two most recent bank-reported balances (same account) with what Kitna logged in between."""
     db = get_db()
     last = db.execute("SELECT * FROM balance_snapshots WHERE user_id = ? AND transaction_id IS NOT NULL"
                       " ORDER BY id DESC LIMIT 1", (user_id,)).fetchone()
     if not last:
-        return {"status": "no_data", "message": "Flux checks your balance against the bank once it has seen two bank SMS with a balance."}
+        return {"status": "no_data", "message": "Kitna checks your balance against the bank once it has seen two bank SMS with a balance."}
     prev = db.execute(
         "SELECT * FROM balance_snapshots WHERE user_id = ? AND id < ? AND transaction_id IS NOT NULL"
         " AND COALESCE(account_last4,'') = COALESCE(?, '') ORDER BY id DESC LIMIT 1",
@@ -105,11 +105,11 @@ def reconcile(user_id):
     result = {"from": prev["observed_date"], "to": last["observed_date"], "bank_balance": rupees(last["balance"]),
               "expected": rupees(expected), "drift": rupees(drift), "account_last4": last["account_last4"]}
     if abs(drift) <= 100:  # ±₹1 tolerance for rounding
-        return {**result, "status": "in_sync", "message": "Flux matches your bank. Nothing is missing."}
+        return {**result, "status": "in_sync", "message": "Kitna matches your bank. Nothing is missing."}
     what = "money came in" if drift > 0 else "a payment"
     return {**result, "status": "drift",
-            "message": f"Flux is missing about ₹{abs(rupees(drift)):,.2f}: {what} between {prev['observed_date']} and "
-                       f"{last['observed_date']} that Flux didn't see. Add it or import that day's SMS."}
+            "message": f"Kitna is missing about ₹{abs(rupees(drift)):,.2f}: {what} between {prev['observed_date']} and "
+                       f"{last['observed_date']} that Kitna didn't see. Add it or import that day's SMS."}
 
 
 def journal(user_id):
@@ -146,7 +146,7 @@ def trial_balance(user_id):
 
 
 def align_to_bank(user_id):
-    """Set the opening balance so Flux's available balance equals the bank's latest reported balance.
+    """Set the opening balance so Kitna's available balance equals the bank's latest reported balance.
     Money in goals and investments is still inside the bank account, so it's added back."""
     from .finance import invested_cost, opening_balance, total_saved
 
@@ -164,7 +164,7 @@ def align_to_bank(user_id):
 
 
 def bank_gap(user_id):
-    """Bank balance minus what Flux thinks is in the bank (available + goal cash), or None."""
+    """Bank balance minus what Kitna thinks is in the bank (available + goal cash), or None."""
     from .finance import invested_cost, total_saved
 
     bank = get_db().execute("SELECT balance FROM balance_snapshots WHERE user_id = ? ORDER BY id DESC LIMIT 1",

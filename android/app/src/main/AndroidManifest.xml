@@ -17,7 +17,7 @@
         android:icon="@drawable/ic_flux"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Flux"
+        android:theme="@style/Theme.Kitna"
         android:usesCleartextTraffic="false">
 
         <activity
@@ -28,7 +28,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- "Link the Flux app" on the Flux website opens fluxapp://connect?server=…&token=… -->
+            <!-- "Link the Kitna Companion app" on the Kitna website opens fluxapp://connect?server=…&token=… -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

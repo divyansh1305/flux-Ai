@@ -52,9 +52,9 @@ def _inr(v):
 def transactions_pdf(user, txs):
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=16 * mm, rightMargin=16 * mm, topMargin=16 * mm,
-                            bottomMargin=16 * mm, title="Flux transactions")
+                            bottomMargin=16 * mm, title="Kitna transactions")
     s = _styles()
-    story = [Paragraph("Flux — Transactions", s["h1"]),
+    story = [Paragraph("Kitna — Transactions", s["h1"]),
              Paragraph(f"{_esc(user['name'])} · generated {clock.now():%d %b %Y, %H:%M}", s["muted"]),
              Spacer(1, 8)]
     rows = [["Date", "Type", "Category", "Note", "Amount"]]
@@ -72,10 +72,10 @@ def transactions_pdf(user, txs):
 def monthly_pdf(user, snap):
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=18 * mm,
-                            bottomMargin=18 * mm, title="Flux monthly report")
+                            bottomMargin=18 * mm, title="Kitna monthly report")
     s = _styles()
     m = snap["this_month"]
-    story = [Paragraph(f"Flux monthly report — {_esc(m['month'])}", s["h1"]),
+    story = [Paragraph(f"Kitna monthly report — {_esc(m['month'])}", s["h1"]),
              Paragraph(f"Prepared for {_esc(user['name'])}", s["muted"]), Spacer(1, 10)]
 
     rate = f"{m['savings_rate']}%" if m["savings_rate"] is not None else "—"
@@ -120,7 +120,7 @@ def monthly_pdf(user, snap):
     story.append(Paragraph(f"Projected spending this month: <b>{_inr(f['projected_month_total'])}</b> "
                            f"(last month: {_inr(f['last_month_total'])}). {_esc(f['method'])}", s["p"]))
     story.append(Spacer(1, 16))
-    story.append(Paragraph("Flux is a budgeting tool, not financial advice.", s["muted"]))
+    story.append(Paragraph("Kitna is a budgeting tool, not financial advice.", s["muted"]))
     doc.build(story)
     buf.seek(0)
     return buf

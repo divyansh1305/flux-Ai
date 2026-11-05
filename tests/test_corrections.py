@@ -20,7 +20,7 @@ def test_fix_category_remember_refile_and_accuracy(app, client, user):
     before = client.get("/api/insights").json["accuracy"]
     assert before["auto_logged"] == 3 and before["corrected"] == 0
 
-    # User says Chaayos is "Food & Dining" (whatever Flux guessed) and asks Flux to remember
+    # User says Chaayos is "Food & Dining" (whatever Kitna guessed) and asks Kitna to remember
     target = "Shopping" if a["category"] == "Food & Dining" else "Food & Dining"
     r = client.patch(f"/api/transactions/{a['transaction_id']}", json={"category": target, "remember": True})
     assert r.status_code == 200 and r.json["transaction"]["category"] == target

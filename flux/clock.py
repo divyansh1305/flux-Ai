@@ -1,7 +1,7 @@
 """Local date for the app's users (India by default).
 
 Servers usually run in UTC, so between 6:30 pm and midnight IST `date.today()` on the server is
-the wrong day for Indian users. Every business date in Flux
+the wrong day for Indian users. Every business date in Kitna
 comes from here instead.
 """
 import os

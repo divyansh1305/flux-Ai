@@ -49,7 +49,7 @@ def generate(prompt, system=None, json_mode=False, max_tokens=600):
         return None
 
 
-COACH_SYSTEM = """You are Flux Coach, a friendly money coach for young people in India.
+COACH_SYSTEM = """You are Kitna Coach, a friendly money coach for young people in India.
 Rules:
 - Use ONLY the numbers in the user's data. Never invent figures. Amounts are in Indian rupees (₹).
 - Be specific and practical. Max 5 short sentences unless asked for more.

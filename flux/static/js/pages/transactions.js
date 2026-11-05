@@ -1,5 +1,5 @@
 (function () {
-  const { el, icon, api, download, err, pageHead, txRow, deleteTx, addTransactionModal, onRefresh, meta } = window.Flux;
+  const { el, icon, api, download, err, pageHead, txRow, deleteTx, addTransactionModal, onRefresh, meta } = window.Kitna;
 
   // First page of Activity starts loading in parallel with the sign-in check.
   let early = api("/api/transactions?page=1&size=30", { allow401: true }).catch(() => null);
@@ -42,7 +42,7 @@
         };
         const pre = query === "page=1&size=30" ? early : null;
         early = null;
-        if (!append && query === "page=1&size=30") await window.Flux.live("/api/transactions?" + query, show, pre);
+        if (!append && query === "page=1&size=30") await window.Kitna.live("/api/transactions?" + query, show, pre);
         else show(await api("/api/transactions?" + query));
       } catch (e) { err(e); }
     }
@@ -62,5 +62,5 @@
     reload();
   }
 
-  document.addEventListener("DOMContentLoaded", () => window.Flux.boot(render));
+  document.addEventListener("DOMContentLoaded", () => window.Kitna.boot(render));
 })();

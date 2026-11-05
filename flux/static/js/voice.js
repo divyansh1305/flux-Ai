@@ -1,16 +1,16 @@
-/* Flux Voice — a Siri-style assistant for the whole app.
-   - Tap the mic, press Ctrl/⌘+K, or say "Hey Flux" (optional wake word, Chrome/Edge).
+/* Kitna Voice — a Siri-style assistant for the whole app.
+   - Tap the mic, press Ctrl/⌘+K, or say "Hey Kitna" (optional wake word, Chrome/Edge).
    - Speech is recognised by the browser; the text goes to /api/voice/command,
      which understands English, Hindi and Hinglish and performs the action.
    - Replies are spoken aloud. Works by typing too when speech isn't available. */
 (function () {
   "use strict";
-  const { el, icon, api, ok, refresh } = window.Flux;
+  const { el, icon, api, ok, refresh } = window.Kitna;
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const synth = window.speechSynthesis;
   const CONTINUE_KEY = "flux_voice_continue";
   const WAKE_KEY = "flux_wake_word";
-  const WAKE_RE = /\b(hey|hi|ok|okay|hello)\s+(flux|flex|flocks|flucks|fluxx)\b/i;
+  const WAKE_RE = /\b(hey|hi|ok|okay|hello)\s+(kitna|kitnaa|kithna|kitana|keetna)\b/i;
 
   const SUGGESTIONS = {
     "en-IN": ["What's my balance?", "Spent 250 on Swiggy", "How much did I spend this month?", "Can I afford 2000 shoes?", "Open goals", "Help"],
@@ -54,7 +54,7 @@
     if (!orb) return;
     orb.className = "v-mic " + (s === "listening" || s === "thinking" ? s : "");
     overlay.classList.toggle("listening-on", s === "listening");
-    stateEl.firstChild.textContent = { listening: "Listening", thinking: "Thinking…", speaking: "Flux", idle: SR ? "Tap the mic and speak" : "Type a command" }[s] || "";
+    stateEl.firstChild.textContent = { listening: "Listening", thinking: "Thinking…", speaking: "Kitna", idle: SR ? "Tap the mic and speak" : "Type a command" }[s] || "";
   }
 
   function chips() {
@@ -67,7 +67,7 @@
   function open(startListening = true) {
     if (overlay) { if (startListening) listen(); return; }
     pauseWake();
-    orb = el("button", { class: "v-mic", type: "button", "aria-label": "Talk to Flux", onclick: () => (listening ? stopListening() : listen()) }, icon("mic"));
+    orb = el("button", { class: "v-mic", type: "button", "aria-label": "Talk to Kitna", onclick: () => (listening ? stopListening() : listen()) }, icon("mic"));
     stateEl = el("div", { class: "v-state row", style: { gap: "0" } }, el("span"), el("span", { class: "eq", "aria-hidden": "true" }, el("i"), el("i"), el("i"), el("i")));
     heardEl = el("div", { class: "v-heard", "aria-live": "polite" });
     replyEl = el("div", { class: "v-reply", "aria-live": "assertive" });
@@ -81,7 +81,7 @@
       el("div", { class: "v-top" }, orb, el("div", { style: { flex: 1, minWidth: 0 } }, stateEl, heardEl)),
       replyEl, actionsEl, chips(), typeForm,
       el("div", { class: "row tiny faint wrap" }, langBtn, SR ? "Esc to close · Ctrl/⌘+K to open" : "Voice input works in Chrome, Edge and Safari."));
-    overlay = el("div", { class: "voice-overlay", role: "dialog", "aria-label": "Flux voice assistant",
+    overlay = el("div", { class: "voice-overlay", role: "dialog", "aria-label": "Kitna voice assistant",
       onclick: (e) => { if (e.target === overlay) close(); } }, sheet);
     document.body.appendChild(overlay);
     setState("idle");
@@ -195,7 +195,7 @@
         el("button", { class: "btn sm", type: "button", onclick: () => send("no") }, "No"));
       return speak(r.reply, () => { if (overlay && pending) listen(); });
     }
-    if (r.logout) return speak(r.reply, () => window.Flux.logout());
+    if (r.logout) return speak(r.reply, () => window.Kitna.logout());
     if (r.navigate && r.navigate !== location.pathname && !["budget_status", "goal_status", "health_score"].includes(r.intent)) {
       try { sessionStorage.setItem(CONTINUE_KEY, JSON.stringify({ heard: r.heard || "", reply: r.reply })); } catch (e) { /* ignore */ }
       return speak(r.reply, () => { location.href = r.navigate; });
@@ -206,7 +206,7 @@
     speak(r.reply);
   }
 
-  // ─── "Hey Flux" wake word (optional) ──────────────────────
+  // ─── "Hey Kitna" wake word (optional) ──────────────────────
   function startWake() {
     if (!SR || wakeRec || !wakeOn) return;
     wakeRec = new SR();
@@ -243,15 +243,15 @@
   function updateFab() {
     if (!fab) return;
     fab.classList.toggle("wake", !!wakeRec);
-    fab.title = wakeRec ? 'Listening for "Hey Flux"… (tap to talk)' : "Talk to Flux (Ctrl/⌘+K)";
+    fab.title = wakeRec ? 'Listening for "Hey Kitna"… (tap to talk)' : "Talk to Kitna (Ctrl/⌘+K)";
   }
 
   // ─── Init ─────────────────────────────────────────────────
   function init(u) {
     user = u;
     lang = (u && u.voice_lang) || "en-IN";
-    fab = el("button", { class: "mic-fab", type: "button", "aria-label": "Talk to Flux", onclick: () => open(true) }, icon("mic"));
-    const hint = el("div", { class: "mic-hint" }, SR ? "Ask Flux anything" : "Type to Flux");
+    fab = el("button", { class: "mic-fab", type: "button", "aria-label": "Talk to Kitna", onclick: () => open(true) }, icon("mic"));
+    const hint = el("div", { class: "mic-hint" }, SR ? "Ask Kitna anything" : "Type to Kitna");
     document.body.append(fab, hint);
     setTimeout(() => hint.remove(), 6000);
     document.addEventListener("keydown", (e) => {

@@ -1,6 +1,8 @@
-# Flux: the money tracker that's actually right
+# Kitna: aaj kitna safe hai?
 
-**Flux logs every UPI and bank payment automatically and keeps a ledger you can trust.** It tells you how much you can safely spend today, built from *your* payday, plans and safety cushion, checks itself against your bank, and catches real problems: failed payments whose money hasn't come back, double charges and subscription price rises. It never moves money, never offers loans and never sells data. For ages 18+.
+*Kitna* (कितना) means "how much?": the question this app answers every day. (Earlier name: Flux.)
+
+**Kitna logs every UPI and bank payment automatically and keeps a ledger you can trust.** It tells you how much you can safely spend today, built from *your* payday, plans and safety cushion, checks itself against your bank, and catches real problems: failed payments whose money hasn't come back, double charges and subscription price rises. It never moves money, never offers loans and never sells data. For ages 18+.
 
 🛠 Deploy and update: [`docs/DEPLOY.md`](docs/DEPLOY.md) · 📄 Interview guide: [`docs/INTERVIEW.md`](docs/INTERVIEW.md) · 🚀 Launch plan: [`docs/LAUNCH.md`](docs/LAUNCH.md) · 📦 Open-source parser: [`packages/upi_parse`](packages/upi_parse) · 🤖 Android app: [`android/`](android)
 
@@ -19,16 +21,16 @@ UPI made spending effortless, but nothing made *knowing where you stand* effortl
 
 **Who it's for:** students and first-job earners (18–28) who pay mostly by UPI.
 
-## What Flux does
+## What Kitna does
 
-| Question | How Flux answers it |
+| Question | How Kitna answers it |
 |---|---|
 | "Where did my money go?" | **Logs itself.** The Android companion app reads payment notifications (GPay, PhonePe, Paytm, bank apps). iPhone users forward bank SMS with a Shortcuts automation. Statements import from CSV. All of it goes through the open-source `upi-parse` library. |
-| "Is this number even right?" | **One ledger, no double counting.** The same payment seen in a UPI app notification, the bank SMS, Gmail and the statement is matched (by UPI reference, or amount ± 1 day from a different channel) and stored once. The bank's own "Avl Bal" is captured to **reconcile** your Flux balance against your real one. |
+| "Is this number even right?" | **One ledger, no double counting.** The same payment seen in a UPI app notification, the bank SMS, Gmail and the statement is matched (by UPI reference, or amount ± 1 day from a different channel) and stored once. The bank's own "Avl Bal" is captured to **reconcile** your Kitna balance against your real one. |
 | "What can I spend today?" | **Personal safe-to-spend** = (money you have + money you're *sure* is coming − bills due − your plans − goal top-ups − your safety cushion) ÷ days until *your* next payday (or month end if income varies). Tap it to see every line. Plans like "Dinner Friday ₹2,000" are kept aside, and a plan paid today isn't counted twice. |
 | "Is anything wrong?" | **Money checks:** a failed payment is watched until the refund arrives, with the RBI deadlines (T+1 transfer, T+5 merchant, ₹100/day after); double charges (same merchant, amount and day, different bank refs); subscription price rises. Each can be dismissed for good. |
-| "What do you have about me?" | **What Flux knows:** every source and record type counted, export, delete (which also revokes Gmail). 18+ only, as India's DPDP rules require for behavioural tracking. |
-| "Did Flux file it correctly?" | **You correct it, Flux learns.** Tap a transaction to fix its category and tick "always use this". Flux re-files earlier entries, applies the rule to future payments, and shows its **measured accuracy** from your corrections. |
+| "What do you have about me?" | **What Kitna knows:** every source and record type counted, export, delete (which also revokes Gmail). 18+ only, as India's DPDP rules require for behavioural tracking. |
+| "Did Kitna file it correctly?" | **You correct it, Kitna learns.** Tap a transaction to fix its category and tick "always use this". Kitna re-files earlier entries, applies the rule to future payments, and shows its **measured accuracy** from your corrections. |
 
 ## Numbers (measured, not claimed)
 
@@ -50,7 +52,7 @@ The load test also caught three production bugs before any user did: worker recy
 - 🧾 **Ledger integrity:** cross-source dedupe, bank-balance reconciliation with drift alerts, a double-entry trial balance at `/api/ledger`, and integer paise everywhere.
 - 🔮 **Personal safe-to-spend, plans, safety cushion, recurring bills, month-end forecast, money checks.**
 - 🔔 **Reminders on the phone (Web Push, no push library):** VAPID (RFC 8292) and message encryption (RFC 8291/8188) written on `cryptography`, byte-for-byte equal to the reference implementation, with an allowlist of real push services so the endpoint can't be abused. A daily job picks the few things worth interrupting for (late refund past the RBI deadline, double charge, bill due tomorrow, friends who owe you, Sunday note, morning number), at most 3 a day, never the same twice, and everything also shows under the bell in the app.
-- 🤝 **Money lent to friends:** split a payment and your budgets count only your share while the balance still matches the bank. When the friend's UPI payment arrives (SMS, Gmail, Android, statement), Flux ticks them off if the amount and name match; amount without a name → it asks instead of guessing. Money you owe is kept aside in safe-to-spend; money owed to you is shown but only counted once it arrives.
+- 🤝 **Money lent to friends:** split a payment and your budgets count only your share while the balance still matches the bank. When the friend's UPI payment arrives (SMS, Gmail, Android, statement), Kitna ticks them off if the amount and name match; amount without a name → it asks instead of guessing. Money you owe is kept aside in safe-to-spend; money owed to you is shown but only counted once it arrives.
 - 🗓 **Sunday note:** last week vs your usual 4 weeks, biggest category and payment, what's due next week, who owes what. Computed, not generated.
 - 📄 **PDF statements, password-protected too:** reads word positions (most bank PDFs have no table lines): column headers decide money in/out, multi-line narrations are joined, and when the balance moves by exactly the amount, the balance decides the direction.
 - 🗣 **Hinglish:** one switch in Settings; daily screens, reminders and the Sunday note.
@@ -87,14 +89,14 @@ flux/            Flask app (factory + blueprints)
   security.py      auth, CSRF, rate limiting (per IP or per token), CSP, validation
   api/             auth, money, plans, statement, ingest, gmail, voice
 packages/upi_parse/  pip-installable parser library + benchmarks (MIT)
-android/         Flux Companion (Kotlin)
+android/         Kitna Companion (Kotlin)
 scripts/loadtest.py
 tests/           pytest suite
 ```
 
-## Regulatory design (why Flux never touches money)
+## Regulatory design (why Kitna never touches money)
 
-- **Payments and investing:** initiating UPI payments needs NPCI approval as a Third-Party App Provider, and API stock orders need SEBI empanelment. Flux does neither: it only reads, so the PIN and the money never pass through Flux.
+- **Payments and investing:** initiating UPI payments needs NPCI approval as a Third-Party App Provider, and API stock orders need SEBI empanelment. Kitna does neither: it only reads, so the PIN and the money never pass through Kitna.
 - **Personal data (DPDP Act and Rules 2025):** plain-language notice, export and delete, purpose-limited use, and 18+ only because tracking spending habits counts as behavioural monitoring, which is restricted for under-18s.
 - **Bank data:** notifications, SMS and CSV today, all user-initiated and consented. The production path for direct bank sync is the RBI Account Aggregator framework through a licensed FIU partner (for example Setu).
 - **Google Play:** SMS permissions are restricted, so the Android app uses notification access with a prominent disclosure and consent screen.
@@ -132,4 +134,4 @@ Load test: see the header of `scripts/loadtest.py`. Docker: `docker build -t flu
 
 ---
 
-*Flux is a budgeting tool, not financial advice.*
+*Kitna is a budgeting tool, not financial advice.*

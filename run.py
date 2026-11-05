@@ -1,4 +1,4 @@
-"""Start Flux locally:  python run.py   (then open http://127.0.0.1:5000)"""
+"""Start Kitna locally:  python run.py   (then open http://127.0.0.1:5000)"""
 import os
 
 from flux import create_app

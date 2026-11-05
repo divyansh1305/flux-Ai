@@ -1,6 +1,6 @@
 (function () {
-  const onDay = (iso) => { const t = window.Flux.dateFmt(iso); return t === "Today" ? "today" : t === "Yesterday" ? "yesterday" : "on " + t; };
-  const { el, icon, api, inr0, txRow, addTransactionModal, planModal, onRefresh, CAT_COLORS, avatar, dateFmt } = window.Flux;
+  const onDay = (iso) => { const t = window.Kitna.dateFmt(iso); return t === "Today" ? "today" : t === "Yesterday" ? "yesterday" : "on " + t; };
+  const { el, icon, api, inr0, txRow, addTransactionModal, planModal, onRefresh, CAT_COLORS, avatar, dateFmt } = window.Kitna;
   const C = window.FluxCharts;
 
   function greeting(name) {
@@ -19,20 +19,20 @@
     const load = async () => {
       const pre = early;
       early = null;
-      await window.Flux.live("/api/dashboard", (d) => content.replaceChildren(...build(d, user).filter(Boolean)), pre);
+      await window.Kitna.live("/api/dashboard", (d) => content.replaceChildren(...build(d, user).filter(Boolean)), pre);
     };
     onRefresh(load);
     await load();
     fillWeek();
     fillRemind();
-    window.Flux.prefetch(["/api/meta", "/api/transactions?page=1&size=30", "/api/plans", "/api/insights", "/api/goals"]);
+    window.Kitna.prefetch(["/api/meta", "/api/transactions?page=1&size=30", "/api/plans", "/api/insights", "/api/goals"]);
     const params = new URLSearchParams(location.search);
     if (params.get("gmail") === "connected") {
-      window.Flux.ok("Gmail connected. Your bank payments from the last 30 days are being added.");
+      window.Kitna.ok("Gmail connected. Your bank payments from the last 30 days are being added.");
       history.replaceState(null, "", "/app");
     }
     // Quietly check Gmail for new bank alerts (the server checks at most every 10 minutes).
-    if ((window.Flux.config.features || {}).gmail) {
+    if ((window.Kitna.config.features || {}).gmail) {
       // Small batches, one after another, so the page never waits on Gmail and nothing else gets stuck behind it.
       (async () => {
         let added = 0;
@@ -44,7 +44,7 @@
           if (r.needs_reconnect) { load(); return; }
           if (!r.more) break;
         }
-        if (added) { window.Flux.ok(`${added} new payment${added === 1 ? "" : "s"} added from Gmail.`); load(); }
+        if (added) { window.Kitna.ok(`${added} new payment${added === 1 ? "" : "s"} added from Gmail.`); load(); }
       })();
     }
   }
@@ -55,14 +55,14 @@
   async function alignBank() {
     try {
       const r = await api("/api/ledger/align", { method: "POST" });
-      window.Flux.ok(`Done. Flux now matches your bank: ${inr0(r.balance)} available.`);
-      window.Flux.refresh();
-    } catch (e) { window.Flux.err(e); }
+      window.Kitna.ok(`Done. Kitna now matches your bank: ${inr0(r.balance)} available.`);
+      window.Kitna.refresh();
+    } catch (e) { window.Kitna.err(e); }
   }
 
   async function act(key, card) {
     if (card) card.remove();  // gone at once; the server catches up
-    try { await api("/api/checks/dismiss", { method: "POST", body: { key } }); window.Flux.refresh(); } catch (e) { window.Flux.err(e); window.Flux.refresh(); }
+    try { await api("/api/checks/dismiss", { method: "POST", body: { key } }); window.Kitna.refresh(); } catch (e) { window.Kitna.err(e); window.Kitna.refresh(); }
   }
 
   function checkCard(c) {
@@ -122,7 +122,7 @@
   }
   // ── Offer reminders once, only where the phone can actually show them
   async function fillRemind() {
-    const P = window.Flux.push;
+    const P = window.Kitna.push;
     try { if (localStorage.getItem("flux_remind_offer") === "no") return; } catch (e) { /* ignore */ }
     if (!P.supported() && !P.needsHomeScreen()) return;
     if (P.supported() && Notification.permission === "denied") return;
@@ -130,10 +130,10 @@
     const card = el("div", { class: "notice info", style: { alignItems: "center" } }, icon("bell"),
       el("div", { style: { flex: 1 } }, el("b", null, "Get a heads-up on your phone"),
         el("div", { class: "small" }, P.needsHomeScreen()
-          ? "On iPhone: tap Share → Add to Home Screen, open Flux from there, and turn on reminders for bills, late refunds and friends paying you back."
+          ? "On iPhone: tap Share → Add to Home Screen, open Kitna from there, and turn on reminders for bills, late refunds and friends paying you back."
           : "Bills due tomorrow, late refunds, and when friends pay you back. At most 3 a day.")),
       P.needsHomeScreen() ? null : el("button", { class: "btn sm", onclick: async () => {
-        try { const r = await P.enable(); card.remove(); window.Flux.ok(r.test_sent ? "Reminders are on. You should see a test notification now." : "Reminders are on."); } catch (e) { window.Flux.err(e); }
+        try { const r = await P.enable(); card.remove(); window.Kitna.ok(r.test_sent ? "Reminders are on. You should see a test notification now." : "Reminders are on."); } catch (e) { window.Kitna.err(e); }
       } }, "Turn on"),
       el("button", { class: "icon-btn", "aria-label": "Not now", title: "Not now", onclick: () => { try { localStorage.setItem("flux_remind_offer", "no"); } catch (e) { /* ignore */ } card.remove(); } }, icon("x")));
     remindSlot.replaceChildren(card);
@@ -176,14 +176,14 @@
     const g = d.gmail || {};
     const reconnect = g.connected && g.needs_reconnect
       ? el("div", { class: "notice caution", style: { alignItems: "center" } }, icon("alert"),
-          el("div", { style: { flex: 1 } }, el("b", null, "Gmail stopped sharing bank emails with Flux. "), "New email payments won't show up until you reconnect. It takes one tap."),
+          el("div", { style: { flex: 1 } }, el("b", null, "Gmail stopped sharing bank emails with Kitna. "), "New email payments won't show up until you reconnect. It takes one tap."),
           el("a", { class: "btn sm", href: "/gmail/connect" }, "Reconnect"))
       : null;
     const setupShowsBank = !d.setup.complete && d.setup.steps.some((s) => s.key === "bank" && !s.done && s.action === "align");
     const gap = d.bank_gap;
     const bankCard = d.bank && gap !== null && Math.abs(gap) >= 1 && d.reconcile.status !== "drift" && !setupShowsBank
       ? el("div", { class: "notice info", style: { alignItems: "center" } }, icon("bank"),
-          el("div", { style: { flex: 1 } }, el("b", null, `Your bank shows ${inr0(d.bank.balance)}, Flux shows ${inr0(d.balance)}.`), " Flux started counting later. Match them in one tap."),
+          el("div", { style: { flex: 1 } }, el("b", null, `Your bank shows ${inr0(d.bank.balance)}, Kitna shows ${inr0(d.balance)}.`), " Kitna started counting later. Match them in one tap."),
           el("button", { class: "btn sm", onclick: alignBank }, "Match"))
       : null;
     const drift = d.reconcile.status === "drift"
@@ -193,8 +193,8 @@
       el("div", { style: { flex: 1 } }, el("b", null, `Was the ${inr0(x.amount)} ${onDay(x.tx_date)} from ${x.person.split(" ")[0]}?`),
         el("div", { class: "small", style: { marginTop: "4px" } }, "Your bank didn't say who sent it."),
         el("div", { class: "row", style: { gap: "8px", marginTop: "10px" } },
-          el("button", { class: "btn sm", onclick: async () => { try { await api(`/api/friends/${x.id}/settle`, { method: "POST", body: { transaction_id: x.suggested_tx_id } }); window.Flux.ok("Ticked off."); window.Flux.refresh(); } catch (e) { window.Flux.err(e); } } }, "Yes"),
-          el("button", { class: "btn sm ghost", onclick: async () => { try { await api(`/api/friends/${x.id}/not-them`, { method: "POST" }); window.Flux.refresh(); } catch (e) { window.Flux.err(e); } } }, "No")))));
+          el("button", { class: "btn sm", onclick: async () => { try { await api(`/api/friends/${x.id}/settle`, { method: "POST", body: { transaction_id: x.suggested_tx_id } }); window.Kitna.ok("Ticked off."); window.Kitna.refresh(); } catch (e) { window.Kitna.err(e); } } }, "Yes"),
+          el("button", { class: "btn sm ghost", onclick: async () => { try { await api(`/api/friends/${x.id}/not-them`, { method: "POST" }); window.Kitna.refresh(); } catch (e) { window.Kitna.err(e); } } }, "No")))));
 
     // ── Coming up: plans + bills before the next money
     const upcoming = [
@@ -206,7 +206,7 @@
         ? el("div", { class: "tx-list" }, upcoming.map((u) => el("div", { class: "tx" }, avatar(u.name),
             el("div", { class: "tx-main" }, el("div", { class: "tx-title" }, u.name), el("div", { class: "tx-sub" }, `${u.sub} · ${dateFmt(u.date)}`)),
             el("div", { class: "tx-amt" + (u.income ? " green" : "") }, (u.income ? "+" : "") + inr0(u.amount)))))
-        : el("div", { class: "empty" }, el("b", null, "Nothing planned yet"), "Going out on Friday? Add it as a plan and Flux keeps the money aside.")));
+        : el("div", { class: "empty" }, el("b", null, "Nothing planned yet"), "Going out on Friday? Add it as a plan and Kitna keeps the money aside.")));
 
     const recent = section("Recent", el("a", { class: "link", href: "/app/transactions" }, "See all"),
       el("div", { class: "card", style: { padding: "4px 20px" } }, d.recent.length
@@ -232,5 +232,5 @@
     return [hero, reconnect, ...checks, ...asks, weekSlot, remindSlot, setupCard(d.setup), bankCard, drift, coming, recent, month, spending];
   }
 
-  document.addEventListener("DOMContentLoaded", () => window.Flux.boot(render));
+  document.addEventListener("DOMContentLoaded", () => window.Kitna.boot(render));
 })();

@@ -76,7 +76,7 @@ try { Object.keys(localStorage).filter((k) => k.startsWith("fluxc:")).forEach((k
   $("change-email").addEventListener("click", () => {
     $("code-form").classList.add("hidden");
     $("email-form").classList.remove("hidden");
-    $("title").textContent = "Sign in to Flux";
+    $("title").textContent = "Sign in to Kitna";
     $("subtitle").textContent = "We'll email you a 6-digit code. No password needed.";
     $("dev-note").classList.add("hidden");
   });

@@ -4,7 +4,7 @@ from upi_parse._common import clean_merchant
 
 
 def categorize(description, kind):
-    """Flux kinds ('expense'/'income') -> (category, matched_reason or None if it was a guess)."""
+    """Kitna kinds ('expense'/'income') -> (category, matched_reason or None if it was a guess)."""
     cat, conf, reason = _categorize(description, "credit" if kind == "income" else "debit")
     return cat, (reason if conf >= 0.7 else None)
 

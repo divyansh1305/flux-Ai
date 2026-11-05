@@ -74,7 +74,7 @@ def test_reconciliation_detects_missing_transaction(app, client, user):
     sms(app, t, "Rs.100.00 debited from A/c XX1234 on 10-11-26 to VPA uber@axl (UPI Ref No 628800000012). Avl Bal Rs 9,650.00")
     rec = client.get("/api/ledger").json["reconcile"]
     assert rec["status"] == "in_sync"
-    # A ₹200 payment happened that Flux never saw, then the next SMS shows the gap.
+    # A ₹200 payment happened that Kitna never saw, then the next SMS shows the gap.
     sms(app, t, "Rs.50.00 debited from A/c XX1234 on 10-11-26 to VPA chai@ybl (UPI Ref No 628800000013). Avl Bal Rs 9,400.00")
     rec = client.get("/api/ledger").json["reconcile"]
     assert rec["status"] == "drift" and rec["drift"] == -200.0 and "200" in rec["message"]

@@ -1,4 +1,4 @@
-/* Flux in Hinglish (Settings → Language). Turns on only when the user picks it.
+/* Kitna in Hinglish (Settings → Language). Turns on only when the user picks it.
    How: the screens are written in English; this swaps whole sentences for their Hinglish version as they appear
    (exact matches, plus patterns for sentences with numbers in them). User data (merchant names, notes) never
    matches a sentence here, so it is left alone. Covers Home, Activity, Plans, Friends, reminders and common
@@ -23,7 +23,7 @@
     "Spent today": "Aaj kharch hua",
     "Whatever you don't spend today stays in the pool, so tomorrow's number goes up.": "Aaj jo bachega woh kal ke number mein jud jayega.",
     "Make today's number yours": "Aaj ka number apna banao", "Your week": "Aapka hafta",
-    "Get a heads-up on your phone": "Phone pe yaad dilaye Flux",
+    "Get a heads-up on your phone": "Phone pe yaad dilaye Kitna",
     "Bills due tomorrow, late refunds, and when friends pay you back. At most 3 a day.": "Kal ke bills, late refund, aur jab dost paise lautayein. Din mein 3 se zyada nahi.",
     "Reminders are on.": "Reminders chalu.", "Reminders are on. You should see a test notification now.": "Reminders chalu. Ek test notification aana chahiye.",
     "Recent": "Haal ke payments", "See all": "Sab dekho", "No payments yet": "Abhi koi payment nahi",
@@ -31,14 +31,14 @@
     "This month": "Is mahine", "Details": "Details", "Spent": "Kharch", "Nothing yet this month": "Is mahine abhi kuch nahi",
     "Money in": "Aaye paise", "Set aside for goals": "Goals ke liye alag", "Still in your bank, not counted as spendable": "Bank mein hi hai, kharche mein nahi gina",
     "Where your money went": "Paise kahan gaye", "Nothing planned yet": "Abhi koi plan nahi",
-    "Going out on Friday? Add it as a plan and Flux keeps the money aside.": "Friday ko bahar ja rahe ho? Plan jodo, Flux paise alag rakh dega.",
+    "Going out on Friday? Add it as a plan and Kitna keeps the money aside.": "Friday ko bahar ja rahe ho? Plan jodo, Kitna paise alag rakh dega.",
     "Your plan": "Aapka plan", "Maybe coming in": "Shayad aayega", "Repeats every month": "Har mahine", "Repeats every week": "Har hafte",
     "Your bank didn't say who sent it.": "Bank ne nahi bataya kisne bheja.", "Ticked off.": "Ho gaya, list se hata diya.",
     "Reconnect": "Dobara jodo", "Match": "Milao", "A payment may be missing. ": "Shayad ek payment chhoot gaya. ",
     // setup card (from the server)
-    "Connect your payments": "Payments jodo", "Gmail on iPhone, the Flux app on Android": "iPhone pe Gmail, Android pe Flux app",
-    "Tell Flux when money comes in": "Batao paise kab aate hain", "So today's number lasts until then": "Taaki aaj ka number tab tak chale",
-    "Match Flux with your bank": "Flux ko bank se milao", "One tap, after your first bank message arrives": "Pehla bank message aate hi, ek tap",
+    "Connect your payments": "Payments jodo", "Gmail on iPhone, the Kitna Companion app on Android": "iPhone pe Gmail, Android pe Kitna Companion app",
+    "Tell Kitna when money comes in": "Batao paise kab aate hain", "So today's number lasts until then": "Taaki aaj ka number tab tak chale",
+    "Match Kitna with your bank": "Kitna ko bank se milao", "One tap, after your first bank message arrives": "Pehla bank message aate hi, ek tap",
     "Your bank balance is ready to match": "Bank balance milane ke liye taiyaar", "Like \"Dinner Friday ₹2,000\", so it's kept aside": "Jaise \"Friday dinner ₹2,000\", taaki alag rakha jaye",
     "spent": "kharch",
     // safe-to-spend breakdown (from the server)
@@ -47,14 +47,14 @@
     "Money you owe friends": "Doston ko dene hain", "Safety cushion (kept aside)": "Emergency ke liye alag",
     "You've spent today's safe amount. Whatever you don't spend tomorrow carries forward.": "Aaj ka safe amount kharch ho gaya. Kal jo bachega woh aage judega.",
     "Bills, plans and your cushion need everything you have until your next money. Only spend on essentials.": "Agle paise aane tak bills, plans aur cushion ke liye sab chahiye. Sirf zaroori kharcha karo.",
-    "Add your money in (salary, pocket money) or confirm your bank balance, and Flux works out today's number.": "Aane wale paise (salary, pocket money) jodo ya bank balance batao, Flux aaj ka number nikal dega.",
+    "Add your money in (salary, pocket money) or confirm your bank balance, and Kitna works out today's number.": "Aane wale paise (salary, pocket money) jodo ya bank balance batao, Kitna aaj ka number nikal dega.",
     // add / plan / friends modals
     "Add transaction": "Payment jodo", "Edit transaction": "Payment badlo", "Split with friends": "Doston mein baanto", "Split": "Baanto",
     "Money going out": "Jaane wale paise", "Money coming in": "Aane wale paise", "What for": "Kis liye", "When": "Kab",
     "I'm sure this money will come": "Yeh paise pakka aayenge", "Edit plan": "Plan badlo",
     "Plan added. Today's number now keeps it aside.": "Plan jud gaya. Aaj ka number ise alag rakhta hai.", "Plan updated.": "Plan badal gaya.",
     "Who was it with?": "Kiske saath tha?", "I'm paying a share too": "Mera hissa bhi hai",
-    "When they pay you back on UPI, Flux ticks them off by itself.": "Jab woh UPI pe lautayenge, Flux khud list se hata dega.",
+    "When they pay you back on UPI, Kitna ticks them off by itself.": "Jab woh UPI pe lautayenge, Kitna khud list se hata dega.",
     "Friends' shares are more than you paid.": "Doston ka hissa aapke diye se zyada hai.",
     "They owe me": "Mujhe lene hain", "I owe them": "Mujhe dene hain", "Add money with a friend": "Dost ke saath hisaab jodo",
     "Friend's name": "Dost ka naam", "What for (optional)": "Kis liye (optional)",
@@ -75,9 +75,9 @@
     "Mark done": "Ho gaya mark karo", "Marked done.": "Ho gaya.", "No plans yet": "Abhi koi plan nahi", "Past and done": "Pichle aur pure",
     "Your money setup": "Aapka money setup", "When does your money come in?": "Paise kab aate hain?",
     "Same date every month": "Har mahine same tareekh", "It varies": "Fix nahi hai", "Safety cushion (₹)": "Emergency cushion (₹)",
-    "Money Flux never counts as spendable. For emergencies.": "Yeh paise Flux kabhi kharche mein nahi ginta. Emergency ke liye.",
+    "Money Kitna never counts as spendable. For emergencies.": "Yeh paise Kitna kabhi kharche mein nahi ginta. Emergency ke liye.",
     "Saved. Today's number is updated.": "Save ho gaya. Aaj ka number update ho gaya.",
-    "Tell Flux what's coming, so today's number is real. Tap a plan to edit it.": "Flux ko batao kya aane wala hai, taaki aaj ka number sahi ho. Badalne ke liye plan pe tap karo.",
+    "Tell Kitna what's coming, so today's number is real. Tap a plan to edit it.": "Kitna ko batao kya aane wala hai, taaki aaj ka number sahi ho. Badalne ke liye plan pe tap karo.",
     // Activity
     "Transactions": "Hisaab", "Every rupee in and out.": "Har rupaya, aaya ya gaya.", "All": "Sab", "Expenses": "Kharche",
     "Load more": "Aur dikhao", "No transactions found": "Koi payment nahi mila", "Try different filters, or add one.": "Filter badlo, ya naya jodo.",

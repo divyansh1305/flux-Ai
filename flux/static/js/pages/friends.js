@@ -1,11 +1,11 @@
 (function () {
-  const onDay = (iso) => { const t = window.Flux.dateFmt(iso); return t === "Today" ? "today" : t === "Yesterday" ? "yesterday" : "on " + t; };
-  const { el, icon, api, inr0, inr, dateFmt, avatar, pageHead, onRefresh, ok, err, confirmBox, friendModal, splitModal } = window.Flux;
+  const onDay = (iso) => { const t = window.Kitna.dateFmt(iso); return t === "Today" ? "today" : t === "Yesterday" ? "yesterday" : "on " + t; };
+  const { el, icon, api, inr0, inr, dateFmt, avatar, pageHead, onRefresh, ok, err, confirmBox, friendModal, splitModal } = window.Kitna;
 
   async function render(main) {
     const content = el("div", { class: "stack narrow", style: { gap: "18px" } });
     main.replaceChildren(pageHead("Friends", "Money you lent or borrowed. Ticked off by itself when the UPI payment arrives."), content);
-    const load = () => window.Flux.live("/api/friends", (d) => content.replaceChildren(...build(d).filter(Boolean)));
+    const load = () => window.Kitna.live("/api/friends", (d) => content.replaceChildren(...build(d).filter(Boolean)));
     onRefresh(load);
     await load();
   }
@@ -24,17 +24,17 @@
     try {
       await api(`/api/friends/${r.id}/settle`, { method: "POST", body: txId ? { transaction_id: txId } : {} });
       ok(r.direction === "they_owe" ? `${r.person.split(" ")[0]} is ticked off.` : `Marked as paid to ${r.person.split(" ")[0]}.`);
-      window.Flux.refresh();
+      window.Kitna.refresh();
     } catch (e) { err(e); }
   }
 
   async function notThem(r) {
-    try { await api(`/api/friends/${r.id}/not-them`, { method: "POST" }); window.Flux.refresh(); } catch (e) { err(e); }
+    try { await api(`/api/friends/${r.id}/not-them`, { method: "POST" }); window.Kitna.refresh(); } catch (e) { err(e); }
   }
 
   async function remove(r) {
     if (!(await confirmBox("Remove this?", `${r.person} · ${inr(r.amount)}${r.note ? " · " + r.note : ""}`, true))) return;
-    try { await api(`/api/friends/${r.id}`, { method: "DELETE" }); ok("Removed."); window.Flux.refresh(); } catch (e) { err(e); }
+    try { await api(`/api/friends/${r.id}`, { method: "DELETE" }); ok("Removed."); window.Kitna.refresh(); } catch (e) { err(e); }
   }
 
   async function pickPayment() {
@@ -49,7 +49,7 @@
         avatar(t.note || t.category), el("div", { class: "tx-main" }, el("div", { class: "tx-title" }, t.note || t.category),
           el("div", { class: "tx-sub" }, dateFmt(t.date) + " · " + t.category)),
         el("div", { class: "tx-amt" }, "-" + inr(t.amount)))));
-    const v = await window.Flux.modal("Which payment?", list, [
+    const v = await window.Kitna.modal("Which payment?", list, [
       { label: "Cancel", value: null, cls: "ghost" },
       { label: "Next", submit: true, cls: "primary", value: () => chosen },
     ]);
@@ -110,5 +110,5 @@
     return [summary, actions, ...asks, open, upi, done];
   }
 
-  document.addEventListener("DOMContentLoaded", () => window.Flux.boot(render));
+  document.addEventListener("DOMContentLoaded", () => window.Kitna.boot(render));
 })();

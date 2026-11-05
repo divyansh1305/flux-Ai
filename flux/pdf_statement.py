@@ -1,6 +1,6 @@
 """Bank statement PDFs (the ones banks email every month), including password-protected ones.
 
-Most Indian bank PDFs have no real table lines, so Flux reads where each word sits on the page:
+Most Indian bank PDFs have no real table lines, so Kitna reads where each word sits on the page:
   1. find the header row (Date … Narration … Withdrawal … Deposit … Balance) and remember each column's position;
   2. every line that starts with a date is a new payment; lines without a date continue its description;
   3. an amount under "Withdrawal/Debit" is money out, under "Deposit/Credit" is money in, under "Balance" is the

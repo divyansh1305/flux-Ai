@@ -202,4 +202,4 @@ def test_what_flux_knows_counts_everything(client, user):
 
 
 def test_android_download_is_advertised(client, user):
-    assert client.get("/api/auth/me").json["features"]["android_apk"].endswith("flux-android.apk")
+    assert client.get("/api/auth/me").json["features"]["android_apk"].endswith("kitna-android.apk")

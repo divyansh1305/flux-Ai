@@ -1,5 +1,5 @@
 (function () {
-  const { el, icon, api, download, err, inr0, pageHead, onRefresh, CAT_COLORS } = window.Flux;
+  const { el, icon, api, download, err, inr0, pageHead, onRefresh, CAT_COLORS } = window.Kitna;
   const C = window.FluxCharts;
 
   async function render(main) {
@@ -32,7 +32,7 @@
       el("button", { class: "btn", onclick: () => download("/api/reports/monthly.pdf", "flux-monthly-report.pdf").catch(err) }, icon("download"), "Monthly report (PDF)")),
       el("div", { class: "grid g-main" }, top, coachCard));
 
-    async function load() { await window.Flux.live("/api/insights", (ins) => paint(ins, window.Flux.config)); }
+    async function load() { await window.Kitna.live("/api/insights", (ins) => paint(ins, window.Kitna.config)); }
     function paint(ins, me) {
       document.getElementById("ai-state").textContent = me.ai_available ? "AI coach on" : "Quick answers";
       const h = ins.health, f = ins.forecast, tm = ins.this_month, lm = ins.last_month;
@@ -78,24 +78,24 @@
       const recCard = el("div", { class: "card" }, el("div", { class: "card-head" }, el("h2", null, "Regular payments"),
         el("span", { class: "tiny faint" }, rec.length ? `≈ ${inr0(rec.reduce((a, b) => a + b.monthly_cost, 0))}/month` : "")),
         rec.length ? el("div", { class: "tx-list" }, rec.map((b) => el("div", { class: "tx" },
-          window.Flux.avatar(b.name),
+          window.Kitna.avatar(b.name),
           el("div", { class: "tx-main" }, el("div", { class: "tx-title" }, b.name), el("div", { class: "tx-sub" }, `${b.cadence} · seen ${b.times_seen}× · next ${b.next_date}`)),
           el("div", { class: "tx-amt" }, inr0(b.amount)))))
-          : el("div", { class: "empty" }, "Bills and subscriptions appear here once Flux sees them repeat."));
+          : el("div", { class: "empty" }, "Bills and subscriptions appear here once Kitna sees them repeat."));
       const ac = ins.accuracy;
       const accCard = ac.auto_logged ? el("div", { class: "card" },
-        el("div", { class: "card-head" }, el("h2", null, "How well Flux files your payments"), el("span", { class: "tiny faint" }, "measured from your fixes")),
+        el("div", { class: "card-head" }, el("h2", null, "How well Kitna files your payments"), el("span", { class: "tiny faint" }, "measured from your fixes")),
         el("div", { class: "grid g-3" },
           el("div", { class: "stat" }, el("div", { class: "label" }, "Auto-logged"), el("div", { class: "value" }, String(ac.auto_logged))),
           el("div", { class: "stat" }, el("div", { class: "label" }, "You corrected"), el("div", { class: "value" }, String(ac.corrected))),
           el("div", { class: "stat" }, el("div", { class: "label" }, "Kept as filed"), el("div", { class: "value " + (ac.accuracy >= 90 ? "green" : "amber") }, ac.accuracy + "%"))),
-        el("p", { class: "small muted", style: { marginTop: "14px" } }, "Tap any transaction to fix its category. Tick “always use this” and Flux learns that merchant for good.")) : null;
+        el("p", { class: "small muted", style: { marginTop: "14px" } }, "Tap any transaction to fix its category. Tick “always use this” and Kitna learns that merchant for good.")) : null;
       top.replaceChildren(scoreCard, fc, cbCard, recCard, ...(accCard ? [accCard] : []), compare);
     }
     onRefresh(load);
     await load();
-    if (!log.children.length) log.appendChild(el("div", { class: "bubble flux" }, "Hi! I'm your Flux coach. Ask me about your spending, budgets or goals."));
+    if (!log.children.length) log.appendChild(el("div", { class: "bubble flux" }, "Hi! I'm your Kitna coach. Ask me about your spending, budgets or goals."));
   }
 
-  document.addEventListener("DOMContentLoaded", () => window.Flux.boot(render));
+  document.addEventListener("DOMContentLoaded", () => window.Kitna.boot(render));
 })();

@@ -1,5 +1,5 @@
 (function () {
-  const { el, icon, api, ok, err, modal, confirmBox, inr0, pageHead, onRefresh, meta, CAT_EMOJI } = window.Flux;
+  const { el, icon, api, ok, err, modal, confirmBox, inr0, pageHead, onRefresh, meta, CAT_EMOJI } = window.Kitna;
 
   async function budgetModal(existing) {
     const m = await meta();
@@ -8,13 +8,13 @@
     const limit = el("input", { class: "input big num", type: "number", min: "1", step: "1", required: true, value: existing ? existing.limit : "", placeholder: "4000" });
     const v = await modal(existing ? "Edit budget" : "New monthly budget",
       el("div", { class: "form" }, el("label", { class: "field" }, "Category", cat), el("label", { class: "field" }, "Monthly limit (₹)", limit),
-        el("p", { class: "tiny faint" }, "Flux warns you before an expense would break this, and when you're spending faster than the month allows.")),
+        el("p", { class: "tiny faint" }, "Kitna warns you before an expense would break this, and when you're spending faster than the month allows.")),
       [{ label: "Cancel", value: null, cls: "ghost" }, { label: "Save", submit: true, cls: "primary", value: () => ({ category: cat.value, limit: limit.value }) }]);
     if (!v) return;
     try {
       await api("/api/budgets/" + encodeURIComponent(v.category), { method: "PUT", body: { limit: v.limit } });
       ok(`Budget saved: ${v.category}.`);
-      window.Flux.refresh();
+      window.Kitna.refresh();
     } catch (e) { err(e); }
   }
 
@@ -42,7 +42,7 @@
           el("button", { class: "btn sm ghost", onclick: () => budgetModal(b) }, "Edit"),
           el("button", { class: "btn sm ghost", onclick: async () => {
             if (!(await confirmBox("Remove budget?", `Stop tracking a budget for ${b.category}?`, true))) return;
-            try { await api("/api/budgets/" + encodeURIComponent(b.category), { method: "DELETE" }); window.Flux.refresh(); } catch (e) { err(e); }
+            try { await api("/api/budgets/" + encodeURIComponent(b.category), { method: "DELETE" }); window.Kitna.refresh(); } catch (e) { err(e); }
           } }, "Remove"))));
 
       const summary = budgets.length ? el("div", { class: "card" }, el("div", { class: "row between wrap" },
@@ -63,5 +63,5 @@
     await load();
   }
 
-  document.addEventListener("DOMContentLoaded", () => window.Flux.boot(render));
+  document.addEventListener("DOMContentLoaded", () => window.Kitna.boot(render));
 })();

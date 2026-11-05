@@ -1,10 +1,10 @@
 """Web Push without a third-party push library: VAPID (RFC 8292) + message encryption (RFC 8291 / RFC 8188).
 
-Phones receive these through their own push service: Chrome/Android via fcm.googleapis.com, iPhone (Flux added to
+Phones receive these through their own push service: Chrome/Android via fcm.googleapis.com, iPhone (Kitna added to
 the Home Screen, iOS 16.4+) via web.push.apple.com, Firefox via push.services.mozilla.com. The message is
 encrypted for that one browser, so the push service can't read it.
 
-Keys: one P-256 key pair for the whole server. Set VAPID_PRIVATE_KEY (base64url, 32 bytes) or let Flux create
+Keys: one P-256 key pair for the whole server. Set VAPID_PRIVATE_KEY (base64url, 32 bytes) or let Kitna create
 instance/vapid_private.key on first use. Changing the key means every phone has to turn reminders on again.
 """
 import base64

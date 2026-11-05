@@ -32,7 +32,7 @@ Who: classmates, hostel groups and college clubs. These are people who pay by UP
 
 - [ ] Recruit 10 friends first. Sit with each one during setup, and write down every confusing step and fix it the same day.
 - [ ] Ask each of them to turn on **"Help improve accuracy"** and send you their masked samples file after 2 weeks. Run `python packages/upi_parse/benchmarks/evaluate.py samples.jsonl`. This gives a real-world accuracy number on consented data, which very few student projects have.
-- [ ] Post in college WhatsApp groups with a 30-second screen recording of a GPay payment appearing in Flux by itself.
+- [ ] Post in college WhatsApp groups with a 30-second screen recording of a GPay payment appearing in Kitna by itself.
 - [ ] Track these weekly in a spreadsheet:
   - signups
   - weekly active users
@@ -55,6 +55,6 @@ Who: classmates, hostel groups and college clubs. These are people who pay by UP
 
 ## What to say in interviews once this is done
 
-> "Flux has N weekly users. X% of them have automatic logging on, and Y% stay in sync with their bank balance. On Z real consented messages, the parser gets A% of categories right. That's measured from user corrections, not a test set I wrote."
+> "Kitna has N weekly users. X% of them have automatic logging on, and Y% stay in sync with their bank balance. On Z real consented messages, the parser gets A% of categories right. That's measured from user corrections, not a test set I wrote."
 
 Fill in N, X, Y, Z and A from the spreadsheet. **Real numbers beat any feature list.**

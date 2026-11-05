@@ -12,7 +12,7 @@ Do these in order. ⏱ about 2–3 hours in total. If anything fails, copy the e
 ## 2. Gmail app password, for sign-in codes (10 min)
 1. Use a new Gmail account such as `flux.app.mail@gmail.com`, so your personal inbox stays private.
 2. Go to https://myaccount.google.com/security and turn on **2-Step Verification**.
-3. Go to https://myaccount.google.com/apppasswords, create one named "Flux" and copy the 16 letters (no spaces).
+3. Go to https://myaccount.google.com/apppasswords, create one named "Kitna" and copy the 16 letters (no spaces).
 
 ## 3. GitHub (15 min)
 1. On https://github.com/new, create **flux** as a **Private** repo with no README.
@@ -26,7 +26,7 @@ git status
 3. **Check the list.** You must NOT see `.env`, `instance/`, `.venv/`, any `.db` file or `statement.csv`. You SHOULD see `.github/workflows/tests.yml` and `backup.yml`.
 4. Commit and push (replace YOUR-NAME):
 ```bash
-git commit -m "Flux v2"
+git commit -m "Kitna"
 git branch -M main
 git remote add origin https://github.com/YOUR-NAME/flux.git
 git push -u origin main
@@ -60,7 +60,7 @@ git push -u origin main
 Restoring a backup: download the artifact, run `gpg -d flux-backup.db.gpg > flux.db`, and send the file to Claude for help putting it back.
 
 ## 6. Google Sign-In (optional, 15 min)
-1. Go to https://console.cloud.google.com, create a project called "Flux", then **APIs & Services → OAuth consent screen**. Choose External and fill in the app name and your email.
+1. Go to https://console.cloud.google.com, create a project called "Kitna", then **APIs & Services → OAuth consent screen**. Choose External and fill in the app name and your email.
 2. Under **Credentials → Create credentials → OAuth client ID**, choose Web application.
 3. For **Authorised JavaScript origins**, add `https://YOUR-APP.onrender.com`.
 4. Copy the Client ID into Render as `GOOGLE_CLIENT_ID`. Render redeploys by itself.
@@ -69,13 +69,13 @@ Restoring a backup: download the artifact, run `gpg -d flux-backup.db.gpg > flux
 **Android:**
 1. Install Android Studio and open the `android/` folder.
 2. Plug in a phone (Settings → About → tap Build number 7 times → Developer options → USB debugging) and press ▶ Run.
-3. In Flux on the web, go to Settings → Automatic tracking and create a token.
+3. In Kitna on the web, go to Settings → Automatic tracking and create a token.
 4. In the app:
    - Tick consent.
    - Paste `https://YOUR-APP.onrender.com` and the token.
    - Tap **Test connection**.
-   - Tap **Open Notification access** and turn on Flux.
-5. Pay ₹1 to a friend by UPI. It should appear in Flux within seconds.
+   - Tap **Open Notification access** and turn on Kitna.
+5. Pay ₹1 to a friend by UPI. It should appear in Kitna within seconds.
 
 **iPhone:** follow the Shortcuts steps shown in Settings on the live site.
 

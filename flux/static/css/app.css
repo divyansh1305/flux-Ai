@@ -1,4 +1,4 @@
-/* Flux design system — "calm money".
+/* Kitna design system — "calm money".
    Warm paper surfaces, one deep-green accent (money, trust), soft status colours.
    Light by default, dark automatically when the phone is in dark mode.
    No neon, no glows, no gradients. System fonts so it feels native on iPhone and Android. */
@@ -13,10 +13,11 @@
   --text: #1d1c1a;
   --muted: #5f5b54;
   --faint: #8b867c;
-  --brand: #1f6b57;
-  --brand-hover: #185746;
+  --brand: #34378a;
+  --brand-hover: #2a2d73;
   --brand-ink: #ffffff;
-  --brand-soft: #e2efea;
+  --brand-soft: #e8e9f6;
+  --accent: #f2a93b;
   --green: #1d7a4c;
   --green-soft: #e3f1e8;
   --amber: #9a5b00;
@@ -33,7 +34,7 @@
   --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
   --maxw: 1120px;
   /* soft avatar tints (bg / fg) */
-  --t0b: #e2efea; --t0f: #1f6b57;
+  --t0b: #e8e9f6; --t0f: #34378a;
   --t1b: #fbeedd; --t1f: #8a4f00;
   --t2b: #e7eef8; --t2f: #2d5ba3;
   --t3b: #f6e6ee; --t3f: #8c2f5c;
@@ -52,10 +53,10 @@
     --text: #ecebe6;
     --muted: #aeb0a9;
     --faint: #80847d;
-    --brand: #6fb59f;
-    --brand-hover: #84c3af;
-    --brand-ink: #0f1a16;
-    --brand-soft: #1e2d28;
+    --brand: #a3a7f0;
+    --brand-hover: #b8bbf4;
+    --brand-ink: #14152e;
+    --brand-soft: #23254a;
     --green: #74c296;
     --green-soft: #1b2a21;
     --amber: #e2b05c;
@@ -325,7 +326,7 @@ table.table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .phone { background: var(--surface); border: 1px solid var(--line-2); border-radius: 34px; padding: 22px; box-shadow: var(--shadow); }
 .bubble { padding: 11px 15px; border-radius: 18px; font-size: 14px; max-width: 86%; margin-bottom: 10px; line-height: 1.45; }
 .bubble.me { background: var(--brand); color: var(--brand-ink); margin-left: auto; border-bottom-right-radius: 6px; }
-.bubble.flux { background: var(--surface-2); color: var(--text); border-bottom-left-radius: 6px; }
+.bubble.kitna { background: var(--surface-2); color: var(--text); border-bottom-left-radius: 6px; }
 .footer { padding: 36px 0; border-top: 1px solid var(--line); color: var(--faint); font-size: 13px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .steps { display: flex; gap: 6px; margin-bottom: 26px; }
 .steps i { flex: 1; height: 4px; border-radius: 4px; background: var(--surface-3); }
@@ -407,3 +408,5 @@ table.table { width: 100%; border-collapse: collapse; font-size: 14px; }
   .raw-text { display: none; }
   .table td.right { white-space: nowrap; }
 }
+
+img.logo-mark { background: none; padding: 0; object-fit: contain; }
