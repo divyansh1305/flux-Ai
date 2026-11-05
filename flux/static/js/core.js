@@ -70,7 +70,7 @@
     svg.setAttribute("viewBox", "0 0 24 24");
     svg.setAttribute("fill", "none");
     svg.setAttribute("stroke", "currentColor");
-    svg.setAttribute("stroke-width", "2");
+    svg.setAttribute("stroke-width", "1.8");
     svg.setAttribute("stroke-linecap", "round");
     svg.setAttribute("stroke-linejoin", "round");
     svg.setAttribute("aria-hidden", "true");
@@ -92,8 +92,8 @@
 
   // ─── Formatting ───────────────────────────────────────────
   const inrFmt = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 });
-  const inr = (v) => (v < 0 ? "-₹" : "₹") + inrFmt.format(Math.abs(Number(v) || 0));
-  const inr0 = (v) => (v < 0 ? "-₹" : "₹") + new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.abs(Number(v) || 0));
+  const inr = (v) => (v < 0 ? "−₹" : "₹") + inrFmt.format(Math.abs(Number(v) || 0));
+  const inr0 = (v) => (v < 0 ? "−₹" : "₹") + new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.abs(Number(v) || 0));
   const dateFmt = (iso) => {
     const d = new Date(iso + "T00:00:00");
     const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -448,12 +448,11 @@
         el("div", { class: "top-actions" },
           bell,
           el("button", { type: "button", class: "avatar", title: USER.name, "aria-label": "More", onclick: moreMenu }, initials))));
+      const tab = (href, ic, label, extra) => el("a", Object.assign({ href, class: (href === "/app/pay" ? "pay " : "") + (path === href || (href === "#more" && inMenu) ? "active" : ""),
+        "aria-current": path === href ? "page" : null }, extra || {}),
+        el("span", { class: "ni" }, href === "/app/pay" ? el("span", { class: "pay-dot" }, icon(ic)) : icon(ic)), el("span", { class: "nl" }, label));
       const bottom = el("nav", { class: "bottom-nav", "aria-label": "Main" }, MOBILE_NAV.map(([href, ic, label]) =>
-        href === "#more"
-          ? el("a", { href: "#", class: inMenu ? "active" : null, onclick: (e) => { e.preventDefault(); moreMenu(); } }, icon(ic), label)
-          : href === "/app/pay"
-            ? el("a", { href, class: "pay" + (path === href ? " active" : "") }, el("span", { class: "pay-dot" }, icon(ic)), label)
-            : el("a", { href, class: path === href ? "active" : null, "aria-current": path === href ? "page" : null }, icon(ic), label)));
+        href === "#more" ? tab(href, ic, label, { href: "#", onclick: (e) => { e.preventDefault(); moreMenu(); }, "aria-haspopup": "dialog" }) : tab(href, ic, label)));
       document.body.append(top, main, bottom);
     } else {
       document.body.append(main);
@@ -463,6 +462,14 @@
     } catch (e) { err(e); }
     track("screen_opened");
     if (window.FluxVoice && location.pathname !== "/onboarding") window.FluxVoice.init(USER, { fab: false });
+  }
+
+  // Grey placeholder rows while the first data loads (never a blank screen).
+  function skeleton(rows = 4) {
+    return el("div", { class: "card list-card", "aria-busy": "true", "aria-label": "Loading" },
+      ...Array.from({ length: rows }, () => el("div", { class: "tx" }, el("div", { class: "skeleton", style: { width: "40px", height: "40px", borderRadius: "50%" } }),
+        el("div", { class: "tx-main" }, el("div", { class: "skeleton", style: { width: "55%", height: "14px" } }), el("div", { class: "skeleton", style: { width: "35%", height: "11px", marginTop: "8px" } })),
+        el("div", { class: "skeleton", style: { width: "56px", height: "14px" } }))));
   }
 
   function pageHead(title, subtitle, ...actions) {
@@ -475,7 +482,7 @@
     const isIn = t.kind === "income";
     const isSave = t.kind === "saving";
     const title = t.note || t.category;
-    const sign = isIn ? "+" : isSave ? (t.amount < 0 ? "+" : "→ ") : "-";
+    const sign = isIn ? "+" : isSave ? (t.amount < 0 ? "+" : "") : "−";  // a real minus sign, like a bank statement
     const amtCls = isIn ? "green" : isSave ? "brand" : "";
     // Only show a tag when it means something to the user (not where the data came from).
     const badge = t.source === "autosave" ? el("span", { class: "badge autosave" }, "set aside") : null;
@@ -673,7 +680,7 @@
 
   window.Kitna = {
     el, icon, api, download, toast, ok, err, modal, confirmBox, inr, inr0, dateFmt, todayISO, CAT_EMOJI, CAT_COLORS, avatar,
-    boot, pageHead, txRow, deleteTx, editTx, addTransactionModal, planModal, splitModal, friendModal, feedbackModal, push: pushApi, live, prefetch, cacheClear, refresh, onRefresh, logout, meta,
+    boot, pageHead, skeleton, txRow, deleteTx, editTx, addTransactionModal, planModal, splitModal, friendModal, feedbackModal, push: pushApi, live, prefetch, cacheClear, refresh, onRefresh, logout, meta,
     get user() { return USER; }, set user(u) { USER = u; }, get config() { return CONFIG; },
   };
 })();

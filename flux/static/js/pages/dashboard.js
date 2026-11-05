@@ -14,12 +14,18 @@
   let early = api("/api/dashboard", { allow401: true }).catch(() => null);
 
   async function render(main, user) {
-    const content = el("div", { class: "stack narrow", style: { gap: "18px" } });
+    const content = el("div", { class: "stack narrow home" });
+    content.replaceChildren(el("div", { class: "hero-card" }, el("div", { class: "skeleton", style: { width: "40%", height: "14px" } }),
+      el("div", { class: "skeleton", style: { width: "60%", height: "48px", marginTop: "12px" } }), el("div", { class: "skeleton", style: { width: "70%", height: "13px", marginTop: "12px" } })),
+      window.Kitna.skeleton(3));
     main.replaceChildren(content);
     const load = async () => {
       const pre = early;
       early = null;
-      await window.Kitna.live("/api/dashboard", (d) => content.replaceChildren(...build(d, user).filter(Boolean)), pre);
+      try {
+        await window.Kitna.live("/api/dashboard", (d) => content.replaceChildren(...build(d, user).filter(Boolean)), pre);
+        markFresh(true);
+      } catch (e) { markFresh(false); throw e; }
     };
     onRefresh(load);
     await load();
@@ -141,6 +147,14 @@
     remindSlot.replaceChildren(card);
   }
 
+  // "Updated 2:25 am": only once the server has answered; saved numbers say so.
+  const asOfEl = el("div", { class: "as-of" }, el("span", { class: "dot-live wait" }), el("span", null, "Updating…"));
+  function markFresh(ok) {
+    asOfEl.firstChild.className = "dot-live" + (ok ? "" : " off");
+    asOfEl.lastChild.textContent = ok ? "Updated " + new Date().toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })
+      : "Offline. Showing your last saved numbers.";
+  }
+
   function build(d, user) {
     const m = d.month;
     const sf = d.safe;
@@ -159,15 +173,17 @@
     const whyBtn = el("button", { class: "why-btn", type: "button", "aria-expanded": "false", title: "How is this worked out?",
       onclick: () => { why.hidden = !why.hidden; whyBtn.setAttribute("aria-expanded", String(!why.hidden)); } }, icon("info"));
 
-    const heroText = sf.status === "ok" ? `Until ${shortDate(sf.until)}. Bills and plans are already kept aside.` : sf.message;
+    const heroText = sf.status === "ok" ? `Until ${shortDate(sf.until)}. Bills and plans already kept aside.` : sf.message;
     const quick = (ic, label, fn) => el("button", { class: "quick", type: "button", onclick: fn }, el("span", { class: "quick-ic" }, icon(ic)), label);
     const hero = el("section", { class: "hero-card" },
       el("div", { class: "hero-top" },
         el("div", { class: "hero-label" }, sf.confirmed || sf.status === "setup" ? "Safe to spend today" : "Safe to spend today, about"),
         sf.status === "setup" ? null : whyBtn),
-      el("div", { class: "hero-num" + (sf.status === "ok" ? "" : " amber") }, sf.status === "setup" ? "—" : inr0(safe)),
+      el("div", { class: "hero-num num" + (sf.status === "ok" ? "" : " amber"), "aria-label": sf.status === "setup" ? "Not set up yet" : inr0(safe) + " safe to spend today" },
+        sf.status === "setup" ? "—" : [el("span", { class: "cur", "aria-hidden": "true" }, "₹"), el("span", { "aria-hidden": "true" }, inr0(safe).replace("₹", ""))]),
       el("div", { class: "hero-sub" }, heroText),
       why,
+      asOfEl,
       el("div", { class: "quick-row" },
         quick("qr", "Scan & Pay", () => { location.href = "/app/pay"; }),
         quick("plus", "Add", () => addTransactionModal("expense")),
@@ -203,7 +219,7 @@
       ...sf.plans.map((p) => ({ date: p.date, name: p.title, amount: p.amount, sub: p.kind === "income" ? (p.sure ? "Money coming in" : "Maybe coming in") : "Your plan", income: p.kind === "income" })),
       ...sf.bills.map((b) => ({ date: b.next_date, name: b.name, amount: b.amount, sub: b.cadence === "monthly" ? "Repeats every month" : "Repeats every week" })),
     ].sort((a, b) => a.date.localeCompare(b.date)).slice(0, 6);
-    const coming = sf.status === "setup" ? null : section("Coming up before " + shortDate(sf.until), el("a", { class: "link", href: "/app/plans" }, "Plans"),
+    const coming = sf.status === "setup" ? null : section("Coming up before " + shortDate(sf.until), el("a", { class: "link", href: "/app/plans" }, "See all"),
       el("div", { class: "card", style: { padding: "4px 20px" } }, upcoming.length
         ? el("div", { class: "tx-list" }, upcoming.map((u) => el("div", { class: "tx" }, avatar(u.name),
             el("div", { class: "tx-main" }, el("div", { class: "tx-title" }, u.name), el("div", { class: "tx-sub" }, `${u.sub} · ${dateFmt(u.date)}`)),
@@ -222,7 +238,9 @@
         el("div", null, el("div", { class: "tiny faint" }, "Money in"), el("div", { class: "month-v num green" }, inr0(m.income))),
         m.saved ? el("div", null, el("div", { class: "tiny faint" }, "Set aside"), el("div", { class: "month-v num" }, inr0(m.saved))) : null));
 
-    return [el("div", { class: "greet" }, greeting(user.name)), hero, reconnect, ...checks, ...asks, weekSlot, remindSlot, setupCard(d.setup), bankCard, drift, coming, recent, month];
+    const trust = el("a", { class: "trust", href: "/privacy" }, icon("shield"),
+      el("span", null, el("b", null, "Read-only. "), "Kitna can't move your money or see your UPI PIN."));
+    return [el("div", { class: "greet" }, greeting(user.name)), hero, reconnect, ...checks, ...asks, weekSlot, remindSlot, setupCard(d.setup), bankCard, drift, coming, recent, month, trust];
   }
 
   document.addEventListener("DOMContentLoaded", () => window.Kitna.boot(render));

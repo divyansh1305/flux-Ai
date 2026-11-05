@@ -7,7 +7,7 @@
   async function render(main) {
     const m = await meta();
     const state = { page: 1, kind: "", category: "", q: "", from: "", to: "" };
-    const list = el("div", { class: "tx-list" });
+    const list = el("div", { class: "tx-list" }, ...window.Kitna.skeleton(5).children);
     const more = el("button", { class: "btn block", style: { marginTop: "12px" } }, "Load more");
     const kindSeg = el("div", { class: "seg full" });
     [["", "All"], ["expense", "Spent"], ["income", "Received"], ["saving", "Set aside"]].forEach(([k, label]) => {

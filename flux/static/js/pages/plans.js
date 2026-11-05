@@ -64,7 +64,7 @@
   let early = api("/api/plans", { allow401: true }).catch(() => null);
 
   async function render(main) {
-    const box = el("div", { class: "stack narrow" });
+    const box = el("div", { class: "stack narrow" }, window.Kitna.skeleton(2));
     main.replaceChildren(pageHead("Plans", "What's coming, so today's number is real. Tap a plan to edit it.",
       el("button", { class: "btn primary", onclick: () => planModal() }, icon("plus"), "Add")), box);
     let me = { user: window.Kitna.user };

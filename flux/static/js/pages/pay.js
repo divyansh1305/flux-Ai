@@ -139,7 +139,9 @@
       const runCheck = () => {
         clearTimeout(t);
         const v = Number(amount.value);
-        payBtn.textContent = v > 0 ? `Pay ${inr(v)}` : "Pay";
+        const who = (d.name || d.vpa.split("@")[0]).split(" ").slice(0, 2).join(" ");
+        payBtn.textContent = v > 0 ? `Pay ${inr(v)} to ${who}` : "Enter an amount";
+        payBtn.disabled = !(v > 0);
         if (!(v > 0)) { check.replaceChildren(); return; }
         t = setTimeout(async () => {
           try {
@@ -159,7 +161,7 @@
         try {
           const r = await api("/api/pay/prepare", { method: "POST", body: { vpa: d.vpa, name: d.name, amount: amount.value, category: cat.value, note: note.value } });
           showHandoff(r, d);
-        } catch (ex) { err(ex); payBtn.disabled = false; }
+        } catch (ex) { err(new Error((ex.message || "Something went wrong.") + " No money has left your account.")); payBtn.disabled = false; }
       } },
         el("div", { class: "pay-who" }, avatar(d.name || d.vpa),
           el("div", { style: { minWidth: 0 } }, el("div", { class: "pay-name" }, d.name || d.vpa), el("div", { class: "tiny faint" }, d.vpa))),
@@ -182,10 +184,11 @@
       let openers;
       if (IS_ANDROID) {
         openers = el("div", { class: "stack", style: { gap: "8px" } },
-          el("a", { class: "btn primary lg block", href: r.links.generic, onclick: markOpened }, "Open UPI app"),
+          el("a", { class: "btn primary lg block", href: r.links.generic, onclick: markOpened }, `Pay ${inr(r.amount)} in your UPI app`),
           el("div", { class: "app-grid" }, r.links.apps.map((a) => el("a", { class: "app-btn", href: a.android, onclick: markOpened }, a.name))));
       } else if (IS_IOS) {
-        openers = el("div", { class: "app-grid" }, r.links.apps.map((a) => el("a", { class: "app-btn", href: a.ios, onclick: markOpened }, a.name)));
+        openers = el("div", { class: "stack", style: { gap: "8px" } }, el("div", { class: "tiny faint", style: { textAlign: "center" } }, "Choose your UPI app"),
+          el("div", { class: "app-grid" }, r.links.apps.map((a) => el("a", { class: "app-btn", href: a.ios, onclick: markOpened }, a.name))));
       } else {
         openers = el("div", { class: "notice info" }, el("div", null, "UPI apps open on phones. Pay ", el("b", null, r.vpa), " from your phone, then come back and tap Yes.",
           el("div", { style: { marginTop: "8px" } }, el("button", { class: "btn sm", type: "button", onclick: copy }, "Copy UPI ID"))));
@@ -198,7 +201,8 @@
         try {
           await api(`/api/pay/${r.payment_id}/confirm`, { method: "POST", body: { status } });
           if (status === "paid") { ok(`Logged ${inr(r.amount)} to ${r.name}.`); setTimeout(() => (location.href = "/app"), 900); }
-          else { ok("Okay, nothing was logged."); history.replaceState(null, "", "/app/pay"); startScreen(); }
+          else if (status === "failed") { ok("Okay, nothing was logged. If your bank took the money anyway, it must come back within 1 working day (RBI rule)."); history.replaceState(null, "", "/app/pay"); startScreen(); }
+          else { ok("Cancelled. Nothing was logged."); history.replaceState(null, "", "/app/pay"); startScreen(); }
         } catch (e) { err(e); }
       }
       document.addEventListener("visibilitychange", () => {
@@ -206,7 +210,7 @@
       });
       area.replaceChildren(
         el("div", { class: "pay-sum" },
-          el("div", { class: "tiny faint" }, "Paying"),
+          el("div", { class: "tiny faint" }, "You're paying"),
           el("div", { class: "pay-big num" }, inr(r.amount)),
           el("div", { class: "small muted" }, r.name, " · ", r.vpa)),
         openers,

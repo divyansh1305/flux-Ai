@@ -3,7 +3,7 @@
   const { el, icon, api, inr0, inr, dateFmt, avatar, pageHead, onRefresh, ok, err, confirmBox, friendModal, splitModal } = window.Kitna;
 
   async function render(main) {
-    const content = el("div", { class: "stack narrow", style: { gap: "18px" } });
+    const content = el("div", { class: "stack narrow", style: { gap: "16px" } }, window.Kitna.skeleton(3));
     main.replaceChildren(pageHead("Friends", "Ticked off by itself when the UPI payment arrives."), content);
     const load = () => window.Kitna.live("/api/friends", (d) => content.replaceChildren(...build(d).filter(Boolean)));
     onRefresh(load);
@@ -48,7 +48,7 @@
         onclick: () => { chosen = t; document.querySelector(".modal-bg .modal-foot .btn.primary").click(); } },
         avatar(t.note || t.category), el("div", { class: "tx-main" }, el("div", { class: "tx-title" }, t.note || t.category),
           el("div", { class: "tx-sub" }, dateFmt(t.date) + " · " + t.category)),
-        el("div", { class: "tx-amt" }, "-" + inr(t.amount)))));
+        el("div", { class: "tx-amt" }, "−" + inr(t.amount)))));
     const v = await window.Kitna.modal("Which payment?", list, [
       { label: "Cancel", value: null, cls: "ghost" },
       { label: "Next", submit: true, cls: "primary", value: () => chosen },
@@ -64,7 +64,7 @@
         el("div", { class: "tx-main" },
           el("div", { class: "tx-title wrap" }, r.person),
           el("div", { class: "tx-sub" }, [r.note, dateFmt(r.date)].filter(Boolean).join(" · "))),
-        el("div", { class: "tx-amt" + (they ? " in" : "") }, (they ? "+" : "-") + inr0(r.amount))),
+        el("div", { class: "tx-amt" + (they ? " in" : "") }, (they ? "+" : "−") + inr0(r.amount))),
       r.settled ? null : el("div", { class: "item-actions" },
         they ? el("button", { class: "btn sm", onclick: () => remind(r) }, icon("share"), "Remind") : null,
         el("button", { class: "btn sm", onclick: () => settle(r) }, icon("check"), they ? "Paid me" : "I paid"),
