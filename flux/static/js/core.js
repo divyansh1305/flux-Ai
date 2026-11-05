@@ -140,7 +140,7 @@
       throw new Error("Please sign in.");
     }
     const type = res.headers.get("Content-Type") || "";
-    const data = type.includes("application/json") ? await res.json() : await res.blob();
+    const data = opts.raw && res.ok ? await res.blob() : type.includes("application/json") ? await res.json() : await res.blob();
     if (!res.ok) throw new Error((data && data.error) || "Something went wrong.");
     if (init.method !== "GET" && path.startsWith("/api/account")) cacheDrop("/api/auth/me");  // settings changed
     return data;
@@ -170,7 +170,7 @@
     if ("requestIdleCallback" in window) requestIdleCallback(run, { timeout: 3000 }); else setTimeout(run, 800);
   }
   async function download(path, filename) {
-    const blob = await api(path);
+    const blob = await api(path, { raw: true });  // a file even when the server sends JSON (the data export)
     const url = URL.createObjectURL(blob);
     const a = el("a", { href: url, download: filename });
     document.body.appendChild(a); a.click(); a.remove();
@@ -373,7 +373,7 @@
         if (!fresh || fresh.error) return;
         if (!fresh.user) { cacheClear(); location.href = "/login"; return; }
         cacheSet("/api/auth/me", fresh);
-        if (fresh.user.id !== cachedMe.user.id || fresh.user.onboarded !== cachedMe.user.onboarded) { location.reload(); return; }
+        if (fresh.user.id !== cachedMe.user.id || fresh.user.onboarded !== cachedMe.user.onboarded || fresh.user.lang !== cachedMe.user.lang) { location.reload(); return; }
         USER = fresh.user; CONFIG = fresh;
       });
     } else {
@@ -502,7 +502,7 @@
       const used = rows.reduce((a, r) => a + (Number(r.input.value) || 0), 0);
       const left = Math.round((total - used) * 100) / 100;
       mine.textContent = left < 0 ? "Friends' shares are more than you paid." : `Your share: ${inr(left)} (only this counts as your spending).`;
-      mine.style.color = left < 0 ? "var(--danger, #b3261e)" : "";
+      mine.style.color = left < 0 ? "var(--red)" : "";
     };
     const rebuild = () => {
       const ps = people();

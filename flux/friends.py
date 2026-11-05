@@ -125,7 +125,7 @@ def match_payment(user_id, tx_id, kind, amount, text, day):
     db = get_db()
     start = (date.fromisoformat(day) - timedelta(days=MATCH_WINDOW_DAYS)).isoformat()
     rows = db.execute(
-        "SELECT * FROM owed WHERE user_id = ? AND direction = ? AND settled_at IS NULL AND date <= ? AND date >= ?"
+        "SELECT * FROM owed WHERE user_id = ? AND direction = ? AND settled_at IS NULL AND date <= date(?, '+2 days') AND date >= ?"
         " AND ABS(amount - ?) <= 100 AND (transaction_id IS NULL OR transaction_id != ?) ORDER BY date, id",
         (user_id, direction, day, start, amount, tx_id)).fetchall()
     if not rows:

@@ -91,7 +91,7 @@
       el("div", { class: "row between", style: { marginBottom: "6px" } },
         el("div", null, el("h2", null, "Make today's number yours"), el("div", { class: "progress-text", style: { marginTop: "2px" } }, `${s.done} of ${s.total} done`)),
         el("button", { class: "btn sm ghost", onclick: () => { try { localStorage.setItem("flux_setup_hidden", String(s.done)); } catch (e) { /* ignore */ } card.remove(); } }, "Later")),
-      el("div", { class: "bar ok", style: { margin: "10px 0 6px" } }, el("i", { style: { width: (s.done / s.total) * 100 + "%" } })),
+      el("div", { class: "bar brand", style: { margin: "10px 0 6px" } }, el("i", { style: { width: (s.done / s.total) * 100 + "%" } })),
       el("div", { class: "setup" }, s.steps.map((st) => el("div", {
         class: "setup-step" + (st.done ? " done" : ""), role: clickable(st) ? "button" : null, tabindex: clickable(st) ? "0" : null,
         style: { cursor: clickable(st) ? "pointer" : "default" },
@@ -152,7 +152,7 @@
         el("span", null, `÷ ${sf.days_left} day${sf.days_left === 1 ? "" : "s"} until ${shortDate(sf.until)}`), el("b", { class: "num" }, inr0(sf.daily) + " a day")),
       sf.spent_today ? el("div", { class: "row between small", style: { padding: "4px 0" } }, el("span", { class: "muted" }, "Spent today"), el("span", { class: "num" }, "− " + inr0(sf.spent_today))) : null,
       el("p", { class: "tiny faint", style: { marginTop: "6px" } }, "Whatever you don't spend today stays in the pool, so tomorrow's number goes up."));
-    const whyBtn = el("button", { class: "link", type: "button", style: { background: "none", border: 0, padding: 0, cursor: "pointer", font: "inherit" },
+    const whyBtn = el("button", { class: "link", type: "button", style: { background: "none", border: 0, padding: "10px 0", margin: "-10px 0", cursor: "pointer", font: "inherit" },
       onclick: () => { why.hidden = !why.hidden; whyBtn.textContent = why.hidden ? "How is this worked out?" : "Hide the maths"; } }, "How is this worked out?");
 
     const heroText = sf.status === "ok"

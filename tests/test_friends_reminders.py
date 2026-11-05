@@ -339,3 +339,11 @@ def test_bank_sms_from_a_friend_ticks_them_off(client, user, app):
     assert r.status_code in (200, 201), r.json
     open_rows = client.get("/api/friends").json["open"]
     assert [o["person"] for o in open_rows] == ["Rahul"]  # Priya ticked off, Rahul (same amount) left alone
+
+
+def test_a_friend_paying_a_day_before_the_bill_still_counts(client, user):
+    add(client, "income", 5000, "Salary")
+    tx = add(client, "expense", 600, "Food & Dining", note="Pizza", date=TODAY.isoformat())["transaction"]
+    client.post("/api/friends/split", json={"transaction_id": tx["id"], "people": [{"name": "Rahul", "amount": 300}]})
+    back = add(client, "income", 300, "Other Income", note="RAHUL", date=(TODAY - timedelta(days=1)).isoformat())
+    assert back["paid_back"]["person"] == "Rahul"

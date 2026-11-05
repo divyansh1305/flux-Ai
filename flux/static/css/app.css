@@ -1,5 +1,6 @@
 /* Kitna design system — "calm money".
-   Warm paper surfaces, one deep-green accent (money, trust), soft status colours.
+   Warm paper surfaces, one ink-indigo brand colour with a marigold accent (the coin in the logo),
+   green/red only for money in and out, soft status colours.
    Light by default, dark automatically when the phone is in dark mode.
    No neon, no glows, no gradients. System fonts so it feels native on iPhone and Android. */
 :root {
@@ -12,7 +13,7 @@
   --line-2: #d9d4c9;
   --text: #1d1c1a;
   --muted: #5f5b54;
-  --faint: #8b867c;
+  --faint: #6e6960;
   --brand: #34378a;
   --brand-hover: #2a2d73;
   --brand-ink: #ffffff;
@@ -44,19 +45,20 @@
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --bg: #141614;
-    --surface: #1b1e1c;
-    --surface-2: #232724;
-    --surface-3: #2c312d;
-    --line: #272b28;
-    --line-2: #363c38;
-    --text: #ecebe6;
-    --muted: #aeb0a9;
-    --faint: #80847d;
+    --bg: #131420;
+    --surface: #1b1c2b;
+    --surface-2: #232435;
+    --surface-3: #2c2d40;
+    --line: #282a3b;
+    --line-2: #383a4e;
+    --text: #ecebf3;
+    --muted: #b0b1c4;
+    --faint: #8a8ca2;
     --brand: #a3a7f0;
     --brand-hover: #b8bbf4;
     --brand-ink: #14152e;
     --brand-soft: #23254a;
+    --accent: #f2a93b;
     --green: #74c296;
     --green-soft: #1b2a21;
     --amber: #e2b05c;
@@ -67,7 +69,7 @@
     --blue-soft: #1b2230;
     --overlay: rgba(0, 0, 0, .6);
     --shadow: none;
-    --t0b: #1e2d28; --t0f: #8fcab7;
+    --t0b: #23254a; --t0f: #b8bbf4;
     --t1b: #2c2416; --t1f: #e2b05c;
     --t2b: #1b2230; --t2f: #9ab8e8;
     --t3b: #2c1d25; --t3f: #e3a3c3;
@@ -171,7 +173,7 @@ p { margin: 0; }
 .btn.lg { padding: 14px 24px; font-size: 16px; }
 .btn.block { width: 100%; }
 .btn svg { width: 17px; height: 17px; }
-.icon-btn { padding: 7px; border-radius: 999px; background: transparent; border: 0; color: var(--faint); cursor: pointer; display: grid; place-items: center; }
+.icon-btn { padding: 7px; min-width: 40px; min-height: 40px; border-radius: 999px; background: transparent; border: 0; color: var(--faint); cursor: pointer; display: grid; place-items: center; }
 .icon-btn:hover { color: var(--red); background: var(--red-soft); }
 .icon-btn svg { width: 16px; height: 16px; }
 
@@ -416,3 +418,24 @@ img.logo-mark { background: none; padding: 0; object-fit: contain; }
 .lp-nav .logo-wm { height: 30px; }
 .auth-side .logo-wm { height: 34px; color: #fff; }
 .tagline { color: var(--brand); font-weight: 700; letter-spacing: -0.01em; }
+
+.bar.brand > i { background: var(--brand); }
+
+/* Bigger tap areas without moving anything (44 px is the guideline for fingers) */
+.link { display: inline-block; padding: 12px 6px; margin: -12px -6px; }
+.logo { min-height: 44px; }
+@media (max-width: 860px) { .icon-btn { min-width: 44px; min-height: 44px; } }
+a.small.muted[href="/app/friends"] { padding: 8px 0; margin: -2px 0; }
+summary { padding: 10px 0; }
+
+/* A list row with its buttons on a line of their own, so names and amounts never get squeezed */
+.tx-item { border-bottom: 1px solid var(--line); }
+.tx-item:last-child { border-bottom: 0; }
+.tx-item > .tx { border-bottom: 0; padding-bottom: 6px; }
+.item-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 0 12px 54px; }
+.item-actions .btn.sm { min-height: 40px; }
+.tx-title.wrap { white-space: normal; overflow: visible; }
+
+/* Coach: the question box first on phones (that's what the Ask tab is for), beside the report on laptops */
+.coach-layout { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1100px) { .coach-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); align-items: start; } .coach-layout > .card:first-child { position: sticky; top: 84px; order: 2; } }

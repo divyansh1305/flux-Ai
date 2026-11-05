@@ -15,3 +15,7 @@ venv/
 .DS_Store
 .vscode/
 .idea/
+
+qa-shots/
+qa-server.log
+qa-results.json

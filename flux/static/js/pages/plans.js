@@ -40,22 +40,24 @@
 
   function planRow(p, past) {
     const editable = !p.done && !past;
-    const title = el("div", { class: "tx-title", style: editable ? { cursor: "pointer" } : null, title: editable ? "Edit" : null,
+    const title = el("div", { class: "tx-title wrap", style: editable ? { cursor: "pointer" } : null, title: editable ? "Edit" : null,
       onclick: editable ? () => planModal(p) : null }, p.title);
     const sub = p.kind === "income" ? (p.sure ? "Coming in" : "Maybe (not counted)") : "Kept aside";
-    const row = el("div", { class: "tx", style: past || p.done ? { opacity: 0.6 } : null }, avatar(p.title),
-      el("div", { class: "tx-main" }, title, el("div", { class: "tx-sub" }, `${p.done ? "Done" : sub} · ${dateFmt(p.date)}`)),
-      el("div", { class: "tx-amt" + (p.kind === "income" ? " green" : "") }, (p.kind === "income" ? "+" : "") + inr0(p.amount)),
-      el("div", { class: "row", style: { gap: "2px" } },
-        !p.done ? el("button", { class: "icon-btn", title: "Mark done", "aria-label": "Mark done", onclick: async () => {
+    const row = el("div", { class: "tx-item", style: past || p.done ? { opacity: 0.6 } : null },
+      el("div", { class: "tx" }, avatar(p.title),
+        el("div", { class: "tx-main" }, title, el("div", { class: "tx-sub" }, `${p.done ? "Done" : sub} · ${dateFmt(p.date)}`)),
+        el("div", { class: "tx-amt" + (p.kind === "income" ? " green" : "") }, (p.kind === "income" ? "+" : "") + inr0(p.amount))),
+      el("div", { class: "item-actions" },
+        !p.done ? el("button", { class: "btn sm ghost", "aria-label": "Mark done", onclick: async () => {
           row.style.opacity = "0.5";  // instant feedback; the list refreshes once the server confirms
           try { await api(`/api/plans/${p.id}`, { method: "PATCH", body: { done: true } }); ok("Marked done."); window.Kitna.refresh(); } catch (e) { row.style.opacity = ""; err(e); }
-        } }, icon("check")) : null,
-        el("button", { class: "icon-btn", title: "Delete", "aria-label": "Delete plan", onclick: async () => {
+        } }, icon("check"), "Done") : null,
+        editable ? el("button", { class: "btn sm ghost", onclick: () => planModal(p) }, "Edit") : null,
+        el("button", { class: "btn sm ghost", "aria-label": "Delete plan", onclick: async () => {
           if (!(await confirmBox("Delete plan?", `${p.title} · ${inr0(p.amount)}`, true))) return;
           row.remove();
           try { await api(`/api/plans/${p.id}`, { method: "DELETE" }); window.Kitna.refresh(); } catch (e) { err(e); window.Kitna.refresh(); }
-        } }, icon("trash"))));
+        } }, icon("trash"), "Delete")));
     return row;
   }
 

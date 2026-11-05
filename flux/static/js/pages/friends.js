@@ -58,16 +58,17 @@
 
   function row(r) {
     const they = r.direction === "they_owe";
-    return el("div", { class: "tx owed-row" },
-      avatar(r.person),
-      el("div", { class: "tx-main" },
-        el("div", { class: "tx-title" }, r.person),
-        el("div", { class: "tx-sub" }, [r.note, dateFmt(r.date)].filter(Boolean).join(" · ")),
-        r.settled ? null : el("div", { class: "chip-row", style: { marginTop: "8px" } },
-          they ? el("button", { class: "btn sm", onclick: () => remind(r) }, icon("share"), "Remind") : null,
-          el("button", { class: "btn sm ghost", onclick: () => settle(r) }, they ? "They paid" : "I paid"),
-          el("button", { class: "icon-btn", title: "Remove", "aria-label": "Remove", onclick: () => remove(r) }, icon("trash")))),
-      el("div", { class: "tx-amt" + (they ? " in" : "") }, (they ? "+" : "-") + inr0(r.amount)));
+    return el("div", { class: "tx-item owed-row" },
+      el("div", { class: "tx" },
+        avatar(r.person),
+        el("div", { class: "tx-main" },
+          el("div", { class: "tx-title wrap" }, r.person),
+          el("div", { class: "tx-sub" }, [r.note, dateFmt(r.date)].filter(Boolean).join(" · "))),
+        el("div", { class: "tx-amt" + (they ? " in" : "") }, (they ? "+" : "-") + inr0(r.amount))),
+      r.settled ? null : el("div", { class: "item-actions" },
+        they ? el("button", { class: "btn sm", onclick: () => remind(r) }, icon("share"), "Remind") : null,
+        el("button", { class: "btn sm ghost", onclick: () => settle(r) }, they ? "They paid" : "I paid"),
+        el("button", { class: "btn sm ghost", "aria-label": "Remove " + r.person, onclick: () => remove(r) }, icon("trash"), "Remove")));
   }
 
   function build(d) {
