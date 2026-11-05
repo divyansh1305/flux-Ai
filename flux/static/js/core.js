@@ -624,11 +624,12 @@
   async function inboxModal(dot) {
     let r;
     try { r = await api("/api/reminders"); } catch (e) { err(e); return; }
-    const when = (ts) => dateFmt(String(ts).slice(0, 10));
+    // Stored in UTC ("2026-11-05 19:30:00"): show it as the local day, so a reminder from 1 am isn't "Yesterday".
+    const when = (ts) => { const d = new Date(String(ts).replace(" ", "T") + "Z"); return isNaN(d) ? "" : dateFmt(new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)); };
     const body = el("div", { class: "stack", style: { gap: "4px", maxHeight: "60vh", overflow: "auto" } },
       r.inbox.length ? r.inbox.map((n) => el("a", { href: n.url, class: "tx", style: { textDecoration: "none", color: "inherit" } },
         avatar(n.title, n.kind === "friends" ? "users" : n.kind === "bills" ? "calendar" : n.kind === "weekly" ? "trend" : n.kind === "morning" ? "spark" : "alert"),
-        el("div", { class: "tx-main" }, el("div", { class: "tx-title", style: { fontWeight: n.read ? 500 : 700 } }, n.title),
+        el("div", { class: "tx-main" }, el("div", { class: "tx-title wrap", style: { fontWeight: n.read ? 500 : 700 } }, n.title),
           el("div", { class: "tx-sub", style: { whiteSpace: "normal" } }, n.body)),
         el("div", { class: "tiny faint" }, when(n.created_at))))
         : el("div", { class: "empty" }, el("b", null, "Nothing yet"), "Reminders about bills, late refunds and friends show up here."),
