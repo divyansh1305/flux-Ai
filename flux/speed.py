@@ -69,6 +69,29 @@ self.addEventListener("fetch", (e) => {
     return fresh;
   }));
 });
+// Reminders: the server encrypts each message for this phone only; the push service can't read it.
+self.addEventListener("push", (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (err) { d = { title: "Flux", body: e.data ? e.data.text() : "" }; }
+  const url = new URL(d.url || "/app", location.origin);
+  if (url.origin !== location.origin) url.href = location.origin + "/app";  // only ever open Flux itself
+  url.searchParams.set("from", "push");
+  if (d.tag) url.searchParams.set("k", d.tag);
+  e.waitUntil(self.registration.showNotification(d.title || "Flux", {
+    body: d.body || "", tag: d.tag ? "flux-" + d.tag + "-" + (d.id || "") : undefined,
+    icon: "/static/img/icon-192.png", badge: "/static/img/badge-96.png", data: { url: url.pathname + url.search },
+  }));
+});
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const target = (e.notification.data && e.notification.data.url) || "/app";
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+    for (const c of list) {
+      if (new URL(c.url).origin === location.origin && "focus" in c) { c.navigate(target); return c.focus(); }
+    }
+    return self.clients.openWindow(target);
+  }));
+});
 """
 
 

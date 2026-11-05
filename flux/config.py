@@ -46,7 +46,7 @@ class Config:
         self.SESSION_COOKIE_SECURE = self.IS_PRODUCTION or _bool("FORCE_SECURE_COOKIES")
         self.SESSION_COOKIE_NAME = "flux_session"
         self.PERMANENT_SESSION_LIFETIME = timedelta(days=7)
-        self.MAX_CONTENT_LENGTH = 2 * 1024 * 1024  # 2 MB uploads max
+        self.MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5 MB uploads max (a year of PDF statement is usually under 2 MB)
 
         # Email (OTP login)
         self.MAIL_SENDER = os.environ.get("EMAIL_SENDER", "")

@@ -40,17 +40,29 @@ def _hash(uid, row):
 def preview():
     f = request.files.get("file")
     if f is None or not f.filename:
-        raise ApiError("Choose a CSV file to upload.")
-    if not f.filename.lower().endswith((".csv", ".txt")):
-        raise ApiError("Only CSV files are supported. Most banks let you download a statement as CSV.")
+        raise ApiError("Choose a statement file to upload.")
+    name = f.filename.lower()
     raw = f.read()
-    for enc in ("utf-8-sig", "cp1252", "latin-1"):
+    if name.endswith(".pdf") or raw[:5] == b"%PDF-":
+        from .. import pdf_statement
+
         try:
-            text = raw.decode(enc)
-            break
-        except UnicodeDecodeError:
-            continue
-    rows, skipped = parse_statement(text)
+            rows, skipped = pdf_statement.to_rows(raw, request.form.get("password") or None, MAX_ROWS)
+        except pdf_statement.NeedsPassword as e:
+            return jsonify({"needs_password": True, "wrong": e.wrong, "message": e.message})
+        fmt = "pdf"
+    elif name.endswith((".csv", ".txt")):
+        for enc in ("utf-8-sig", "cp1252", "latin-1"):
+            try:
+                text = raw.decode(enc)
+                break
+            except UnicodeDecodeError:
+                continue
+        rows, skipped = parse_statement(text)
+        fmt = "csv"
+    else:
+        raise ApiError("Upload the PDF your bank emails you, or a CSV from net banking. "
+                       "Excel file? Open it and “Save as” CSV first.")
     if not rows:
         raise ApiError("No transactions found in this file.")
     uid = current_user()["id"]
@@ -60,7 +72,7 @@ def preview():
         r["duplicate"] = _hash(uid, r) in existing
     auto = sum(1 for r in rows if r["auto"])
     return jsonify({
-        "rows": rows, "skipped": skipped,
+        "rows": rows, "skipped": skipped, "format": fmt,
         "stats": {"total": len(rows), "auto_categorised": auto,
                   "auto_percent": round(auto / len(rows) * 100), "duplicates": sum(r["duplicate"] for r in rows)},
         "categories": {"expense": finance.EXPENSE_CATEGORIES, "income": finance.INCOME_CATEGORIES},
@@ -157,4 +169,8 @@ def commit():
     except Exception:
         db.rollback()
         raise
+    if source == "import" and imported:
+        from .. import analytics
+
+        analytics.track(u["id"], "statement_import", "pdf" if body.get("format") == "pdf" else "csv")
     return jsonify({"imported": imported, "duplicates_skipped": dupes, "balance": finance.rupees(finance.balance(u["id"]))})

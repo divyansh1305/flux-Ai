@@ -3,15 +3,15 @@
 
   async function render(main) {
     const area = el("div", { class: "stack" });
-    main.replaceChildren(pageHead("Import bank statement", "Upload a CSV from your bank. Flux sorts every transaction for you."), area);
+    main.replaceChildren(pageHead("Import bank statement", "Upload the PDF your bank emails you, or a CSV. Flux sorts every transaction for you."), area);
     showUpload();
 
     function showUpload() {
-      const input = el("input", { type: "file", accept: ".csv,.txt,text/csv", class: "sr-only", id: "file" });
+      const input = el("input", { type: "file", accept: ".pdf,.csv,.txt,application/pdf,text/csv", class: "sr-only", id: "file" });
       const drop = el("label", { for: "file", class: "card", style: { display: "block", border: "2px dashed var(--line-2)", background: "transparent", textAlign: "center", padding: "48px 20px", cursor: "pointer" } },
         el("div", { class: "feature", style: { display: "flex", justifyContent: "center" } }, el("div", { class: "ico" }, icon("file"))),
-        el("h2", { style: { margin: "10px 0 6px" } }, "Drop your statement CSV here"),
-        el("p", { class: "muted small" }, "or click to choose a file · max 2 MB"), input);
+        el("h2", { style: { margin: "10px 0 6px" } }, "Drop your statement here"),
+        el("p", { class: "muted small" }, "PDF or CSV · password-protected PDFs work too · max 5 MB"), input);
       ["dragover", "dragenter"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.style.borderColor = "var(--brand)"; }));
       ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, () => (drop.style.borderColor = "var(--line-2)")));
       drop.addEventListener("drop", (e) => { e.preventDefault(); if (e.dataTransfer.files[0]) upload(e.dataTransfer.files[0]); });
@@ -21,9 +21,10 @@
           el("div", { style: { flex: 1 } }, el("h3", null, "Got bank SMS instead?"), el("div", { class: "small muted" }, "Paste or share your debit/credit alerts and Flux adds them.")),
           el("span", { class: "link" }, "Track from SMS →")),
         el("div", { class: "grid g-2" },
-        el("div", { class: "card" }, el("h3", null, "How to get the CSV"),
+        el("div", { class: "card" }, el("h3", null, "Where to find your statement"),
           el("ul", { class: "small muted", style: { paddingLeft: "18px", margin: "10px 0 0", lineHeight: 1.8 } },
-            el("li", null, "Net banking → Accounts → Statement → choose dates → Download as CSV/Excel"),
+            el("li", null, "Easiest: the monthly e-statement PDF in your email (search “statement” in Gmail)"),
+            el("li", null, "Or net banking → Accounts → Statement → choose dates → Download PDF or CSV"),
             el("li", null, "Works with HDFC, SBI, ICICI, Axis, Kotak and most others"),
             el("li", null, "Excel file? Open it and “Save as” CSV first"))),
         el("div", { class: "card" }, el("h3", null, "Your privacy"),
@@ -31,14 +32,30 @@
           el("a", { class: "btn sm", href: "/static/sample_statement.csv", download: "sample_statement.csv", style: { marginTop: "12px" } }, icon("download"), "Try with sample data"))));
     }
 
-    async function upload(file) {
+    let format = "csv";
+    async function upload(file, password) {
       area.replaceChildren(el("div", { class: "card" }, el("div", { class: "skeleton", style: { height: "20px", width: "40%" } }), el("div", { class: "skeleton", style: { height: "200px", marginTop: "14px" } })));
       const fd = new FormData();
       fd.append("file", file);
+      if (password) fd.append("password", password);
       try {
         const r = await api("/api/import/preview", { method: "POST", body: fd });
+        if (r.needs_password) { askPassword(file, r); return; }
+        format = r.format || "csv";
         showPreview(r);
       } catch (e) { err(e); showUpload(); }
+    }
+
+    function askPassword(file, r) {
+      const pw = el("input", { class: "input", type: "password", autocomplete: "off", required: true, placeholder: "Statement password", "aria-label": "PDF password" });
+      const form = el("form", { class: "card form", onsubmit: (e) => { e.preventDefault(); if (pw.value) upload(file, pw.value); } },
+        el("h2", null, r.wrong ? "That password didn't work" : "This PDF has a password"),
+        el("p", { class: "small muted" }, r.message),
+        el("p", { class: "tiny faint" }, "Common formats: first 4 letters of your name + date of birth (DDMM), your customer ID, or date of birth (DDMMYYYY). The password is used once to open the file and is never saved."),
+        pw, el("div", { class: "row", style: { gap: "8px" } }, el("button", { class: "btn primary", type: "submit" }, "Open statement"),
+          el("button", { class: "btn ghost", type: "button", onclick: showUpload }, "Choose another file")));
+      area.replaceChildren(form);
+      setTimeout(() => pw.focus(), 30);
     }
 
     function showPreview(r) {
@@ -58,7 +75,7 @@
         tbody.appendChild(el("tr", { style: { opacity: row.duplicate ? 0.5 : 1 } },
           el("td", null, cb),
           el("td", { class: "small" }, row.date),
-          el("td", null, el("div", { class: "small", style: { fontWeight: 600 } }, row.note), el("div", { class: "tiny faint" }, row.raw), row.duplicate ? el("span", { class: "badge" }, "already imported") : null),
+          el("td", null, el("div", { class: "small", style: { fontWeight: 600 } }, row.note), el("div", { class: "tiny faint raw-text" }, row.raw), row.duplicate ? el("span", { class: "badge" }, "already imported") : null),
           el("td", null, sel, row.auto ? null : el("div", { class: "tiny amber" }, "check this")),
           el("td", { class: "right num " + (row.kind === "income" ? "green" : "") }, (row.kind === "income" ? "+" : "-") + inr(row.amount))));
       });
@@ -68,7 +85,7 @@
         if (!chosen.length) return err("Select at least one transaction.");
         go.disabled = true;
         try {
-          const res = await api("/api/import/commit", { method: "POST", body: { rows: chosen } });
+          const res = await api("/api/import/commit", { method: "POST", body: { rows: chosen, format } });
           ok(`Imported ${res.imported} transactions.` + (res.duplicates_skipped ? ` Skipped ${res.duplicates_skipped} duplicates.` : ""));
           location.href = "/app";
         } catch (e) { err(e); go.disabled = false; }

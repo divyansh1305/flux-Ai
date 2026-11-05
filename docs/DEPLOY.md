@@ -10,6 +10,7 @@ Flux runs at `https://fluxai.pythonanywhere.com` from the code in `~/flux-ai`.
    cd ~/flux-ai && git pull
    ~/.virtualenvs/flux/bin/pip install -r requirements.txt   # only needed if requirements.txt changed
    ```
+   **This update (reminders, friends, PDF statements) changed `requirements.txt`: run the pip line.** It adds the PDF reader.
 3. **Web** tab → green **Reload** button.
 4. Open the site. The database updates itself; phones pick up the new version on their own (open Flux twice).
 
@@ -25,17 +26,21 @@ Flux runs at `https://fluxai.pythonanywhere.com` from the code in `~/flux-ai`.
 | `ADMIN_EMAILS` | **your** sign-in email, so only you can open `/app/admin` (Flux numbers) |
 | `METRICS_TOKEN` | optional: a long password for `/metrics` |
 | `APP_TIMEZONE` | `Asia/Kolkata` |
+| `VAPID_PRIVATE_KEY` | optional. Leave empty: Flux creates its reminder key in `instance/vapid_private.key` on first use. Back that file up; if it is lost, everyone has to turn reminders on again. |
 
 After changing `.env`, press **Reload** on the Web tab.
 
 ## Once
 
 - **Google Cloud → OAuth consent screen → Audience → Publish app.** Testing mode makes every Gmail connection expire after 7 days. Users will still see "Google hasn't verified this app" until Google's security review (needed before 100 users).
-- **Tasks tab → daily task** (one free task):
+- **Tasks tab → daily task** (one free task), at **03:15 UTC** (8:45 am in India):
   ```bash
   cd ~/flux-ai && ~/.virtualenvs/flux/bin/python scripts/daily.py
   ```
-  It backs up the database, checks everyone's Gmail, and works out yesterday's totals for Flux numbers.
+  It backs up the database, checks everyone's Gmail, sends the day's reminders (at most 3 per person), and works out
+  yesterday's totals for Flux numbers. Already set it for another time? Edit the time on the Tasks tab.
+- Reminders reach phones through `fcm.googleapis.com` (Android/Chrome) and `web.push.apple.com` (iPhone). Both are on
+  PythonAnywhere's free allowlist. iPhone users must add Flux to the Home Screen first (iOS 16.4+).
 
 ## Every month
 
@@ -50,4 +55,5 @@ After changing `.env`, press **Reload** on the Web tab.
 | Every request | Web tab → **Server log** |
 | Raw totals by hand | Bash: `sqlite3 ~/flux-ai/instance/flux.db` then e.g. `SELECT COUNT(*) FROM users;` |
 | Live counters | `/metrics` with `Authorization: Bearer <METRICS_TOKEN>` |
+| Reminders sent | Bash: `sqlite3 ~/flux-ai/instance/flux.db "SELECT kind, COUNT(*), SUM(pushed) FROM notifications GROUP BY kind;"` |
 | Android app download | GitHub → Releases → `android-latest` (rebuilt on every push that changes `android/`) |

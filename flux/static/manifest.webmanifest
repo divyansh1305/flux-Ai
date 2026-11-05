@@ -7,14 +7,53 @@
   "display": "standalone",
   "background_color": "#f6f4ef",
   "theme_color": "#1f6b57",
-  "icons": [{ "src": "/static/img/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }],
+  "icons": [
+    {
+      "src": "/static/img/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/img/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
   "shortcuts": [
-    { "name": "Plans", "url": "/app/plans" },
-    { "name": "Add from SMS", "url": "/app/share" }
+    {
+      "name": "Plans",
+      "url": "/app/plans"
+    },
+    {
+      "name": "Friends",
+      "url": "/app/friends"
+    },
+    {
+      "name": "Add from SMS",
+      "url": "/app/share"
+    }
   ],
   "share_target": {
     "action": "/app/share",
     "method": "GET",
-    "params": { "title": "title", "text": "text", "url": "url" }
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
   }
 }

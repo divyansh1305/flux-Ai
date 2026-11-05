@@ -391,3 +391,19 @@ table.table { width: 100%; border-collapse: collapse; font-size: 14px; }
 @media (max-width: 860px) {
   .hero-card { padding: 18px; border-radius: 18px; }
 }
+
+/* ─── Reminders bell, friends ───────────────────────────── */
+.icon-link.bell { position: relative; }
+.bell-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%; background: #d0603a; border: 2px solid var(--surface); }
+.bell-dot[hidden] { display: none; }
+.owed-row .tx-amt.in { color: var(--green, #2f7d67); }
+.chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.toggle-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.toggle-row:last-child { border-bottom: 0; }
+.toggle-row input { margin-top: 3px; }
+@media (max-width: 860px) { .bottom-nav a { min-width: 0; padding: 4px 2px; flex: 1; } }
+@media (max-width: 860px) {
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .raw-text { display: none; }
+  .table td.right { white-space: nowrap; }
+}

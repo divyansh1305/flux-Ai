@@ -57,6 +57,10 @@
     arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
     calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
     eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    bell: '<path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
+    users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 20a6.5 6.5 0 0 0-3-5.5"/>',
+    split: '<path d="M12 3v7M12 10l-6 6v5M12 10l6 6v5"/>',
+    share: '<path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v7h14v-7"/>',
   };
   function icon(name) {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -176,10 +180,11 @@
   // Usage counting: which screen was opened, and that an error was shown. Never amounts, merchants or text.
   const SCREENS = { "/app": "home", "/app/transactions": "activity", "/app/plans": "plans", "/app/coach": "ask",
     "/app/goals": "goals", "/app/budgets": "budgets", "/app/settings": "settings", "/app/import": "import",
-    "/app/share": "share", "/app/privacy-center": "privacy-center", "/onboarding": "onboarding", "/app/admin": "admin" };
-  function track(name) {
+    "/app/share": "share", "/app/privacy-center": "privacy-center", "/onboarding": "onboarding", "/app/admin": "admin",
+    "/app/friends": "friends" };
+  function track(name, value) {
     if (!USER) return;
-    const prop = SCREENS[location.pathname.replace(/\/$/, "") || "/app"] || "other";
+    const prop = value || SCREENS[location.pathname.replace(/\/$/, "") || "/app"] || "other";
     api("/api/events", { method: "POST", body: { name, prop } }).catch(() => {});
   }
 
@@ -268,6 +273,7 @@
       const r = await api("/api/transactions", { method: "POST", body: v });
       let msg = `Saved ${inr(r.transaction.amount)} ${r.transaction.kind}.`;
       if (r.autosaved) msg += ` ${inr(r.autosaved)} set aside for ${r.autosave_goal}.`;
+      if (r.paid_back) msg += r.paid_back.direction === "they_owe" ? ` ${r.paid_back.person.split(" ")[0]} is ticked off your Friends list.` : ` Your debt to ${r.paid_back.person.split(" ")[0]} is settled.`;
       ok(msg, { label: "Undo", run: async () => { await api(`/api/transactions/${r.transaction.id}`, { method: "DELETE" }); refresh(); } });
       refresh();
       return r;
@@ -323,11 +329,12 @@
     ["/app/budgets", "pie", "Budgets"],
     ["/app/goals", "target", "Goals"],
     ["/app/plans", "calendar", "Plans"],
+    ["/app/friends", "users", "Friends"],
     ["/app/coach", "spark", "Coach"],
   ];
   // Centre button: quick "Add" (always works).
   const MOBILE_NAV = [["/app", "home", "Home"], ["/app/transactions", "list", "Activity"], ["#add", "plus", "Add"],
-    ["/app/plans", "calendar", "Plans"], ["/app/coach", "spark", "Ask"]];
+    ["/app/plans", "calendar", "Plans"], ["/app/friends", "users", "Friends"], ["/app/coach", "spark", "Ask"]];
   const featureOn = () => true;
   let USER = null;
   let CONFIG = {};
@@ -369,10 +376,22 @@
     USER = me.user;
     CONFIG = me;
     if (!USER.onboarded && location.pathname !== "/onboarding") { location.href = "/onboarding"; return; }
+    if (window.FluxI18n) window.FluxI18n.start(USER.lang);
+    const qs = new URLSearchParams(location.search);
+    if (qs.get("from") === "push") {  // opened from a reminder: count it (which kind only), then tidy the address
+      track("push_opened", qs.get("k") || "");
+      qs.delete("from"); qs.delete("k");
+      history.replaceState(null, "", location.pathname + (qs.toString() ? "?" + qs : "") + location.hash);
+    }
     const path = location.pathname.replace(/\/$/, "") || "/app";
     const main = el("main", { class: "main", id: "main" });
     if (location.pathname !== "/onboarding") {
       const initials = USER.name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+      const dot = el("span", { class: "bell-dot", hidden: true });
+      const bell = el("a", { href: "#", class: "icon-link bell", title: "Reminders", "aria-label": "Reminders", onclick: (e) => { e.preventDefault(); inboxModal(dot); } }, icon("bell"), dot);
+      const showDot = (r) => { dot.hidden = !(r && r.unread); };
+      showDot(cacheGet("/api/reminders"));
+      setTimeout(() => api("/api/reminders").then((r) => { cacheSet("/api/reminders", r); showDot(r); }).catch(() => {}), 1500);
       const nav = el("nav", { class: "nav", "aria-label": "Main" }, NAV.filter(([href]) => featureOn(href)).map(([href, ic, label]) =>
         el("a", { href, class: path === href ? "active" : null, "aria-current": path === href ? "page" : null }, icon(ic), el("span", null, label))));
       const top = el("header", { class: "topbar" }, el("div", { class: "topbar-in" },
@@ -380,6 +399,7 @@
         nav,
         el("div", { class: "top-actions" },
           (CONFIG.features || {}).admin ? el("a", { href: "/app/admin", class: "icon-link" + (path === "/app/admin" ? " active" : ""), title: "Flux numbers (only you can see this)", "aria-label": "Flux numbers" }, icon("trend")) : null,
+          bell,
           el("a", { href: "/app/import", class: "icon-link" + (path === "/app/import" ? " active" : ""), title: "Import statement or SMS", "aria-label": "Import" }, icon("upload")),
           el("a", { href: "/app/settings", class: "icon-link" + (path === "/app/settings" ? " active" : ""), title: "Settings", "aria-label": "Settings" }, icon("gear")),
           el("a", { href: "/app/settings", class: "avatar", title: USER.name, "aria-label": "Account" }, initials))));
@@ -440,8 +460,10 @@
       el("label", { class: "row", style: { gap: "8px", alignItems: "center" } }, remember, rememberText), hint);
     const v = await modal("Edit transaction", body, [
       { label: "Cancel", value: null, cls: "ghost" },
+      t.kind === "expense" ? { label: "Split with friends", value: "split" } : null,
       { label: "Save", submit: true, cls: "primary", value: () => ({ category: cat.value, note: note.value, remember: remember.checked }) },
-    ]);
+    ].filter(Boolean));
+    if (v === "split") { splitModal(t); return; }
     if (!v) return;
     try {
       const r = await api(`/api/transactions/${t.id}`, { method: "PATCH", body: v });
@@ -455,9 +477,134 @@
     try { await api(`/api/transactions/${t.id}`, { method: "DELETE" }); ok("Deleted."); refresh(); } catch (e) { err(e); }
   }
 
+  // ─── Split a payment with friends ─────────────────────────
+  async function splitModal(t) {
+    const total = Math.abs(Number(t.amount));
+    const names = el("input", { class: "input", maxlength: "200", placeholder: "Rahul, Priya, Aman", required: true, "aria-label": "Friends' names" });
+    const me = el("input", { type: "checkbox", checked: true });
+    const list = el("div", { class: "stack", style: { gap: "8px" } });
+    const mine = el("p", { class: "small muted", style: { margin: 0 } });
+    let rows = [];
+    const people = () => names.value.split(/[,\n]+/).map((x) => x.trim()).filter(Boolean).slice(0, 20);
+    const recount = () => {
+      const used = rows.reduce((a, r) => a + (Number(r.input.value) || 0), 0);
+      const left = Math.round((total - used) * 100) / 100;
+      mine.textContent = left < 0 ? "Friends' shares are more than you paid." : `Your share: ${inr(left)} (only this counts as your spending).`;
+      mine.style.color = left < 0 ? "var(--danger, #b3261e)" : "";
+    };
+    const rebuild = () => {
+      const ps = people();
+      const share = ps.length ? Math.floor((total / (ps.length + (me.checked ? 1 : 0))) * 100) / 100 : 0;
+      rows = ps.map((name) => ({ name, input: el("input", { class: "input num", type: "number", inputmode: "decimal", min: "1", step: "0.01", value: share, "aria-label": "Share for " + name }) }));
+      rows.forEach((r) => r.input.addEventListener("input", recount));
+      list.replaceChildren(...rows.map((r) => el("div", { class: "row between", style: { gap: "10px" } }, el("span", null, r.name), el("div", { style: { width: "130px" } }, r.input))));
+      recount();
+    };
+    names.addEventListener("input", rebuild);
+    me.addEventListener("change", rebuild);
+    rebuild();
+    const body = el("div", { class: "form" },
+      el("p", { class: "muted small", style: { margin: 0 } }, `${t.note || t.category} · ${inr(total)} · ${dateFmt(t.date)}`),
+      el("label", { class: "field" }, "Who was it with?", names),
+      el("label", { class: "row", style: { gap: "8px", alignItems: "center" } }, me, el("span", null, "I'm paying a share too")),
+      list, mine,
+      el("p", { class: "tiny faint" }, "When they pay you back on UPI, Flux ticks them off by itself."));
+    const v = await modal("Split with friends", body, [
+      { label: "Cancel", value: null, cls: "ghost" },
+      { label: "Split", submit: true, cls: "primary", value: () => rows.map((r) => ({ name: r.name, amount: r.input.value })) },
+    ]);
+    if (!v || !v.length) return null;
+    try {
+      const r = await api("/api/friends/split", { method: "POST", body: { transaction_id: t.id, people: v } });
+      ok(`Done. Friends owe you ${inr(r.totals.they_owe)} in total.`, { label: "See", run: () => (location.href = "/app/friends") });
+      cacheDrop("/api/friends");
+      refresh();
+      return r;
+    } catch (e) { err(e); return null; }
+  }
+
+  async function friendModal(direction = "they_owe") {
+    let dir = direction;
+    const person = el("input", { class: "input", maxlength: "40", placeholder: "Rahul", required: true });
+    const amount = el("input", { class: "input big num", type: "number", inputmode: "decimal", min: "1", step: "0.01", placeholder: "500", required: true, "aria-label": "Amount in rupees" });
+    const note = el("input", { class: "input", maxlength: "80", placeholder: "Movie tickets" });
+    const day = el("input", { class: "input", type: "date", value: todayISO(), max: todayISO() });
+    const seg = el("div", { class: "seg" });
+    const a = el("button", { type: "button" }, "They owe me");
+    const b = el("button", { type: "button" }, "I owe them");
+    const paint = () => { a.className = dir === "they_owe" ? "on inc" : ""; b.className = dir === "i_owe" ? "on exp" : ""; };
+    a.onclick = () => { dir = "they_owe"; paint(); };
+    b.onclick = () => { dir = "i_owe"; paint(); };
+    seg.append(a, b); paint();
+    const v = await modal("Add money with a friend", el("div", { class: "form" }, seg,
+      el("div", { class: "grid g-2" }, el("label", { class: "field" }, "Friend's name", person), el("label", { class: "field" }, "Amount (₹)", amount)),
+      el("div", { class: "grid g-2" }, el("label", { class: "field" }, "What for (optional)", note), el("label", { class: "field" }, "Date", day)),
+      el("p", { class: "tiny faint" }, "Money you owe is kept aside in today's number. Money friends owe you is only counted once it arrives.")), [
+      { label: "Cancel", value: null, cls: "ghost" },
+      { label: "Save", submit: true, cls: "primary", value: () => ({ direction: dir, person: person.value, amount: amount.value, note: note.value, date: day.value }) },
+    ]);
+    if (!v) return null;
+    try { const r = await api("/api/friends", { method: "POST", body: v }); ok("Saved."); cacheDrop("/api/friends"); refresh(); return r; } catch (e) { err(e); return null; }
+  }
+
+  // ─── Reminders on this phone (Web Push) ───────────────────
+  const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const standalone = () => window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const pushApi = {
+    supported: () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window,
+    // iPhone only allows notifications for web apps added to the Home Screen (iOS 16.4+).
+    needsHomeScreen: () => isIOS() && !standalone(),
+    async current() {
+      if (!pushApi.supported()) return null;
+      try { const reg = await navigator.serviceWorker.ready; return await reg.pushManager.getSubscription(); } catch (e) { return null; }
+    },
+    async enable() {
+      if (pushApi.needsHomeScreen()) throw new Error("On iPhone, first add Flux to your Home Screen (Share → Add to Home Screen), open it from there, then turn reminders on.");
+      if (!pushApi.supported()) throw new Error("This browser can't show notifications. Try Chrome on Android, or Flux from the iPhone Home Screen.");
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") throw new Error("Notifications are blocked for Flux. Allow them in your phone's settings for this site, then try again.");
+      try { await navigator.serviceWorker.register("/sw.js"); } catch (e) { /* already registered */ }
+      const reg = await navigator.serviceWorker.ready;
+      const info = await api("/api/reminders");
+      const raw = atob(info.public_key.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - (info.public_key.length % 4)) % 4));
+      const key = Uint8Array.from(raw, (c) => c.charCodeAt(0));
+      let sub = await reg.pushManager.getSubscription();
+      if (sub) {  // a subscription made with an old server key can't be used: replace it
+        const old = sub.options && sub.options.applicationServerKey ? new Uint8Array(sub.options.applicationServerKey) : null;
+        if (old && old.join() !== key.join()) { await sub.unsubscribe(); sub = null; }
+      }
+      sub = sub || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+      const r = await api("/api/reminders/subscribe", { method: "POST", body: sub.toJSON() });
+      cacheDrop("/api/reminders");
+      return r;
+    },
+    async disable() {
+      const sub = await pushApi.current();
+      await api("/api/reminders/unsubscribe", { method: "POST", body: { endpoint: sub ? sub.endpoint : "" } });
+      if (sub) { try { await sub.unsubscribe(); } catch (e) { /* ignore */ } }
+      cacheDrop("/api/reminders");
+    },
+  };
+
+  async function inboxModal(dot) {
+    let r;
+    try { r = await api("/api/reminders"); } catch (e) { err(e); return; }
+    const when = (ts) => dateFmt(String(ts).slice(0, 10));
+    const body = el("div", { class: "stack", style: { gap: "4px", maxHeight: "60vh", overflow: "auto" } },
+      r.inbox.length ? r.inbox.map((n) => el("a", { href: n.url, class: "tx", style: { textDecoration: "none", color: "inherit" } },
+        avatar(n.title, n.kind === "friends" ? "users" : n.kind === "bills" ? "calendar" : n.kind === "weekly" ? "trend" : n.kind === "morning" ? "spark" : "alert"),
+        el("div", { class: "tx-main" }, el("div", { class: "tx-title", style: { fontWeight: n.read ? 500 : 700 } }, n.title),
+          el("div", { class: "tx-sub", style: { whiteSpace: "normal" } }, n.body)),
+        el("div", { class: "tiny faint" }, when(n.created_at))))
+        : el("div", { class: "empty" }, el("b", null, "Nothing yet"), "Reminders about bills, late refunds and friends show up here."),
+      r.phones ? null : el("a", { href: "/app/settings#reminders", class: "link small", style: { marginTop: "10px" } }, "Get these on your phone →"));
+    if (r.unread) api("/api/reminders/read", { method: "POST" }).then(() => { if (dot) dot.hidden = true; cacheDrop("/api/reminders"); }).catch(() => {});
+    await modal("Reminders", body);
+  }
+
   window.Flux = {
     el, icon, api, download, toast, ok, err, modal, confirmBox, inr, inr0, dateFmt, todayISO, CAT_EMOJI, CAT_COLORS, avatar,
-    boot, pageHead, txRow, deleteTx, editTx, addTransactionModal, planModal, live, prefetch, cacheClear, refresh, onRefresh, logout, meta,
+    boot, pageHead, txRow, deleteTx, editTx, addTransactionModal, planModal, splitModal, friendModal, push: pushApi, live, prefetch, cacheClear, refresh, onRefresh, logout, meta,
     get user() { return USER; }, set user(u) { USER = u; }, get config() { return CONFIG; },
   };
 })();

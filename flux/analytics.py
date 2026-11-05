@@ -22,7 +22,7 @@ EVENTS = {
     "auto_payment": {"sms", "notification", "email"},
     "message_unread": {"sms", "notification", "email"},
     "screen_opened": {"home", "activity", "plans", "ask", "goals", "budgets", "settings", "import", "share",
-                      "privacy-center", "onboarding", "admin"},
+                      "privacy-center", "onboarding", "admin", "friends"},
     "plan_added": {"spend", "income"},
     "cushion_set": {""},
     "category_fixed": {""},
@@ -32,10 +32,20 @@ EVENTS = {
     "asked_flux": {"add_expense", "add_income", "check_balance", "spending_query", "budget_status", "logout", "set_budget", "goal_status",
                    "create_goal", "add_to_goal", "can_i_afford", "health_score", "forecast", "safe_to_spend", "bills",
                    "pay", "undo", "navigate", "help", "ask_coach", "unknown", "other"},
+    "split_added": {""},
+    "friend_added": {"they_owe", "i_owe"},
+    "friend_reminded": {""},
+    "owed_settled": {"auto", "manual"},
+    "reminders_on": {""},
+    "reminders_off": {""},
+    "push_opened": {"refunds", "checks", "bills", "friends", "weekly", "morning"},
+    "weekly_opened": {""},
+    "lang_set": {"en", "hinglish"},
+    "statement_import": {"csv", "pdf"},
     "error_shown": {"home", "activity", "plans", "ask", "goals", "budgets", "settings", "import", "share",
-                    "privacy-center", "onboarding", "admin", "other"},
+                    "privacy-center", "onboarding", "admin", "friends", "other"},
 }
-CLIENT_EVENTS = {"screen_opened", "error_shown"}  # the only ones a browser may send
+CLIENT_EVENTS = {"screen_opened", "error_shown", "push_opened"}  # the only ones a browser may send
 
 
 def track(user_id, name, prop=""):

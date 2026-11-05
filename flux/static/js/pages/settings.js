@@ -238,7 +238,73 @@
       el("div", { style: { marginTop: "10px" } }, el("button", { class: "btn sm", onclick: () => download("/api/samples/export", "flux-parser-samples.jsonl").catch(err) }, "Download my masked samples")));
     drawRules().catch(err);
 
-    main.replaceChildren(pageHead("Settings", null), el("div", { class: "grid g-2" }, autoCard, learnCard, profile, autosave, voiceCard, data));
+    // Reminders on this phone
+    const P = window.Flux.push;
+    const KIND_TEXT = {
+      refunds: ["Late refunds", "A failed payment's money hasn't come back by the RBI deadline."],
+      checks: ["Double charges and price rises", "The same payment twice, or a subscription that got more expensive."],
+      bills: ["Due tomorrow", "Bills, subscriptions and your plans, the day before."],
+      friends: ["Friends", "When someone pays you back, and once a week if money is still owed."],
+      weekly: ["Sunday note", "Last week in a few lines."],
+      morning: ["Morning number", "Today's safe-to-spend amount, every morning."],
+    };
+    const remindBox = el("div", { class: "stack", style: { gap: "10px" } });
+    async function drawRemind() {
+      let r;
+      try { r = await api("/api/reminders"); } catch (e) { remindBox.replaceChildren(el("p", { class: "small muted" }, e.message)); return; }
+      const sub = await P.current();
+      const state = sub ? el("div", { class: "notice ok" }, icon("check"), el("div", null, el("b", null, "On for this phone. "), "At most 3 a day."))
+        : P.needsHomeScreen() ? el("div", { class: "notice info" }, icon("info"), el("div", null, el("b", null, "On iPhone: "), "tap Share → Add to Home Screen, open Flux from the Home Screen, then come back here. (iOS 16.4 or newer.)"))
+        : !P.supported() ? el("div", { class: "notice caution" }, icon("alert"), el("div", null, "This browser can't show notifications. Use Chrome on Android, or Flux from the iPhone Home Screen. Everything still shows under the bell icon in Flux."))
+        : Notification.permission === "denied" ? el("div", { class: "notice caution" }, icon("alert"), el("div", null, "Notifications are blocked for Flux. Allow them in your browser's site settings, then turn reminders on."))
+        : null;
+      const btn = sub
+        ? el("button", { class: "btn sm ghost", onclick: async () => { try { await P.disable(); ok("Reminders off for this phone."); drawRemind(); } catch (e) { err(e); } } }, "Turn off on this phone")
+        : P.supported() && !P.needsHomeScreen() && Notification.permission !== "denied" ? el("button", { class: "btn primary", onclick: async () => {
+            try { const x = await P.enable(); ok(x.test_sent ? "Reminders are on. A test notification is on its way." : "Reminders are on."); drawRemind(); } catch (e) { err(e); }
+          } }, icon("bell"), "Turn on reminders") : null;
+      const on = new Set(r.kinds);
+      const toggles = el("div", null, r.all_kinds.map((k) => {
+        const cb = el("input", { type: "checkbox", checked: on.has(k) ? true : null });
+        cb.onchange = async () => {
+          cb.checked ? on.add(k) : on.delete(k);
+          try { await api("/api/reminders", { method: "PATCH", body: { kinds: [...on] } }); ok("Saved."); } catch (e) { err(e); }
+        };
+        return el("label", { class: "toggle-row", style: { cursor: "pointer" } }, cb,
+          el("span", null, el("b", { class: "small" }, KIND_TEXT[k][0]), el("br"), el("span", { class: "tiny muted" }, KIND_TEXT[k][1])));
+      }));
+      remindBox.replaceChildren(...[state, btn ? el("div", null, btn) : null, toggles].filter(Boolean));
+    }
+    drawRemind();
+    const remindCard = el("div", { class: "card", id: "reminders" }, el("h2", null, "Reminders"),
+      el("p", { class: "small muted", style: { margin: "6px 0 14px" } }, "Only things worth knowing. Reminders also show under the bell icon, even without notifications."),
+      remindBox);
+
+    // Language and UPI ID
+    const seg = el("div", { class: "seg" });
+    const bEn = el("button", { type: "button" }, "English");
+    const bHi = el("button", { type: "button" }, "Hinglish");
+    const paintLang = () => { bEn.className = u.lang !== "hinglish" ? "on" : ""; bHi.className = u.lang === "hinglish" ? "on" : ""; };
+    const setLang = async (lang) => {
+      if (u.lang === lang) return;
+      await save({ lang }, lang === "hinglish" ? "Hinglish on." : "English on.");
+      window.Flux.cacheClear();
+      location.reload();
+    };
+    bEn.onclick = () => setLang("en");
+    bHi.onclick = () => setLang("hinglish");
+    seg.append(bEn, bHi); paintLang();
+    const upi = el("input", { class: "input", value: u.upi_id || "", maxlength: "96", placeholder: "yourname@okhdfcbank", autocapitalize: "off", spellcheck: "false" });
+    const langCard = el("div", { class: "card", id: "upi" }, el("h2", null, "Language and UPI ID"),
+      el("div", { class: "form", style: { marginTop: "14px" } },
+        el("div", { class: "field" }, "App language", seg,
+          el("span", { class: "tiny faint" }, "Hinglish covers Home, Plans, Friends, reminders and the Sunday note. Some settings stay in English.")),
+        el("label", { class: "field" }, "Your UPI ID (optional)", upi,
+          el("span", { class: "tiny faint" }, "Added to the reminder messages you send friends, so they can pay you back easily.")),
+        el("div", null, el("button", { class: "btn primary", onclick: () => save({ upi_id: upi.value }, "UPI ID saved.") }, "Save"))));
+
+    main.replaceChildren(pageHead("Settings", null), el("div", { class: "grid g-2" }, remindCard, langCard, autoCard, learnCard, profile, autosave, voiceCard, data));
+    if (location.hash) { const t = document.querySelector(location.hash); if (t) setTimeout(() => t.scrollIntoView({ behavior: "smooth", block: "start" }), 60); }
   }
 
   document.addEventListener("DOMContentLoaded", () => window.Flux.boot(render));

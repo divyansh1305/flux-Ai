@@ -22,6 +22,7 @@ APP_PAGES = {
     "/app/import": "import.html",
     "/app/coach": "coach.html",
     "/app/plans": "plans.html",
+    "/app/friends": "friends.html",
     "/app/privacy-center": "know.html",
     "/app/admin": "admin.html",
     "/app/share": "share.html",
@@ -54,10 +55,13 @@ def create_app(overrides=None):
 
     backup.init_app(app)
 
-    from .api import admin, auth, gmail, ingest, money, plans, statement, voice
+    from .api import admin, auth, gmail, ingest, money, plans, social, statement, voice
 
-    for bp in (auth.bp, money.bp, statement.bp, voice.bp, ingest.bp, gmail.bp, plans.bp, admin.bp):
+    for bp in (auth.bp, money.bp, statement.bp, voice.bp, ingest.bp, gmail.bp, plans.bp, admin.bp, social.bp):
         app.register_blueprint(bp)
+    from . import reminders
+
+    reminders.init_app(app)
 
     @app.before_request
     def _before():
@@ -140,7 +144,7 @@ def create_app(overrides=None):
     @app.errorhandler(HTTPException)
     def _http_error(e):
         if request.path.startswith("/api/"):
-            msg = "File too large (max 2 MB)." if e.code == 413 else (e.description or e.name)
+            msg = "File too large (max 5 MB). Download a shorter period." if e.code == 413 else (e.description or e.name)
             return jsonify({"error": msg}), e.code
         if e.code == 404:
             return send_from_directory(PAGES_DIR, "404.html"), 404

@@ -47,6 +47,7 @@ def user_json(u):
         "adult_confirmed": bool(u["adult_confirmed"]),
         "income_pattern": u["income_pattern"], "pay_day": u["pay_day"],
         "expected_income": u["expected_income"] / 100, "cushion": u["cushion"] / 100,
+        "lang": u["lang"], "upi_id": u["upi_id"] or "",
     }
 
 
@@ -225,6 +226,16 @@ def update_account():
             get_db().execute("DELETE FROM parse_samples WHERE user_id = ?", (u["id"],))
     if data.get("adult_confirmed") is True:
         fields["adult_confirmed"] = 1
+    if "lang" in data:
+        if data["lang"] not in ("en", "hinglish"):
+            raise ApiError("Language must be English or Hinglish.")
+        fields["lang"] = data["lang"]
+        analytics.track(u["id"], "lang_set", data["lang"])
+    if "upi_id" in data:
+        vpa = str(data["upi_id"] or "").strip().lower()
+        if vpa and not re.fullmatch(r"[a-z0-9._\-]{2,64}@[a-z][a-z0-9.\-]{1,31}", vpa):
+            raise ApiError("That doesn't look like a UPI ID (for example name@okhdfcbank).")
+        fields["upi_id"] = vpa or None
     if "income_pattern" in data:
         if data["income_pattern"] not in ("unset", "monthly", "varies"):
             raise ApiError("Choose when your money usually comes in.")
@@ -297,8 +308,15 @@ def export_account():
     plans = [{"kind": r["kind"], "title": r["title"], "amount": r["amount"] / 100, "date": r["date"], "sure": bool(r["sure"]),
               "done": bool(r["done"])} for r in db.execute("SELECT * FROM plans WHERE user_id = ? ORDER BY date", (u["id"],))]
     events = [dict(r) for r in db.execute("SELECT name, prop, created_at FROM events WHERE user_id = ? ORDER BY id", (u["id"],))]
+    owed = [{"direction": r["direction"], "person": r["person"], "amount": r["amount"] / 100, "note": r["note"],
+             "date": r["date"], "settled_at": r["settled_at"]}
+            for r in db.execute("SELECT * FROM owed WHERE user_id = ? ORDER BY date", (u["id"],))]
+    notes = [{"kind": r["kind"], "title": r["title"], "body": r["body"], "created_at": r["created_at"]}
+             for r in db.execute("SELECT * FROM notifications WHERE user_id = ? ORDER BY id", (u["id"],))]
+    phones = db.execute("SELECT COUNT(*) FROM push_subscriptions WHERE user_id = ?", (u["id"],)).fetchone()[0]
     resp = jsonify({"profile": user_json(u), "transactions": tx, "budgets": budgets, "merchant_rules": rules,
-                    "masked_samples": samples, "plans": plans, "usage_events": events,
+                    "masked_samples": samples, "plans": plans, "usage_events": events, "friends": owed,
+                    "reminders": notes, "phones_with_reminders": phones,
                     "goals": goals_with_progress(u["id"], include_archived=True)})
     resp.headers["Content-Disposition"] = "attachment; filename=flux-my-data.json"
     return resp
@@ -343,6 +361,9 @@ def what_flux_knows():
             "bank_balances": count("SELECT COUNT(*) FROM balance_snapshots WHERE user_id = ?"),
             "masked_samples": count("SELECT COUNT(*) FROM parse_samples WHERE user_id = ?"),
             "usage_events": count("SELECT COUNT(*) FROM events WHERE user_id = ?"),
+            "friends": count("SELECT COUNT(*) FROM owed WHERE user_id = ?"),
+            "reminders": count("SELECT COUNT(*) FROM notifications WHERE user_id = ?"),
+            "phones_with_reminders": count("SELECT COUNT(*) FROM push_subscriptions WHERE user_id = ?"),
         },
         "contribute_samples": bool(u["contribute_samples"]),
     })

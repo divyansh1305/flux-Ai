@@ -97,7 +97,7 @@ def test_import_rejects_bad_files(client, user):
     assert client.post("/api/import/preview", data=data, content_type="multipart/form-data").status_code == 400
     data = {"file": (io.BytesIO(b"a,b,c\n1,2,3"), "x.csv")}
     assert client.post("/api/import/preview", data=data, content_type="multipart/form-data").status_code == 400
-    big = {"file": (io.BytesIO(b"x" * (3 * 1024 * 1024)), "big.csv")}
+    big = {"file": (io.BytesIO(b"x" * (6 * 1024 * 1024)), "big.csv")}
     assert client.post("/api/import/preview", data=big, content_type="multipart/form-data").status_code == 413
 
 

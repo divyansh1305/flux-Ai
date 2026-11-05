@@ -150,7 +150,11 @@ def safe_to_spend(user_id, user=None):
     # Money paid for a plan today was already planned: it isn't part of today's everyday allowance.
     everyday_today = spent_today - sum(spent_today_rows[i]["amount"] for i in used)
     cushion = user["cushion"] if user is not None else 0
-    pool = avail + everyday_today + plans_in - bills_due - plans_spend - goal_reserve - cushion
+    from . import friends
+
+    owe = friends.totals(user_id)
+    i_owe = owe["i_owe_paise"]  # money you owe friends is already spoken for
+    pool = avail + everyday_today + plans_in - bills_due - plans_spend - goal_reserve - cushion - i_owe
     daily = max(0, pool) / days_left
     left_today = max(0, daily - everyday_today)
     maybe_daily = maybe_in / days_left if maybe_in else 0
@@ -178,16 +182,19 @@ def safe_to_spend(user_id, user=None):
         lines.append({"label": "Your plans", "amount": -rupees(plans_spend)})
     if goal_reserve:
         lines.append({"label": "Goal top-ups this month", "amount": -rupees(goal_reserve)})
+    if i_owe:
+        lines.append({"label": "Money you owe friends", "amount": -rupees(i_owe)})
     if cushion:
         lines.append({"label": "Safety cushion (kept aside)", "amount": -rupees(cushion)})
     until = "your next payday" if horizon == "payday" else "the end of the month"
     return {"left_today": rupees(round(left_today)), "daily": rupees(round(daily)), "spent_today": rupees(spent_today),
             "available": rupees(avail), "bills_due": rupees(bills_due), "bills": bills, "goal_reserve": rupees(goal_reserve),
             "plans_reserved": rupees(plans_spend), "sure_income": rupees(plans_in), "plans": plan_items,
-            "cushion": rupees(cushion), "maybe_extra_daily": rupees(round(maybe_daily)),
+            "cushion": rupees(cushion), "i_owe": rupees(i_owe), "owed_to_you": owe["they_owe"],
+            "owed_to_you_people": owe["they_owe_people"], "maybe_extra_daily": rupees(round(maybe_daily)),
             "pool": rupees(max(0, pool)), "days_left": days_left, "until": end.isoformat(), "until_label": until,
             "horizon": horizon, "confirmed": confirmed, "status": status, "message": message, "lines": lines,
-            "method": f"(money you have + sure money coming − bills − plans − goal top-ups − cushion) ÷ {days_left} "
+            "method": f"(money you have + sure money coming − bills − plans − goal top-ups − money you owe − cushion) ÷ {days_left} "
                       f"day{'s' if days_left != 1 else ''} until {until}, minus what you've spent today."}
 
 

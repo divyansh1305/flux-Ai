@@ -22,6 +22,10 @@ ADDED_COLUMNS = [
     ("users", "cushion", "INTEGER NOT NULL DEFAULT 0"),            # paise never counted as spendable
     ("users", "adult_confirmed", "INTEGER NOT NULL DEFAULT 0"),    # DPDP: Flux is for 18+ only
     ("gmail_accounts", "needs_reconnect", "INTEGER NOT NULL DEFAULT 0"),
+    # Which reminders the user wants (comma list) and the app language ('en' or 'hinglish').
+    ("users", "reminders", "TEXT NOT NULL DEFAULT 'refunds,checks,bills,friends,weekly,morning'"),
+    ("users", "lang", "TEXT NOT NULL DEFAULT 'en'"),
+    ("users", "upi_id", "TEXT"),                                    # shown in "please pay me back" messages
 ]
 
 

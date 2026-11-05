@@ -17,7 +17,7 @@ from . import clock
 from upi_parse import EXPENSE_CATEGORIES as _EXP, INCOME_CATEGORIES as _INC  # noqa: E402
 
 EXPENSE_CATEGORIES = list(_EXP)
-INCOME_CATEGORIES = list(_INC)
+INCOME_CATEGORIES = list(_INC) + ["Paid back"]  # a friend returning their share (see friends.py)
 SAVING_CATEGORY = "Goal Saving"
 
 
@@ -51,6 +51,30 @@ def _sum(user_id, kind, start=None, end=None, category=None, goal_id=None):
     if start is None and end is None and category is None and goal_id is None:
         return _memo(("sum", user_id, kind), lambda: _sum_q(user_id, kind))
     return _sum_q(user_id, kind, start, end, category, goal_id)
+
+
+def own_sum(user_id, kind, start=None, end=None, category=None):
+    """Like _sum, but only YOUR money: friends' shares of a split payment aren't your spending, and a friend
+    paying you back isn't income. (The balance still uses _sum: it must match the bank.)"""
+    total = _sum(user_id, kind, start, end, category)
+    db = get_db()
+    if kind == "expense":
+        sql = ("SELECT COALESCE(SUM(o.amount),0) FROM owed o JOIN transactions t ON t.id = o.transaction_id"
+               " WHERE o.user_id = ? AND o.direction = 'they_owe' AND t.kind = 'expense'")
+        args = [user_id]
+        if start:
+            sql += " AND t.date >= ?"
+            args.append(start.isoformat())
+        if end:
+            sql += " AND t.date <= ?"
+            args.append(end.isoformat())
+        if category:
+            sql += " AND t.category = ?"
+            args.append(category)
+        total -= db.execute(sql, args).fetchone()[0]
+    elif kind == "income" and category is None:
+        total -= _sum(user_id, "income", start, end, category="Paid back")
+    return max(0, total)
 
 
 def _sum_q(user_id, kind, start=None, end=None, category=None, goal_id=None):
@@ -153,7 +177,23 @@ def add_transaction(user, kind, amount, category, note="", day=None, source="man
          auto_category),
     )
     tx_id = cur.lastrowid
-    result = {"id": tx_id, "autosaved": 0, "autosave_goal": None}
+    result = {"id": tx_id, "autosaved": 0, "autosave_goal": None, "paid_back": None}
+    if kind in ("income", "expense"):
+        from . import friends
+
+        closed = friends.match_payment(user["id"], tx_id, kind, amount, note, day)
+        if closed is not None:
+            result["paid_back"] = {"person": closed["person"], "amount": rupees(closed["amount"]),
+                                   "direction": closed["direction"]}
+            from . import reminders
+
+            if closed["direction"] == "they_owe" and "friends" in reminders.enabled(user):
+                hi = "lang" in user.keys() and user["lang"] == "hinglish"
+                first, amt = closed["person"].split(" ")[0], f"₹{rupees(closed['amount']):,.0f}"
+                reminders.notify_now(user["id"], {
+                    "kind": "friends", "key": f"paid-back:{closed['id']}", "url": "/app/friends",
+                    "title": f"{first} ne {amt} wapas kar diye" if hi else f"{first} paid you back {amt}",
+                    "body": "Flux ne list se hata diya." if hi else "Ticked off your list. Nothing to do."})
 
     if kind == "expense" and autosave:
         goal_id_auto = user["autosave_goal_id"]
@@ -180,12 +220,14 @@ def add_transaction(user, kind, amount, category, note="", day=None, source="man
 # ─── Summaries ────────────────────────────────────────────────
 def month_summary(user_id, day=None):
     first, last = month_bounds(day)
-    inc = _sum(user_id, "income", first, last)
-    exp = _sum(user_id, "expense", first, last)
+    inc = own_sum(user_id, "income", first, last)
+    exp = own_sum(user_id, "expense", first, last)
     sav = _sum(user_id, "saving", first, last)
     rows = get_db().execute(
-        "SELECT category, SUM(amount) AS total FROM transactions WHERE user_id = ? AND kind = 'expense'"
-        " AND date BETWEEN ? AND ? GROUP BY category ORDER BY total DESC",
+        "SELECT category, total FROM (SELECT t.category, SUM(t.amount - COALESCE((SELECT SUM(o.amount) FROM owed o"
+        " WHERE o.transaction_id = t.id AND o.direction = 'they_owe'), 0)) AS total FROM transactions t"
+        " WHERE t.user_id = ? AND t.kind = 'expense' AND t.date BETWEEN ? AND ? GROUP BY t.category)"
+        " WHERE total > 0 ORDER BY total DESC",
         (user_id, first.isoformat(), last.isoformat()),
     ).fetchall()
     return {
@@ -264,7 +306,7 @@ def budget_status(user_id, day=None):
     ).fetchall()
     out = []
     for r in rows:
-        spent = _sum(user_id, "expense", first, last, category=r["category"])
+        spent = own_sum(user_id, "expense", first, last, category=r["category"])
         limit = r["monthly_limit"]
         expected_by_now = limit * elapsed / total_days
         if spent > limit:
@@ -297,7 +339,7 @@ def pre_spend_check(user, amount, category):
     ).fetchone()
     budget_info = None
     if budget:
-        spent = _sum(uid, "expense", first, last, category=category)
+        spent = own_sum(uid, "expense", first, last, category=category)
         after = spent + amount
         limit = budget["monthly_limit"]
         budget_info = {"limit": rupees(limit), "spent": rupees(spent), "after": rupees(after),
@@ -332,11 +374,11 @@ def month_forecast(user_id, day=None):
     first, last = month_bounds(day)
     elapsed = (day - first).days + 1
     remaining = (last - day).days
-    spent = _sum(user_id, "expense", first, day)
-    income = _sum(user_id, "income", first, last)
+    spent = own_sum(user_id, "expense", first, day)
+    income = own_sum(user_id, "income", first, last)
     prev_last = first - timedelta(days=1)
     prev_first = prev_last.replace(day=1)
-    last_month = _sum(user_id, "expense", prev_first, prev_last)
+    last_month = own_sum(user_id, "expense", prev_first, prev_last)
 
     WARMUP = 7
     daily = spent / elapsed if elapsed else 0

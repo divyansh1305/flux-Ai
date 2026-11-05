@@ -234,3 +234,50 @@ CREATE TABLE IF NOT EXISTS seen_checks (
     check_key       TEXT NOT NULL,
     PRIMARY KEY (user_id, check_key)
 );
+
+-- Phones that turned reminders on. One row per browser; removed when the push service says it's gone (404/410).
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    endpoint        TEXT NOT NULL UNIQUE,
+    p256dh          TEXT NOT NULL,
+    auth            TEXT NOT NULL,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    last_ok_at      TEXT,
+    fails           INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_push_user ON push_subscriptions(user_id);
+
+-- Every reminder Flux made, so the same one is never sent twice and people without push still see it in the app.
+CREATE TABLE IF NOT EXISTS notifications (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind            TEXT NOT NULL,
+    dedupe_key      TEXT NOT NULL,
+    title           TEXT NOT NULL,
+    body            TEXT NOT NULL,
+    url             TEXT NOT NULL DEFAULT '/app',
+    pushed          INTEGER NOT NULL DEFAULT 0,
+    read_at         TEXT,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (user_id, dedupe_key)
+);
+CREATE INDEX IF NOT EXISTS idx_notif_user_time ON notifications(user_id, created_at);
+
+-- Money between the user and friends: "they_owe" (I paid for dinner, Rahul owes ₹500) or "i_owe".
+-- Closed automatically when a matching UPI payment arrives, or by hand.
+CREATE TABLE IF NOT EXISTS owed (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    direction       TEXT NOT NULL DEFAULT 'they_owe' CHECK (direction IN ('they_owe','i_owe')),
+    person          TEXT NOT NULL,
+    amount          INTEGER NOT NULL CHECK (amount > 0),
+    note            TEXT NOT NULL DEFAULT '',
+    date            TEXT NOT NULL,
+    transaction_id  INTEGER REFERENCES transactions(id) ON DELETE SET NULL,
+    settled_at      TEXT,
+    settled_tx_id   INTEGER REFERENCES transactions(id) ON DELETE SET NULL,
+    suggested_tx_id INTEGER REFERENCES transactions(id) ON DELETE SET NULL,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_owed_user_open ON owed(user_id, settled_at);

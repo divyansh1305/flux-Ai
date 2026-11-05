@@ -85,7 +85,8 @@ def create_tx_from(data, source="manual"):
                                      auto_category=category if source == "voice" else None)
     row = get_db().execute("SELECT * FROM transactions WHERE id = ?", (result["id"],)).fetchone()
     return {"transaction": tx_json(row), "autosaved": rupees(result["autosaved"]),
-            "autosave_goal": result["autosave_goal"], "balance": rupees(finance.balance(u["id"]))}
+            "autosave_goal": result["autosave_goal"], "paid_back": result.get("paid_back"),
+            "balance": rupees(finance.balance(u["id"]))}
 
 
 @bp.post("/transactions")
@@ -260,7 +261,7 @@ def dashboard():
     recent = get_db().execute(
         "SELECT * FROM transactions WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT 6", (uid,)
     ).fetchall()
-    from .. import checks, gmail, insights, ledger
+    from .. import checks, friends, gmail, insights, ledger
 
     return jsonify({
         "balance": rupees(finance.balance(uid)),
@@ -280,6 +281,7 @@ def dashboard():
         "checks": checks.all_checks(uid),
         "gmail": gmail.status(uid),
         "money_setup": {"income_pattern": u["income_pattern"], "pay_day": u["pay_day"], "cushion": rupees(u["cushion"])},
+        "friends": {"totals": friends.totals(uid), "suggestions": friends.suggestions(uid)[:2]},
     })
 
 

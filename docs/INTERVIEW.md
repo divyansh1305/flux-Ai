@@ -87,3 +87,30 @@ Correctness is the product. A tracker that's 95% right gets abandoned the first 
 - Parser on unseen banks: 96.6% direction, 100% amount, 86.2% category, 91.7% UTR
 - 3 production bugs found by load testing
 - Android app: about 440 lines of Kotlin, 0 third-party libraries
+
+## Round 3: reminders, friends, PDF statements
+
+**"Why write Web Push yourself instead of using pywebpush?"** pywebpush pulls in aiohttp and more; the free host has
+little disk and one worker. The protocol is small: ECDH on P-256 → HKDF (auth secret, then salt) → AES-128-GCM with a
+0x02 padding delimiter, plus an ES256 JWT for VAPID. I proved it with two checks: output identical byte-for-byte to
+`http_ece` (by the RFC's author) with the same salt and key, and a test "phone" that decrypts independently.
+Security: the server only POSTs to an allowlist of push services (https, port 443), otherwise "subscribe" would let
+anyone make my server call any URL (SSRF).
+
+**"How do you avoid spamming people?"** Priorities (late refund > double charge > due tomorrow > friends > weekly >
+morning), at most 3 pushes a day, a UNIQUE (user, dedupe_key) so the same reminder never goes twice even if the job
+runs twice, and everything is in an in-app inbox so turning push off loses nothing. Event pushes ("Rahul paid you
+back") are sent after the response in a thread, so no request waits on Google or Apple.
+
+**"How does auto tick-off avoid false matches?"** Amount within ₹1 AND a name token (≥3 letters, honorifics removed)
+in the payment text → settle. Amount alone → a question to the user, never a guess. Two friends owing the same amount:
+the name decides (there's a test with a real Kotak SMS for exactly this).
+
+**"Doesn't splitting break the balance?"** Two different questions, two functions. `balance()` is cash and must equal
+the bank, so it never changes. `own_sum()` answers "what did *I* spend": it subtracts friends' shares linked to the
+payment and ignores "Paid back" income. Budgets, the monthly total, the forecast and the Sunday note use `own_sum`.
+
+**"PDF statements without tables?"** Group words into lines by y, find the header, remember x-positions of
+Withdrawal/Deposit/Balance, assign each amount to the nearest column by its right edge (numbers are right-aligned),
+join continuation lines into the narration. Strongest signal last: if the balance changed by exactly the amount, the
+sign of the change wins. Password-protected PDFs: ask once, never store the password.

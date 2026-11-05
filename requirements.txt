@@ -3,5 +3,7 @@ python-dotenv>=1.1,<2
 google-auth>=2.40,<3
 requests>=2.32,<3
 reportlab>=4.2,<6
+pdfplumber>=0.11,<0.12
+cryptography>=42
 gunicorn>=23,<24
 ./packages/upi_parse
