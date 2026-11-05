@@ -39,7 +39,7 @@
 
   async function render(main, user) {
     const box = el("div", { class: "stack" });
-    main.replaceChildren(pageHead("Goals", "Track what you're saving for. Money you set aside stays in your bank; Kitna just stops counting it as spendable.",
+    main.replaceChildren(pageHead("Savings goals", "Track what you're saving for. Money you set aside stays in your bank; Kitna just stops counting it as spendable.",
       el("button", { class: "btn primary", onclick: goalModal }, icon("plus"), "New goal")), box);
 
     async function load() { await window.Kitna.live("/api/goals", (goals) => paint(goals, window.Kitna.user)); }

@@ -6,7 +6,7 @@
   function greeting(name) {
     const h = new Date().getHours();
     const part = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-    return `${part}, ${name.split(" ")[0]}`;
+    return `Hi, ${name.split(" ")[0]}`;
   }
   const shortDate = (iso) => new Date(iso + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 
@@ -15,7 +15,7 @@
 
   async function render(main, user) {
     const content = el("div", { class: "stack narrow home" });
-    content.replaceChildren(el("div", { class: "hero-card" }, el("div", { class: "skeleton", style: { width: "40%", height: "14px" } }),
+    content.replaceChildren(el("div", { class: "today" }, el("div", { class: "skeleton", style: { width: "40%", height: "14px" } }),
       el("div", { class: "skeleton", style: { width: "60%", height: "48px", marginTop: "12px" } }), el("div", { class: "skeleton", style: { width: "70%", height: "13px", marginTop: "12px" } })),
       window.Kitna.skeleton(3));
     main.replaceChildren(content);
@@ -30,7 +30,6 @@
     onRefresh(load);
     await load();
     fillWeek();
-    fillRemind();
     window.Kitna.prefetch(["/api/meta", "/api/transactions?page=1&size=30", "/api/plans", "/api/insights", "/api/goals"]);
     const params = new URLSearchParams(location.search);
     if (params.get("gmail") === "connected") {
@@ -83,34 +82,34 @@
     return card;
   }
 
-  function setupCard(s) {
+  // Setup: one clear next step at a time, never a checklist
+  function nextStep(s) {
     if (s.complete) return null;
-    try { if (localStorage.getItem("flux_setup_hidden") === String(s.done)) return null; } catch (e) { /* storage blocked */ }
-    const clickable = (st) => !st.done && (st.href || st.action || st.key === "plan");
-    const run = (st) => {
-      if (st.done) return;
-      if (st.action === "align") alignBank();
-      else if (st.key === "plan") planModal();
-      else if (st.href) location.href = st.href;
-    };
-    const steps = el("div", { class: "setup", hidden: true }, s.steps.map((st) => el("div", {
-        class: "setup-step" + (st.done ? " done" : ""), role: clickable(st) ? "button" : null, tabindex: clickable(st) ? "0" : null,
-        style: { cursor: clickable(st) ? "pointer" : "default" },
-        onclick: () => run(st), onkeydown: (e) => { if (e.key === "Enter") run(st); } },
-        el("span", { class: "tick" }, icon("check")),
-        el("div", { class: "s-main" }, el("div", { class: "s-title" }, st.title), st.done ? null : el("div", { class: "s-sub" }, st.sub)),
-        clickable(st) ? el("span", { class: "faint", style: { display: "grid" } }, icon("chev")) : null)));
-    const head = el("button", { type: "button", class: "setup-head", "aria-expanded": "false", onclick: () => {
-        steps.hidden = !steps.hidden; head.setAttribute("aria-expanded", String(!steps.hidden)); } },
-      el("span", { class: "ring", style: { "--p": Math.round((s.done / s.total) * 100) } }, el("span", null, `${s.done}/${s.total}`)),
-      el("span", { class: "s-main" }, el("b", null, "Finish setting up"), el("span", { class: "tiny faint" }, "So today's number is exactly right")),
-      icon("chev"));
-    steps.appendChild(el("button", { class: "btn sm ghost", style: { margin: "6px 0 8px" }, onclick: () => { try { localStorage.setItem("flux_setup_hidden", String(s.done)); } catch (e) { /* ignore */ } card.remove(); } }, "Hide for now"));
-    const card = el("div", { class: "card setup-card" }, head, steps);
+    const st = s.steps.find((x) => !x.done && (x.href || x.action || x.key === "plan"));
+    if (!st) return null;
+    try { if (localStorage.getItem("flux_setup_hidden") === st.key) return null; } catch (e) { /* storage blocked */ }
+    const run = () => { if (st.action === "align") alignBank(); else if (st.key === "plan") planModal(); else if (st.href) location.href = st.href; };
+    const card = el("div", { class: "next-step" },
+      el("button", { type: "button", class: "next-main", onclick: run },
+        el("span", { class: "next-ic" }, icon(st.key === "gmail" ? "msg" : st.key === "bank" ? "bank" : st.key === "plan" ? "calendar" : "check")),
+        el("span", { class: "next-text" }, el("b", null, st.title), el("span", null, st.sub)),
+        icon("chev")),
+      el("button", { type: "button", class: "next-x", "aria-label": "Not now", onclick: () => { try { localStorage.setItem("flux_setup_hidden", st.key); } catch (e) { /* ignore */ } card.remove(); } }, icon("x")));
     return card;
   }
 
-  // ── The Sunday note (shown Sunday and Monday, or when opened from the reminder)
+  // "How is this worked out?" in a sheet, in plain words
+  function howSheet(sf) {
+    const row = (label, amount) => el("div", { class: "how-row" }, el("span", null, label), el("b", { class: "num" }, amount));
+    window.Kitna.modal("How Kitna works it out", el("div", { class: "how" },
+      ...sf.lines.map((l) => row(l.label, (l.amount < 0 ? "− " : "") + inr0(Math.abs(l.amount)))),
+      el("div", { class: "how-total" }, row(`Shared over ${sf.days_left} day${sf.days_left === 1 ? "" : "s"} till ${shortDate(sf.until)}`, inr0(sf.daily) + " a day")),
+      sf.spent_today ? row("Already spent today", "− " + inr0(sf.spent_today)) : null,
+      el("p", { class: "small muted" }, "Whatever you don't spend today is added to tomorrow."),
+      sf.owed_to_you ? el("p", { class: "small muted" }, `Friends owe you ${inr0(sf.owed_to_you)}. It's added when they pay.`) : null),
+      [{ label: "Got it", value: null, cls: "primary" }]);
+  }
+
   const weekSlot = el("div");
   const remindSlot = el("div");
   async function fillWeek() {
@@ -156,91 +155,62 @@
   }
 
   function build(d, user) {
-    const m = d.month;
     const sf = d.safe;
     const safe = Math.max(0, Math.floor(sf.left_today));
+    const setup = sf.status === "setup";
 
-    // ── Hero: one number that answers "can I spend today?", with the maths one tap away
-    const why = el("div", { class: "why", hidden: true },
-      ...sf.lines.map((l) => el("div", { class: "row between small" },
-        el("span", { class: "muted" }, l.label), el("span", { class: "num" }, (l.amount < 0 ? "− " : "") + inr0(Math.abs(l.amount))))),
-      el("div", { class: "row between small why-total" },
-        el("span", null, `÷ ${sf.days_left} day${sf.days_left === 1 ? "" : "s"} until ${shortDate(sf.until)}`), el("b", { class: "num" }, inr0(sf.daily) + " a day")),
-      sf.spent_today ? el("div", { class: "row between small" }, el("span", { class: "muted" }, "Spent today"), el("span", { class: "num" }, "− " + inr0(sf.spent_today))) : null,
-      sf.maybe_extra_daily ? el("div", { class: "tiny faint" }, `If the money you're unsure about arrives: about ${inr0(sf.maybe_extra_daily)} more a day.`) : null,
-      sf.owed_to_you ? el("a", { href: "/app/friends", class: "tiny faint" }, `Friends owe you ${inr0(sf.owed_to_you)}. It counts once it arrives.`) : null,
-      el("div", { class: "tiny faint" }, "Whatever you don't spend today is added to tomorrow."));
-    const whyBtn = el("button", { class: "why-btn", type: "button", "aria-expanded": "false", title: "How is this worked out?",
-      onclick: () => { why.hidden = !why.hidden; whyBtn.setAttribute("aria-expanded", String(!why.hidden)); } }, icon("info"));
+    // ── 1. One sentence: how much you can spend today
+    const today = el("section", { class: "today" + (sf.status === "ok" || setup ? "" : " careful") },
+      el("div", { class: "today-label" }, setup ? "Let's find out how much you can spend" : "You can spend today"),
+      setup ? null : el("div", { class: "today-num num", "aria-label": inr0(safe) + " today" },
+        el("span", { class: "cur", "aria-hidden": "true" }, "₹"), el("span", { "aria-hidden": "true" }, inr0(safe).replace("₹", ""))),
+      el("div", { class: "today-sub" }, setup ? sf.message : sf.status === "ok" ? `Money for ${sf.days_left} more days, till ${shortDate(sf.until)}` : sf.message),
+      setup ? el("a", { class: "btn primary block", href: "/onboarding" }, "Start (takes 1 minute)")
+        : el("div", { class: "today-foot" }, asOfEl, el("button", { type: "button", class: "today-how", onclick: () => howSheet(sf) }, "How?")));
 
-    const heroText = sf.status === "ok" ? `Until ${shortDate(sf.until)}. Bills and plans already kept aside.` : sf.message;
-    const quick = (ic, label, fn) => el("button", { class: "quick", type: "button", onclick: fn }, el("span", { class: "quick-ic" }, icon(ic)), label);
-    const hero = el("section", { class: "hero-card" },
-      el("div", { class: "hero-top" },
-        el("div", { class: "hero-label" }, sf.confirmed || sf.status === "setup" ? "Safe to spend today" : "Safe to spend today, about"),
-        sf.status === "setup" ? null : whyBtn),
-      el("div", { class: "hero-num num" + (sf.status === "ok" ? "" : " amber"), "aria-label": sf.status === "setup" ? "Not set up yet" : inr0(safe) + " safe to spend today" },
-        sf.status === "setup" ? "—" : [el("span", { class: "cur", "aria-hidden": "true" }, "₹"), el("span", { "aria-hidden": "true" }, inr0(safe).replace("₹", ""))]),
-      el("div", { class: "hero-sub" }, heroText),
-      why,
-      asOfEl,
-      el("div", { class: "quick-row" },
-        quick("qr", "Scan & Pay", () => { location.href = "/app/pay"; }),
-        quick("plus", "Add", () => addTransactionModal("expense")),
-        quick("split", "Split", () => window.Kitna.splitModal()),
-        quick("calendar", "Plan", () => planModal())));
+    // ── 2. Four big buttons
+    const big = (ic, label, fn, main) => el("button", { class: "big-act" + (main ? " main" : ""), type: "button", onclick: fn },
+      el("span", { class: "big-ic" }, icon(ic)), el("span", { class: "big-label" }, label));
+    const actions = el("div", { class: "big-acts" },
+      big("qr", "Scan & Pay", () => { location.href = "/app/pay"; }, true),
+      big("plus", "Add payment", () => addTransactionModal("expense")),
+      big("split", "Split bill", () => window.Kitna.splitModal()),
+      big("calendar", "Upcoming", () => { location.href = "/app/plans"; }));
 
-    // ── Things that need the user (only when real)
+    // ── Only things that truly need you
     const g = d.gmail || {};
     const reconnect = g.connected && g.needs_reconnect
       ? el("div", { class: "notice caution", style: { alignItems: "center" } }, icon("alert"),
-          el("div", { style: { flex: 1 } }, el("b", null, "Gmail stopped sharing bank emails with Kitna. "), "New email payments won't show up until you reconnect. It takes one tap."),
+          el("div", { style: { flex: 1 } }, el("b", null, "Reconnect Gmail. "), "New payments from email won't show until you do."),
           el("a", { class: "btn sm", href: "/gmail/connect" }, "Reconnect"))
-      : null;
-    const setupShowsBank = !d.setup.complete && d.setup.steps.some((s) => s.key === "bank" && !s.done && s.action === "align");
-    const gap = d.bank_gap;
-    const bankCard = d.bank && gap !== null && Math.abs(gap) >= 1 && d.reconcile.status !== "drift" && !setupShowsBank
-      ? el("div", { class: "notice info", style: { alignItems: "center" } }, icon("bank"),
-          el("div", { style: { flex: 1 } }, el("b", null, `Your bank shows ${inr0(d.bank.balance)}, Kitna shows ${inr0(d.balance)}.`), " Kitna started counting later. Match them in one tap."),
-          el("button", { class: "btn sm", onclick: alignBank }, "Match"))
       : null;
     const drift = d.reconcile.status === "drift"
       ? el("div", { class: "notice caution" }, icon("alert"), el("div", null, el("b", null, "A payment may be missing. "), d.reconcile.message)) : null;
-    const checks = (d.checks || []).slice(0, 4).map(checkCard);
-    const asks = ((d.friends || {}).suggestions || []).map((x) => el("div", { class: "notice info", style: { alignItems: "flex-start" } }, icon("users"),
+    const checks = (d.checks || []).slice(0, 2).map(checkCard);
+    const asks = ((d.friends || {}).suggestions || []).slice(0, 1).map((x) => el("div", { class: "notice info", style: { alignItems: "flex-start" } }, icon("users"),
       el("div", { style: { flex: 1 } }, el("b", null, `Was the ${inr0(x.amount)} ${onDay(x.tx_date)} from ${x.person.split(" ")[0]}?`),
-        el("div", { class: "small", style: { marginTop: "4px" } }, "Your bank didn't say who sent it."),
         el("div", { class: "row", style: { gap: "8px", marginTop: "10px" } },
           el("button", { class: "btn sm", onclick: async () => { try { await api(`/api/friends/${x.id}/settle`, { method: "POST", body: { transaction_id: x.suggested_tx_id } }); window.Kitna.ok("Ticked off."); window.Kitna.refresh(); } catch (e) { window.Kitna.err(e); } } }, "Yes"),
           el("button", { class: "btn sm ghost", onclick: async () => { try { await api(`/api/friends/${x.id}/not-them`, { method: "POST" }); window.Kitna.refresh(); } catch (e) { window.Kitna.err(e); } } }, "No")))));
 
-    // ── Coming up: plans + bills before the next money
+    // ── 3. Recent payments
+    const recent = section("Recent payments", el("a", { class: "link", href: "/app/transactions" }, "See all"),
+      el("div", { class: "card list-card" }, d.recent.length
+        ? el("div", { class: "tx-list" }, d.recent.slice(0, 5).map((t) => txRow(t)))
+        : el("div", { class: "empty" }, el("b", null, "No payments yet"), "Tap Scan & Pay, or Add payment.")));
+
+    // ── Coming up (only if something is)
     const upcoming = [
-      ...sf.plans.map((p) => ({ date: p.date, name: p.title, amount: p.amount, sub: p.kind === "income" ? (p.sure ? "Money coming in" : "Maybe coming in") : "Your plan", income: p.kind === "income" })),
-      ...sf.bills.map((b) => ({ date: b.next_date, name: b.name, amount: b.amount, sub: b.cadence === "monthly" ? "Repeats every month" : "Repeats every week" })),
-    ].sort((a, b) => a.date.localeCompare(b.date)).slice(0, 6);
-    const coming = sf.status === "setup" ? null : section("Coming up before " + shortDate(sf.until), el("a", { class: "link", href: "/app/plans" }, "See all"),
-      el("div", { class: "card", style: { padding: "4px 20px" } }, upcoming.length
-        ? el("div", { class: "tx-list" }, upcoming.map((u) => el("div", { class: "tx" }, avatar(u.name),
-            el("div", { class: "tx-main" }, el("div", { class: "tx-title" }, u.name), el("div", { class: "tx-sub" }, `${u.sub} · ${dateFmt(u.date)}`)),
-            el("div", { class: "tx-amt" + (u.income ? " green" : "") }, (u.income ? "+" : "") + inr0(u.amount)))))
-        : el("div", { class: "empty" }, el("b", null, "Nothing coming up"), "Add a plan and Kitna keeps the money aside.")));
+      ...sf.plans.filter((p) => p.kind !== "income").map((p) => ({ date: p.date, name: p.title, amount: p.amount })),
+      ...sf.bills.map((b) => ({ date: b.next_date, name: b.name, amount: b.amount })),
+    ].sort((a, b) => a.date.localeCompare(b.date)).slice(0, 3);
+    const coming = !setup && upcoming.length ? section("Coming up", el("a", { class: "link", href: "/app/plans" }, "See all"),
+      el("div", { class: "card list-card" }, el("div", { class: "tx-list" }, upcoming.map((u) => el("div", { class: "tx" },
+        el("div", { class: "cat-ic" }, icon("calendar")),
+        el("div", { class: "tx-main" }, el("div", { class: "tx-title" }, u.name), el("div", { class: "tx-sub" }, dateFmt(u.date))),
+        el("div", { class: "tx-amt" }, inr0(u.amount))))))) : null;
 
-    const recent = section("Recent", el("a", { class: "link", href: "/app/transactions" }, "See all"),
-      el("div", { class: "card", style: { padding: "4px 20px" } }, d.recent.length
-        ? el("div", { class: "tx-list" }, d.recent.map((t) => txRow(t)))
-        : el("div", { class: "empty" }, el("b", null, "No payments yet"), "Scan & Pay, or tap Add.")));
-
-    const month = section("This month", el("a", { class: "link", href: "/app/coach" }, "Details"),
-      el("div", { class: "card month-card" },
-        el("div", null, el("div", { class: "tiny faint" }, "Spent"), el("div", { class: "month-v num" }, inr0(m.expenses)),
-          m.expenses ? el("div", { class: "tiny faint" }, `about ${inr0(d.forecast.daily_average)} a day`) : null),
-        el("div", null, el("div", { class: "tiny faint" }, "Money in"), el("div", { class: "month-v num green" }, inr0(m.income))),
-        m.saved ? el("div", null, el("div", { class: "tiny faint" }, "Set aside"), el("div", { class: "month-v num" }, inr0(m.saved))) : null));
-
-    const trust = el("a", { class: "trust", href: "/privacy" }, icon("shield"),
-      el("span", null, el("b", null, "Read-only. "), "Kitna can't move your money or see your UPI PIN."));
-    return [el("div", { class: "greet" }, greeting(user.name)), hero, reconnect, ...checks, ...asks, weekSlot, remindSlot, setupCard(d.setup), bankCard, drift, coming, recent, month, trust];
+    return [el("div", { class: "greet" }, greeting(user.name)), today, actions, reconnect, drift, ...checks, ...asks, nextStep(d.setup), weekSlot, recent, coming];
   }
 
   document.addEventListener("DOMContentLoaded", () => window.Kitna.boot(render));

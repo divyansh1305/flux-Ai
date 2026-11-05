@@ -20,7 +20,7 @@
 
   async function render(main) {
     const box = el("div", { class: "stack" });
-    main.replaceChildren(pageHead("Budgets", "Monthly limits per category. Resets on the 1st.",
+    main.replaceChildren(pageHead("Monthly limits", "Set how much you want to spend on food, shopping and more. Starts again on the 1st.",
       el("button", { class: "btn primary", onclick: () => budgetModal() }, icon("plus"), "New budget")), box);
 
     async function load() {

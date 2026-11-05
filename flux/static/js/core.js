@@ -63,6 +63,28 @@
     share: '<path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v7h14v-7"/>',
     menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
     chev: '<path d="M9 6l6 6-6 6"/>',
+    "c-food": '<path d="M7 3v8a2 2 0 0 0 2 2v8M11 3v8M7 7h4M17 21V3c-1.8 1.3-3 3.4-3 6v4h3"/>',
+    "c-cart": '<circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2l2.4 11h10.2L20 8H6.2"/>',
+    "c-car": '<path d="M5 16v-5l2-5h10l2 5v5H5zM3 11h18M6 16v2M18 16v2"/><circle cx="8.5" cy="13.5" r=".9"/><circle cx="15.5" cy="13.5" r=".9"/>',
+    "c-plane": '<path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/>',
+    "c-bag": '<path d="M6 8h12l-1 13H7L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+    "c-repeat": '<path d="M17 2l3 3-3 3"/><path d="M4 11V9a4 4 0 0 1 4-4h12"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a4 4 0 0 1-4 4H4"/>',
+    "c-bolt": '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+    "c-house": '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+    "c-film": '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4-2.5z"/>',
+    "c-heart": '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
+    "c-book": '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2V5z"/><path d="M4 19a2 2 0 0 1 2-2h13"/>',
+    "c-scissors": '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.5 7.5 20 18M8.5 16.5 20 6"/>',
+    "c-chartup": '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+    "c-arrows": '<path d="M7 7h13l-3-3M17 17H4l3 3"/>',
+    "c-dots": '<circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/>',
+    "c-briefcase": '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>',
+    "c-laptop": '<rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/>',
+    "c-coins": '<ellipse cx="9" cy="7" rx="6" ry="3"/><path d="M3 7v4c0 1.7 2.7 3 6 3s6-1.3 6-3V7"/><path d="M9 14v3c0 1.7 2.7 3 6 3s6-1.3 6-3v-4c0-1.7-2.7-3-6-3"/>',
+    "c-undo": '<path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>',
+    "c-percent": '<path d="M19 5 5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
+    "c-gift": '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v9h14v-9M12 8v13"/><path d="M12 8c-1.5-3-5-3.5-5-1s3 1 5 1c2 0 5 1.5 5-1s-3.5-2-5 1z"/>',
+    "c-piggy": '<path d="M4 11a7 6 0 0 1 13-3h2.5l-.8 3 1.8 1.5V15h-2.2a7 6 0 0 1-2.3 2.6V20h-3v-1.6a7 6 0 0 1-3 0V20h-3v-2.6A6 6 0 0 1 4 11z"/><circle cx="15" cy="10.5" r=".8"/>',
     sliders: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
   };
   function icon(name) {
@@ -117,6 +139,18 @@
     const m = String(name || "").match(/[A-Za-z0-9\u0900-\u097F]/);
     return el("div", { class: "tx-icon " + tintFor(name), "aria-hidden": "true" }, ic ? icon(ic) : (m ? m[0].toUpperCase() : "•"));
   }
+  // Every category has a picture, so you can tell food from rent at a glance.
+  const CAT_ICON = {
+    "Food & Dining": "c-food", Groceries: "c-cart", Transport: "c-car", Travel: "c-plane", Shopping: "c-bag",
+    Subscriptions: "c-repeat", "Bills & Utilities": "c-bolt", Rent: "c-house", Entertainment: "c-film", Health: "c-heart",
+    Education: "c-book", "Personal Care": "c-scissors", Investments: "c-chartup", Transfers: "c-arrows", Other: "c-dots",
+    Salary: "c-briefcase", Freelance: "c-laptop", "Pocket Money": "c-coins", Refund: "c-undo", Cashback: "c-percent",
+    Interest: "bank", "Investment Returns": "c-chartup", Gift: "c-gift", "Other Income": "plus", "Paid back": "users",
+  };
+  const CAT_SHORT = { "Food & Dining": "Food", "Bills & Utilities": "Bills", Entertainment: "Fun", "Personal Care": "Self care",
+    Subscriptions: "Subscriptions", "Investment Returns": "Returns", "Other Income": "Other", "Pocket Money": "Pocket money" };
+  const catIcon = (c, extra) => el("div", { class: "cat-ic" + (extra ? " " + extra : ""), "aria-hidden": "true" }, icon(CAT_ICON[c] || "c-dots"));
+  const catShort = (c) => CAT_SHORT[c] || c;
   const CAT_COLORS = ["#17171a", "#4b4a4e", "#737176", "#9a989c", "#bcbabd", "#d6d4d6", "#e6e4e5", "#efeeee"];  // one ink, in steps
 
   // ─── API client ───────────────────────────────────────────
@@ -215,12 +249,13 @@
         foot.appendChild(el("button", { class: "btn " + (b.cls || ""), type: b.submit ? "submit" : "button",
           onclick: b.submit ? null : () => close(b.value) }, b.label)));
       const form = el("form", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": title,
-        onsubmit: (e) => { e.preventDefault(); const b = (buttons || []).find((x) => x.submit); if (b) close(b.value()); } },
-        el("h2", null, title), body, foot);
+        onsubmit: (e) => { e.preventDefault(); const b = (buttons || []).find((x) => x.submit); if (b) { const v = b.value(); if (v !== undefined) close(v); } } },
+        el("div", { class: "modal-head" }, el("h2", null, title),
+          el("button", { type: "button", class: "modal-x", "aria-label": "Close", onclick: () => close(null) }, icon("x"))), body, foot);
       const bg = el("div", { class: "modal-bg", onclick: (e) => { if (e.target === bg) close(null); } }, form);
       document.body.appendChild(bg);
       document.addEventListener("keydown", onKey);
-      const first = form.querySelector("input, select, textarea, button");
+      const first = form.querySelector("[autofocus]") || form.querySelector(".modal > :not(.modal-head) input, select, textarea");
       if (first) setTimeout(() => first.focus(), 30);
     });
   }
@@ -242,55 +277,70 @@
     try { sessionStorage.setItem("flux_meta", JSON.stringify({ build: BUILD, data: META })); } catch (e) { /* ignore */ }
     return META;
   }
+  // Pick a category by tapping its picture (no drop-down menus).
+  function catGrid(cats, selected, onPick) {
+    const grid = el("div", { class: "cat-grid", role: "radiogroup", "aria-label": "Category" });
+    const draw = (sel) => grid.replaceChildren(...cats.map((c) => el("button", {
+      type: "button", class: "cat-pick" + (c === sel ? " on" : ""), role: "radio", "aria-checked": String(c === sel),
+      onclick: () => { draw(c); onPick(c); } }, catIcon(c), el("span", null, catShort(c)))));
+    draw(selected);
+    return grid;
+  }
+
   async function addTransactionModal(kind = "expense") {
     const m = await meta();
     let current = kind;
-    const amount = el("input", { class: "input big num", type: "number", inputmode: "decimal", min: "0.01", step: "0.01", placeholder: "0", required: true, "aria-label": "Amount in rupees" });
-    const cat = el("select", { class: "input", "aria-label": "Category" });
-    const note = el("input", { class: "input", maxlength: "140", placeholder: "e.g. Lunch with friends" });
-    const day = el("input", { class: "input", type: "date", value: todayISO(), max: todayISO() });
-    const check = el("div");
+    let category = null;
+    const amount = el("input", { class: "amount-in num", type: "number", inputmode: "decimal", min: "0.01", step: "0.01", placeholder: "0", required: true, autofocus: true, "aria-label": "Amount in rupees" });
+    const fit = () => { amount.style.width = Math.max(2, String(amount.value || "0").length + 0.6) + "ch"; };
+    const note = el("input", { class: "input", maxlength: "140", placeholder: "What was it for? (optional)" });
+    const day = el("input", { class: "input", type: "date", value: todayISO(), max: todayISO(), "aria-label": "Date" });
+    const dayRow = el("div", { class: "day-row" }, el("span", { class: "muted" }, "Date"), day);
+    const check = el("div", { class: "add-check small" });
+    const gridBox = el("div");
+    const save = { el: null };
+    const label = el("div", { class: "field-label" }, "What was it?");
     const fill = () => {
-      cat.replaceChildren(...(current === "expense" ? m.expense_categories : m.income_categories).map((c) => el("option", { value: c }, c)));
+      const cats = current === "expense" ? m.expense_categories : m.income_categories;
+      category = null;
+      label.textContent = current === "expense" ? "What was it?" : "Where did it come from?";
+      gridBox.replaceChildren(catGrid(cats, null, (c) => { category = c; runCheck(); }));
     };
-    const seg = el("div", { class: "seg" });
-    const bE = el("button", { type: "button", class: "on exp" }, "Expense");
-    const bI = el("button", { type: "button" }, "Income");
-    bE.onclick = () => { current = "expense"; bE.className = "on exp"; bI.className = ""; fill(); runCheck(); };
-    bI.onclick = () => { current = "income"; bI.className = "on inc"; bE.className = ""; fill(); check.replaceChildren(); };
+    const seg = el("div", { class: "seg full" });
+    const bE = el("button", { type: "button", class: "on" }, "Money out");
+    const bI = el("button", { type: "button" }, "Money in");
+    bE.onclick = () => { current = "expense"; bE.className = "on"; bI.className = ""; fill(); runCheck(); };
+    bI.onclick = () => { current = "income"; bI.className = "on"; bE.className = ""; fill(); check.replaceChildren(); };
     seg.append(bE, bI);
-    if (kind === "income") bI.onclick();
-    fill();
     let timer;
     const runCheck = () => {
       clearTimeout(timer);
       if (current !== "expense" || !(Number(amount.value) > 0)) { check.replaceChildren(); return; }
       timer = setTimeout(async () => {
         try {
-          const r = await api("/api/transactions/check", { method: "POST", body: { amount: amount.value, category: cat.value } });
-          const lines = r.warnings.length ? r.warnings : ["Looks fine. Balance after: " + inr(r.balance_after) + "."];
-          if (r.goal_delay_days) lines.push(`Pushes your goals back ~${r.goal_delay_days} day(s).`);
-          if (r.autosave_would_add > 0) lines.push(`${inr(r.autosave_would_add)} will be set aside for your goal (it stays in your bank).`);
-          check.replaceChildren(el("div", { class: "notice " + r.level }, el("div", null, ...lines.map((l) => el("div", null, l)))));
-        } catch (e) { /* ignore preview errors */ }
+          const r = await api("/api/transactions/check", { method: "POST", body: { amount: amount.value, category: category || "Other" } });
+          check.className = "add-check small " + r.level;
+          check.replaceChildren(r.warnings.length ? r.warnings[0] : `Fine. ${inr(r.balance_after)} left after this.`);
+        } catch (e) { /* the check is a nice-to-have */ }
       }, 300);
     };
-    amount.addEventListener("input", runCheck);
-    cat.addEventListener("change", runCheck);
+    amount.addEventListener("input", () => { fit(); runCheck(); });
+    fit();
+    if (kind === "income") bI.onclick(); else fill();
 
-    const body = el("div", { class: "form" }, seg,
-      el("label", { class: "field" }, "Amount (₹)", amount),
-      el("label", { class: "field" }, "Category", cat), check,
-      el("div", { class: "grid g-2" }, el("label", { class: "field" }, "Note (optional)", note), el("label", { class: "field" }, "Date", day)));
-    const v = await modal("Add transaction", body, [
-      { label: "Cancel", value: null, cls: "ghost" },
-      { label: "Save", submit: true, cls: "primary", value: () => ({ kind: current, amount: amount.value, category: cat.value, note: note.value, date: day.value }) },
+    const body = el("div", { class: "form add-form" }, seg,
+      el("label", { class: "amount-wrap" }, el("span", null, "₹"), amount), check,
+      label, gridBox, note, dayRow);
+    const v = await modal(kind === "income" ? "Add money in" : "Add a payment", body, [
+      { label: "Save", submit: true, cls: "primary", value: () => {
+        if (!category) { err("Tap what it was for."); return undefined; }
+        return { kind: current, amount: amount.value, category, note: note.value, date: day.value };
+      } },
     ]);
     if (!v) return null;
     try {
       const r = await api("/api/transactions", { method: "POST", body: v });
-      let msg = `Saved ${inr(r.transaction.amount)} ${r.transaction.kind}.`;
-      if (r.autosaved) msg += ` ${inr(r.autosaved)} set aside for ${r.autosave_goal}.`;
+      let msg = `Saved ${inr(r.transaction.amount)}.`;
       if (r.paid_back) msg += r.paid_back.direction === "they_owe" ? ` ${r.paid_back.person.split(" ")[0]} is ticked off your Friends list.` : ` Your debt to ${r.paid_back.person.split(" ")[0]} is settled.`;
       ok(msg, { label: "Undo", run: async () => { await api(`/api/transactions/${r.transaction.id}`, { method: "DELETE" }); refresh(); } });
       refresh();
@@ -349,19 +399,19 @@
   // Four things people do every day are tabs; everything else lives in one "More" menu.
   const NAV = [
     ["/app", "home", "Home"],
-    ["/app/transactions", "list", "Activity"],
+    ["/app/transactions", "list", "History"],
     ["/app/pay", "qr", "Pay"],
     ["/app/friends", "users", "Friends"],
-    ["/app/plans", "calendar", "Plans"],
+    ["/app/plans", "calendar", "Upcoming"],
   ];
-  const MOBILE_NAV = [["/app", "home", "Home"], ["/app/transactions", "list", "Activity"], ["/app/pay", "qr", "Pay"],
+  const MOBILE_NAV = [["/app", "home", "Home"], ["/app/transactions", "list", "History"], ["/app/pay", "qr", "Pay"],
     ["/app/friends", "users", "Friends"], ["#more", "menu", "More"]];
   const MENU = [
-    ["/app/plans", "calendar", "Plans", "Money kept aside for what's coming"],
-    ["/app/budgets", "pie", "Budgets", "Monthly limits"],
-    ["/app/goals", "target", "Goals", "Saving for something"],
-    ["/app/coach", "chat", "Ask Kitna", "Questions about your money"],
-    ["/app/import", "upload", "Import a statement", "Bank PDF or CSV"],
+    ["/app/plans", "calendar", "Upcoming", "Bills and plans coming up"],
+    ["/app/budgets", "pie", "Monthly limits", "Spend less on food, shopping…"],
+    ["/app/goals", "c-piggy", "Savings goals", "Save for a phone, a trip…"],
+    ["/app/coach", "chat", "Ask Kitna", "Ask anything about your money"],
+    ["/app/import", "upload", "Add bank statement", "PDF or CSV from your bank"],
     ["/app/settings", "gear", "Settings", "Account, reminders, language"],
   ];
   function moreMenu() {
@@ -481,38 +531,38 @@
   function txRow(t, onDelete) {
     const isIn = t.kind === "income";
     const isSave = t.kind === "saving";
-    const title = t.note || t.category;
+    const title = (t.note || catShort(t.category)).split(" · ")[0];
     const sign = isIn ? "+" : isSave ? (t.amount < 0 ? "+" : "") : "−";  // a real minus sign, like a bank statement
-    const amtCls = isIn ? "green" : isSave ? "brand" : "";
-    // Only show a tag when it means something to the user (not where the data came from).
-    const badge = t.source === "autosave" ? el("span", { class: "badge autosave" }, "set aside") : null;
     const editable = t.kind === "income" || t.kind === "expense";
+    const sub = isSave ? "Saved" : (t.note ? catShort(t.category) : (isIn ? "Money in" : "Money out"));
     return el("div", { class: "tx" },
-      avatar(title, isSave ? "target" : null),
-      el("div", editable ? { class: "tx-main tx-edit", role: "button", tabindex: "0", title: "Change category or note",
+      isSave ? el("div", { class: "cat-ic save", "aria-hidden": "true" }, icon("c-piggy")) : catIcon(t.category, isIn ? "in" : ""),
+      el("div", editable ? { class: "tx-main tx-edit", role: "button", tabindex: "0", title: "Open",
         onclick: () => editTx(t), onkeydown: (e) => { if (e.key === "Enter") editTx(t); } } : { class: "tx-main" },
         el("div", { class: "tx-title" }, title),
-        el("div", { class: "tx-sub" }, dateFmt(t.date), " · ", t.category, " ", badge)),
-      el("div", { class: "tx-amt " + amtCls }, sign + inr(Math.abs(t.amount))),
-      onDelete && !editable && t.source !== "autosave" ? el("button", { class: "icon-btn", title: "Delete", "aria-label": "Delete transaction", onclick: () => onDelete(t) }, icon("trash")) : null);
+        el("div", { class: "tx-sub" }, sub)),
+      el("div", { class: "tx-amt" + (isIn ? " green" : "") }, sign + inr(Math.abs(t.amount))),
+      onDelete && !editable && t.source !== "autosave" ? el("button", { class: "icon-btn", title: "Delete", "aria-label": "Delete", onclick: () => onDelete(t) }, icon("trash")) : null);
   }
 
   async function editTx(t) {
     const m = await meta();
     const cats = t.kind === "income" ? m.income_categories : m.expense_categories;
-    const cat = el("select", { class: "input" }, cats.map((c) => el("option", { value: c, selected: c === t.category }, c)));
-    const note = el("input", { class: "input", value: t.note || "", maxlength: "140" });
+    const cat = { value: t.category };
+    const grid = catGrid(cats, t.category, (c) => { cat.value = c; });
+    const note = el("input", { class: "input", value: t.note || "", maxlength: "140", placeholder: "Name or note" });
     const remember = el("input", { type: "checkbox", checked: t.source !== "manual" });
     const who = () => (note.value || "").split("·")[0].trim() || "this merchant";
-    const rememberText = el("span", null, `Always use this category for ${who()}`);
-    note.addEventListener("input", () => { rememberText.textContent = `Always use this category for ${who()}`; });
+    const rememberText = el("span", null, `Do the same for ${who()} next time`);
+    note.addEventListener("input", () => { rememberText.textContent = `Do the same for ${who()} next time`; });
     const hint = t.auto_category && t.auto_category !== t.category ? el("p", { class: "tiny faint" }, `Kitna first filed this under ${t.auto_category}.`) : null;
-    const body = el("div", { class: "form" },
-      el("p", { class: "muted small", style: { margin: 0 } }, `${inr(Math.abs(t.amount))} · ${dateFmt(t.date)}`),
-      el("label", { class: "field" }, "Category", cat),
-      el("label", { class: "field" }, "Note / merchant", note),
+    const body = el("div", { class: "form add-form" },
+      el("div", { class: "edit-sum" }, el("div", { class: "edit-amt num" + (t.kind === "income" ? " green" : "") }, (t.kind === "income" ? "+" : "−") + inr(Math.abs(t.amount))),
+        el("div", { class: "muted small" }, `${t.kind === "income" ? "Money in" : "Money out"} · ${dateFmt(t.date)}`)),
+      note,
+      el("div", { class: "field-label" }, t.kind === "income" ? "Where did it come from?" : "What was it?"), grid,
       el("label", { class: "row", style: { gap: "8px", alignItems: "center" } }, remember, rememberText), hint);
-    const v = await modal("Edit payment", body, [
+    const v = await modal(t.note ? t.note.split(" · ")[0] : "Payment", body, [
       { label: "Delete", value: "delete", cls: "ghost danger-text" },
       t.kind === "expense" ? { label: "Split", value: "split" } : null,
       { label: "Save", submit: true, cls: "primary", value: () => ({ category: cat.value, note: note.value, remember: remember.checked }) },
@@ -528,7 +578,7 @@
   }
 
   async function deleteTx(t) {
-    if (!(await confirmBox("Delete transaction?", `${t.note || t.category} · ${inr(t.amount)}. Anything set aside from it is removed too.`, true))) return;
+    if (!(await confirmBox("Delete this payment?", `${t.note || t.category} · ${inr(Math.abs(t.amount))}`, true))) return;
     try { await api(`/api/transactions/${t.id}`, { method: "DELETE" }); ok("Deleted."); refresh(); } catch (e) { err(e); }
   }
 
@@ -680,7 +730,7 @@
 
   window.Kitna = {
     el, icon, api, download, toast, ok, err, modal, confirmBox, inr, inr0, dateFmt, todayISO, CAT_EMOJI, CAT_COLORS, avatar,
-    boot, pageHead, skeleton, txRow, deleteTx, editTx, addTransactionModal, planModal, splitModal, friendModal, feedbackModal, push: pushApi, live, prefetch, cacheClear, refresh, onRefresh, logout, meta,
+    boot, pageHead, skeleton, txRow, catIcon, catShort, catGrid, deleteTx, editTx, addTransactionModal, planModal, splitModal, friendModal, feedbackModal, push: pushApi, live, prefetch, cacheClear, refresh, onRefresh, logout, meta,
     get user() { return USER; }, set user(u) { USER = u; }, get config() { return CONFIG; },
   };
 })();

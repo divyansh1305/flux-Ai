@@ -131,7 +131,14 @@
       stopCamera();
       const amount = el("input", { class: "pay-amount num", type: "number", inputmode: "decimal", min: "1", max: "100000", step: "0.01",
         value: d.amount || "", placeholder: "0", readonly: d.amount_locked ? true : null, "aria-label": "Amount in rupees" });
-      const cat = el("select", { class: "input", "aria-label": "Category" }, m.expense_categories.map((c) => el("option", { value: c, selected: c === d.category ? true : null }, c)));
+      // The category Kitna guessed, with a picture; tap Change to pick another
+      const cat = { value: m.expense_categories.includes(d.category) ? d.category : "Other" };
+      const catRow = el("div", { class: "pay-cat" });
+      const drawCat = () => catRow.replaceChildren(window.Kitna.catIcon(cat.value), el("span", { class: "pay-cat-name" }, window.Kitna.catShort(cat.value)),
+        el("button", { type: "button", class: "link-inline", onclick: () => {
+          catRow.replaceChildren(window.Kitna.catGrid(m.expense_categories, cat.value, (c) => { cat.value = c; drawCat(); runCheck(); }));
+        } }, "Change"));
+      drawCat();
       const note = el("input", { class: "input", maxlength: "50", placeholder: "Note (optional)", value: d.note || "", "aria-label": "Note" });
       const check = el("div", { class: "pay-check small" });
       const payBtn = el("button", { class: "btn primary lg block", type: "submit" }, "Pay");
@@ -153,7 +160,6 @@
       };
       const fit = () => { amount.style.width = Math.max(2, String(amount.value || "0").length + 0.6) + "ch"; };
       amount.addEventListener("input", () => { fit(); runCheck(); });
-      cat.addEventListener("change", runCheck);
       fit();
       const form = el("form", { class: "stack", onsubmit: async (e) => {
         e.preventDefault();
@@ -168,7 +174,7 @@
         el("label", { class: "pay-amount-wrap" }, el("span", null, "₹"), amount),
         d.amount_locked ? el("div", { class: "tiny faint", style: { textAlign: "center" } }, "Amount set by the shop") : null,
         check,
-        el("div", { class: "grid g-2", style: { gap: "8px" } }, cat, note),
+        catRow, note,
         payBtn,
         el("button", { class: "btn ghost block", type: "button", onclick: () => { history.replaceState(null, "", "/app/pay"); startScreen(); } }, "Scan another code"));
       area.replaceChildren(form);

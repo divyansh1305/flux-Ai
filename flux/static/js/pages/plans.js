@@ -65,7 +65,7 @@
 
   async function render(main) {
     const box = el("div", { class: "stack narrow" }, window.Kitna.skeleton(2));
-    main.replaceChildren(pageHead("Plans", "What's coming, so today's number is real. Tap a plan to edit it.",
+    main.replaceChildren(pageHead("Upcoming", "Bills and plans coming up. Kitna keeps money ready for them.",
       el("button", { class: "btn primary", onclick: () => planModal() }, icon("plus"), "Add")), box);
     let me = { user: window.Kitna.user };
     let lastPlans = null;

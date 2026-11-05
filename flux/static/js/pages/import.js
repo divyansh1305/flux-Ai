@@ -3,7 +3,7 @@
 
   async function render(main) {
     const area = el("div", { class: "stack" });
-    main.replaceChildren(pageHead("Import bank statement", "Upload the PDF your bank emails you, or a CSV. Kitna sorts every transaction for you."), area);
+    main.replaceChildren(pageHead("Add bank statement", "Upload the PDF your bank emails you, or a CSV. Kitna sorts every transaction for you."), area);
     showUpload();
 
     function showUpload() {

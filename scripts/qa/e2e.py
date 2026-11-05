@@ -105,31 +105,33 @@ def main():
             pg.screenshot(path=S + "onboarding-3.png", full_page=True)
             pg.get_by_role("button", name=re.compile("add payments myself")).click()
             pg.wait_for_url("**/app", timeout=8000)
-            expect(pg.get_by_text(re.compile("Safe to spend today"))).to_be_visible()
+            expect(pg.get_by_text(re.compile("You can spend today"))).to_be_visible()
         step("Onboarding: 18+, payday, balance, skip connect", onboarding)
 
         # 3. Add an expense from the bottom bar
         def add_expense():
-            pg.locator(".quick", has_text="Add").click()
+            pg.locator(".big-act", has_text="Add payment").click()
             m = pg.locator(".modal")
             m.get_by_label("Amount in rupees").fill("250")
-            m.get_by_label("Category").select_option("Food & Dining")
-            m.locator("input[placeholder*='Lunch']").fill("Chai Point")
+            m.locator(".cat-pick", has_text="Food").click()
+            m.locator("input[placeholder*='What was it for']").fill("Chai Point")
             m.get_by_role("button", name="Save").click()
             toast("Saved")
             expect(pg.locator(".tx-title", has_text="Chai Point").first).to_be_visible()
-        step("Add expense from the + button", add_expense)
+        step("Add a payment by tapping the Food picture", add_expense)
 
         # 4. Plan from Home
         def add_plan():
-            pg.locator(".quick", has_text="Plan").click()
+            pg.locator(".big-act", has_text="Upcoming").click()
+            pg.wait_for_url("**/app/plans")
+            pg.locator(".page-head").get_by_role("button", name="Add").click()
             m = pg.locator(".modal")
             m.locator("input[placeholder='Dinner on Friday']").fill("Movie night")
             m.get_by_label("Amount in rupees").fill("800")
             m.get_by_role("button", name="Save").click()
             toast("Plan added")
             expect(pg.locator(".tx-title", has_text="Movie night").first).to_be_visible()
-        step("Add a plan from Home", add_plan)
+        step("Add an upcoming plan", add_plan)
 
         # 5. Split from Activity, then the friend pays back by SMS
         def split():
@@ -228,14 +230,14 @@ def main():
             with pg.expect_navigation():
                 pg.get_by_role("button", name="Hinglish").click()
             pg.goto(B + "/app")
-            expect(pg.get_by_text(re.compile("Aaj safe kharcha"))).to_be_visible(timeout=8000)
+            expect(pg.get_by_text(re.compile("Aaj itna kharch kar sakte ho"))).to_be_visible(timeout=8000)
             expect(pg.locator(".bottom-nav").get_by_text("Dost")).to_be_visible()
             pg.screenshot(path=S + "hinglish-home.png")
             pg.goto(B + "/app/settings")
             with pg.expect_navigation():
                 pg.get_by_role("button", name="English").click()
             pg.goto(B + "/app")
-            expect(pg.get_by_text("Safe to spend today", exact=False).first).to_be_visible()
+            expect(pg.get_by_text("You can spend today", exact=False).first).to_be_visible()
         step("Switch to Hinglish and back", hinglish)
 
         def upi_and_reminders():

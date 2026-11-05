@@ -10,7 +10,7 @@
     const list = el("div", { class: "tx-list" }, ...window.Kitna.skeleton(5).children);
     const more = el("button", { class: "btn block", style: { marginTop: "12px" } }, "Load more");
     const kindSeg = el("div", { class: "seg full" });
-    [["", "All"], ["expense", "Spent"], ["income", "Received"], ["saving", "Set aside"]].forEach(([k, label]) => {
+    [["", "All"], ["expense", "Money out"], ["income", "Money in"]].forEach(([k, label]) => {
       const b = el("button", { type: "button", class: k === "" ? "on" : "" }, label);
       b.onclick = () => { state.kind = k; [...kindSeg.children].forEach((c) => (c.className = "")); b.className = "on"; reload(); };
       kindSeg.appendChild(b);
@@ -69,7 +69,7 @@
         el("button", { type: "button", class: "menu-item plain", onclick: () => exp("pdf") }, "Download PDF")));
     main.replaceChildren(
       el("div", { class: "narrow" },
-        pageHead("Activity", null, dl, el("button", { class: "btn primary", onclick: () => addTransactionModal() }, icon("plus"), "Add")),
+        pageHead("History", null, dl, el("button", { class: "btn primary", onclick: () => addTransactionModal() }, icon("plus"), "Add")),
         el("div", { class: "stack", style: { gap: "10px", marginBottom: "14px" } }, kindSeg,
           el("div", { class: "row", style: { gap: "8px" } }, q, filterBtn), filters),
         el("div", { class: "card list-card" }, list, more)));
