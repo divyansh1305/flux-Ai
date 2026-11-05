@@ -3,7 +3,7 @@ from datetime import date, timedelta
 
 from flask import Blueprint, jsonify
 
-from .. import checks, clock
+from .. import analytics, checks, clock
 from ..db import get_db
 from ..finance import rupees
 from ..security import ApiError, clean_text, current_user, json_body, login_required, parse_amount, parse_date
@@ -65,6 +65,7 @@ def create_plan():
     p = _payload(json_body())
     cur = db.execute("INSERT INTO plans (user_id, kind, title, amount, date, sure) VALUES (?,?,?,?,?,?)",
                      (uid, p["kind"], p["title"], p["amount"], p["date"], p["sure"]))
+    analytics.track(uid, "plan_added", p["kind"])
     db.commit()
     return jsonify(plan_json(db.execute("SELECT * FROM plans WHERE id = ?", (cur.lastrowid,)).fetchone())), 201
 

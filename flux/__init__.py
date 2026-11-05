@@ -23,6 +23,7 @@ APP_PAGES = {
     "/app/coach": "coach.html",
     "/app/plans": "plans.html",
     "/app/privacy-center": "know.html",
+    "/app/admin": "admin.html",
     "/app/share": "share.html",
     "/app/settings": "settings.html",
 }
@@ -53,9 +54,9 @@ def create_app(overrides=None):
 
     backup.init_app(app)
 
-    from .api import auth, gmail, ingest, money, plans, statement, voice
+    from .api import admin, auth, gmail, ingest, money, plans, statement, voice
 
-    for bp in (auth.bp, money.bp, statement.bp, voice.bp, ingest.bp, gmail.bp, plans.bp):
+    for bp in (auth.bp, money.bp, statement.bp, voice.bp, ingest.bp, gmail.bp, plans.bp, admin.bp):
         app.register_blueprint(bp)
 
     @app.before_request
@@ -105,6 +106,8 @@ def create_app(overrides=None):
         def app_view(name=name):
             if current_user() is None:
                 return redirect("/login")
+            if name == "admin.html" and not admin.is_admin(current_user()):
+                return send_from_directory(PAGES_DIR, "404.html"), 404
             return page(name)
 
         app.add_url_rule(path, f"page_{name}", app_view)

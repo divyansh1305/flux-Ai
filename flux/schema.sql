@@ -207,3 +207,30 @@ CREATE TABLE IF NOT EXISTS dismissed_checks (
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
     PRIMARY KEY (user_id, check_key)
 );
+
+-- Product events: what people DO in Flux (never amounts, merchants or message text). Used only in totals
+-- to improve the app. Deleted with the account; purged after 13 months (daily_stats keeps the totals).
+CREATE TABLE IF NOT EXISTS events (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    name            TEXT NOT NULL,
+    prop            TEXT NOT NULL DEFAULT '',
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_events_name_time ON events(name, created_at);
+CREATE INDEX IF NOT EXISTS idx_events_user_time ON events(user_id, created_at);
+
+-- One row per day per number (sign-ups, active users, automatic payments by source, ...). Built nightly.
+CREATE TABLE IF NOT EXISTS daily_stats (
+    day             TEXT NOT NULL,
+    metric          TEXT NOT NULL,
+    value           REAL NOT NULL,
+    PRIMARY KEY (day, metric)
+);
+
+-- Which money checks a user has already been shown, so "check_found" is counted once per check.
+CREATE TABLE IF NOT EXISTS seen_checks (
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    check_key       TEXT NOT NULL,
+    PRIMARY KEY (user_id, check_key)
+);

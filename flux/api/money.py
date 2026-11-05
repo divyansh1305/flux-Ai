@@ -121,6 +121,10 @@ def edit_transaction(tx_id):
     fields = {}
     if "category" in data:
         fields["category"] = finance.validate_category(row["kind"], clean_text(data["category"], "Category", 40, required=True))
+        if fields["category"] != row["category"]:
+            from .. import analytics
+
+            analytics.track(u["id"], "category_fixed")
     if "note" in data:
         fields["note"] = clean_text(data["note"], "Note", 140)
     if not fields:

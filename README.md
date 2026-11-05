@@ -2,7 +2,7 @@
 
 **Flux logs every UPI and bank payment automatically and keeps a ledger you can trust.** It tells you how much you can safely spend today, built from *your* payday, plans and safety cushion, checks itself against your bank, and catches real problems: failed payments whose money hasn't come back, double charges and subscription price rises. It never moves money, never offers loans and never sells data. For ages 18+.
 
-🛠 Go-live steps: [`docs/SETUP.md`](docs/SETUP.md) · 📄 Interview guide: [`docs/INTERVIEW.md`](docs/INTERVIEW.md) · 🚀 Launch plan: [`docs/LAUNCH.md`](docs/LAUNCH.md) · 📦 Open-source parser: [`packages/upi_parse`](packages/upi_parse) · 🤖 Android app: [`android/`](android)
+🛠 Deploy and update: [`docs/DEPLOY.md`](docs/DEPLOY.md) · 📄 Interview guide: [`docs/INTERVIEW.md`](docs/INTERVIEW.md) · 🚀 Launch plan: [`docs/LAUNCH.md`](docs/LAUNCH.md) · 📦 Open-source parser: [`packages/upi_parse`](packages/upi_parse) · 🤖 Android app: [`android/`](android)
 
 > **Safe to spend today: ₹404.** ₹13,502 you have − ₹2,000 Friday dinner plan − ₹1,000 cushion, ÷ 26 days until payday on 1 Dec · watching ₹850 failed payment to Myntra (refund due by 10 Nov)
 
@@ -37,7 +37,7 @@ UPI made spending effortless, but nothing made *knowing where you stand* effortl
 | Parser accuracy on unseen bank formats | **96.6% direction, 100% amount, 86.2% category, 91.7% UTR** (first run, 38 messages from 9 banks never used in development) | `packages/upi_parse/benchmarks/evaluate.py` |
 | Load test (2 vCPU, 1 gunicorn worker × 8 threads, load generator on the same box) | **228 req/s, p95 116 ms, p99 171 ms, 0 errors** over 60 s · 500 users with 6 months of history | `scripts/loadtest.py` → [`docs/loadtest-results.json`](docs/loadtest-results.json) |
 | Dashboard query count | **40 → 28 SQL queries** (6.8 → 4.9 ms) after per-request memoisation keyed on SQLite `total_changes` | profiled with cProfile + sqlite trace |
-| Tests | **172 passing** (app) + library tests, on every push in CI | `pytest -q` |
+| Tests | **180 passing** (app) + library tests, on every push in CI | `pytest -q` |
 
 The load test also caught three production bugs before any user did: worker recycling every few seconds at `max_requests=2000`, per-IP rate limits that would make Jio/Airtel users behind carrier NAT throttle each other, and two different UPI apps' identical payments being merged as duplicates.
 
@@ -49,6 +49,8 @@ The load test also caught three production bugs before any user did: worker recy
 - 📦 **Android APK built in CI:** `.github/workflows/android.yml` builds the companion app and publishes it as a download; the website links it with one tap through a `fluxapp://connect` deep link that only accepts the official server.
 - 🧾 **Ledger integrity:** cross-source dedupe, bank-balance reconciliation with drift alerts, a double-entry trial balance at `/api/ledger`, and integer paise everywhere.
 - 🔮 **Personal safe-to-spend, plans, safety cushion, recurring bills, month-end forecast, money checks.**
+- 📊 **Product analytics without personal data:** an `events` table records only *what happened* ("plan_added", "auto_payment: sms"), validated against a whitelist so no amounts, merchants or text can get in. A nightly job rolls it into `daily_stats`, and a private numbers page (`/app/admin`, for `ADMIN_EMAILS`) shows the setup funnel, day-1/7/30 return rates, read rate per source, money-check usefulness and ₹ kept. Events are deleted with the account and after 13 months.
+- ⚡ **Instant screens:** a service worker serves the app shell from the phone, screens draw from the last data seen and refresh in the background, files are content-hashed and cached for a year, and responses are gzipped. On a simulated 300 ms mobile link, opening a screen went from 1.15–1.50 s to about 0.1 s.
 - 🧠 **Learns from corrections:** merchant rules, re-filing of past entries, measured categorisation accuracy, and an opt-in masked sample export for improving the parser.
 - 🎙️ **Voice:** "spent 340 on Zomato", "aaj kitna kharch kar sakta hoon?", "what bills are coming up?". Rule parser first, Gemini fallback validated against a whitelist.
 - 📄 Statement import, budgets, goals, AI coach, monthly PDF report, CSV/PDF export, full data export and account deletion. Installable PWA.

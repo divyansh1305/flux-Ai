@@ -14,6 +14,13 @@ from ..finance import goals_with_progress
 from ..security import (ApiError, clean_text, current_user, json_body, limiter, login_required,
                         rate_limit, start_session)
 
+from .. import analytics
+
+
+def _is_admin(u):
+    from .admin import is_admin
+
+    return is_admin(u)
 bp = Blueprint("auth", __name__, url_prefix="/api")
 log = logging.getLogger("flux.auth")
 EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,190}\.[A-Za-z]{2,}$")
@@ -116,6 +123,7 @@ def verify_otp():
         name = row["pending_name"] or email.split("@")[0]
         cur = db.execute("INSERT INTO users (email, name) VALUES (?, ?)", (email, name))
         user = db.execute("SELECT * FROM users WHERE id = ?", (cur.lastrowid,)).fetchone()
+        analytics.track(user["id"], "signed_up", "email")
     db.commit()
     start_session(user["id"])
     return jsonify({"user": user_json(user), "redirect": "/app" if user["onboarded"] else "/onboarding"})
@@ -147,6 +155,7 @@ def google_login():
     if user is None:
         name = clean_text(info.get("name") or email.split("@")[0], "Name", 60) or "Flux user"
         cur = db.execute("INSERT INTO users (email, name) VALUES (?, ?)", (email, name))
+        analytics.track(cur.lastrowid, "signed_up", "google")
         db.commit()
         user = db.execute("SELECT * FROM users WHERE id = ?", (cur.lastrowid,)).fetchone()
     start_session(user["id"])
@@ -163,7 +172,8 @@ def me():
         "google_client_id": current_app.config["GOOGLE_CLIENT_ID"] or None,
         "ai_available": ai.available(),
         "features": {"gmail": bool(current_app.config.get("GOOGLE_CLIENT_ID") and current_app.config.get("GOOGLE_CLIENT_SECRET")),
-                     "android_apk": current_app.config.get("ANDROID_APK_URL") or None},
+                     "android_apk": current_app.config.get("ANDROID_APK_URL") or None,
+                     "admin": bool(u) and _is_admin(u)},
     })
 
 
@@ -253,6 +263,14 @@ def update_account():
         if data["onboarded"] and not (fields.get("adult_confirmed") or u["adult_confirmed"]):
             raise ApiError("Flux is for people aged 18 or older. Please confirm your age to continue.")
         fields["onboarded"] = 1 if data["onboarded"] else 0
+    if fields.get("adult_confirmed") and not u["adult_confirmed"]:
+        analytics.track(u["id"], "setup_step", "age")
+    if "income_pattern" in fields and not u["onboarded"]:
+        analytics.track(u["id"], "setup_step", "money")
+    if fields.get("onboarded") and not u["onboarded"]:
+        analytics.track(u["id"], "setup_step", "done")
+    if fields.get("cushion") and fields["cushion"] != u["cushion"]:
+        analytics.track(u["id"], "cushion_set")
     if fields:
         cols = ", ".join(f"{k} = ?" for k in fields)  # keys are whitelisted above
         get_db().execute(f"UPDATE users SET {cols} WHERE id = ?", (*fields.values(), u["id"]))
@@ -278,8 +296,9 @@ def export_account():
     samples = [r["masked_text"] for r in db.execute("SELECT masked_text FROM parse_samples WHERE user_id = ?", (u["id"],))]
     plans = [{"kind": r["kind"], "title": r["title"], "amount": r["amount"] / 100, "date": r["date"], "sure": bool(r["sure"]),
               "done": bool(r["done"])} for r in db.execute("SELECT * FROM plans WHERE user_id = ? ORDER BY date", (u["id"],))]
+    events = [dict(r) for r in db.execute("SELECT name, prop, created_at FROM events WHERE user_id = ? ORDER BY id", (u["id"],))]
     resp = jsonify({"profile": user_json(u), "transactions": tx, "budgets": budgets, "merchant_rules": rules,
-                    "masked_samples": samples, "plans": plans,
+                    "masked_samples": samples, "plans": plans, "usage_events": events,
                     "goals": goals_with_progress(u["id"], include_archived=True)})
     resp.headers["Content-Disposition"] = "attachment; filename=flux-my-data.json"
     return resp
@@ -323,6 +342,7 @@ def what_flux_knows():
             "merchant_rules": count("SELECT COUNT(*) FROM merchant_rules WHERE user_id = ?"),
             "bank_balances": count("SELECT COUNT(*) FROM balance_snapshots WHERE user_id = ?"),
             "masked_samples": count("SELECT COUNT(*) FROM parse_samples WHERE user_id = ?"),
+            "usage_events": count("SELECT COUNT(*) FROM events WHERE user_id = ?"),
         },
         "contribute_samples": bool(u["contribute_samples"]),
     })

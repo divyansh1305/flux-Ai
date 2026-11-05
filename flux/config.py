@@ -67,6 +67,9 @@ class Config:
         self.ANDROID_APK_URL = os.environ.get(
             "ANDROID_APK_URL", "https://github.com/divyansh1305/flux-Ai/releases/download/android-latest/flux-android.apk")
 
+        # Who may open the private numbers page (/app/admin): comma-separated sign-in emails.
+        self.ADMIN_EMAILS = os.environ.get("ADMIN_EMAILS", "")
+
         # OTP policy
         self.OTP_TTL_SECONDS = 600
         self.OTP_MAX_ATTEMPTS = 5

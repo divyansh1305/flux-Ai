@@ -46,6 +46,9 @@ def create_token():
     db.execute("INSERT INTO ingest_tokens (user_id, token_hash) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET"
                " token_hash = excluded.token_hash, created_at = datetime('now'), last_used_at = NULL, uses = 0",
                (current_user()["id"], _digest(token)))
+    from .. import analytics
+
+    analytics.track(current_user()["id"], "connected", "phone")
     db.commit()
     base = request.host_url.rstrip("/")
     return jsonify({"token": token, "url": base + "/api/ingest/sms", "iphone_url": f"{base}/api/ingest/sms/{token}",
@@ -133,6 +136,9 @@ def ingest_row(user, row, source):
 
         checks.resolve_by_refund(user["id"], amount, row["date"])
     count_ingest(source, "logged")
+    from .. import analytics
+
+    analytics.track(user["id"], "auto_payment", source)
     sign = "-" if row["kind"] == "expense" else "+"
     msg = f"Flux logged {sign}₹{row['amount']:,.2f} · {row['note']} ({row['category']})"
     if res["autosaved"]:
@@ -176,6 +182,11 @@ def _ingest_sms(user):
         watching = checks.detect_failed(user["id"], str(text)[:2000])
         db.commit()
         count_ingest("sms", "watch" if watching else "skipped")
+        if not watching:
+            from .. import analytics
+
+            analytics.track(user["id"], "message_unread", "sms")
+            db.commit()
         if watching:
             return jsonify({"logged": False, "watching": True,
                             "reason": "Failed payment noted. Flux will watch for the money to come back."})

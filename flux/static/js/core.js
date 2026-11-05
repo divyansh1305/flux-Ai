@@ -126,7 +126,7 @@
     const type = res.headers.get("Content-Type") || "";
     const data = type.includes("application/json") ? await res.json() : await res.blob();
     if (!res.ok) throw new Error((data && data.error) || "Something went wrong.");
-    if (init.method !== "GET") cacheDrop("/api/auth/me");  // settings may have changed
+    if (init.method !== "GET" && path.startsWith("/api/account")) cacheDrop("/api/auth/me");  // settings changed
     return data;
   }
 
@@ -171,7 +171,17 @@
     setTimeout(() => t.remove(), action ? 7000 : 4000);
   }
   const ok = (m, a) => toast(m, "ok", a);
-  const err = (e) => toast(e && e.message ? e.message : String(e), "err");
+  const err = (e) => { toast(e && e.message ? e.message : String(e), "err"); track("error_shown"); };
+
+  // Usage counting: which screen was opened, and that an error was shown. Never amounts, merchants or text.
+  const SCREENS = { "/app": "home", "/app/transactions": "activity", "/app/plans": "plans", "/app/coach": "ask",
+    "/app/goals": "goals", "/app/budgets": "budgets", "/app/settings": "settings", "/app/import": "import",
+    "/app/share": "share", "/app/privacy-center": "privacy-center", "/onboarding": "onboarding", "/app/admin": "admin" };
+  function track(name) {
+    if (!USER) return;
+    const prop = SCREENS[location.pathname.replace(/\/$/, "") || "/app"] || "other";
+    api("/api/events", { method: "POST", body: { name, prop } }).catch(() => {});
+  }
 
   function modal(title, body, buttons) {
     return new Promise((resolve) => {
@@ -369,6 +379,7 @@
         el("a", { href: "/app", class: "logo" }, el("span", { class: "logo-mark" }, "F"), "Flux"),
         nav,
         el("div", { class: "top-actions" },
+          (CONFIG.features || {}).admin ? el("a", { href: "/app/admin", class: "icon-link" + (path === "/app/admin" ? " active" : ""), title: "Flux numbers (only you can see this)", "aria-label": "Flux numbers" }, icon("trend")) : null,
           el("a", { href: "/app/import", class: "icon-link" + (path === "/app/import" ? " active" : ""), title: "Import statement or SMS", "aria-label": "Import" }, icon("upload")),
           el("a", { href: "/app/settings", class: "icon-link" + (path === "/app/settings" ? " active" : ""), title: "Settings", "aria-label": "Settings" }, icon("gear")),
           el("a", { href: "/app/settings", class: "avatar", title: USER.name, "aria-label": "Account" }, initials))));
@@ -383,6 +394,7 @@
     try {
       await renderPage(main, USER);
     } catch (e) { err(e); }
+    track("screen_opened");
     if (window.FluxVoice && location.pathname !== "/onboarding") window.FluxVoice.init(USER);
   }
 

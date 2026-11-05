@@ -51,7 +51,10 @@ def detect_failed(user_id, text, received_on=None):
     db = get_db()
     cur = db.execute("INSERT OR IGNORE INTO refund_watch (user_id, amount, date, note, ref, fingerprint) VALUES (?,?,?,?,?,?)",
                      (user_id, amount, day, note[:60], ref, fp))
-    return cur.lastrowid if cur.rowcount else None
+    if cur.rowcount:
+        return cur.lastrowid
+    old = db.execute("SELECT id FROM refund_watch WHERE user_id = ? AND fingerprint = ?", (user_id, fp)).fetchone()
+    return old["id"] if old else None  # the same failed-payment message again: already being watched
 
 
 def resolve_by_refund(user_id, amount_paise, day):
@@ -62,6 +65,9 @@ def resolve_by_refund(user_id, amount_paise, day):
                      " ORDER BY date LIMIT 1", (user_id, amount_paise, since)).fetchone()
     if row:
         db.execute("UPDATE refund_watch SET status = 'back' WHERE id = ?", (row["id"],))
+        from .analytics import track
+
+        track(user_id, "refund_back")
         return row["id"]
     return None
 
@@ -71,12 +77,17 @@ def _dismissed(user_id):
 
 
 def dismiss(user_id, key):
+    from .analytics import track
+
     db = get_db()
+    kind = key.split(":")[0]
     if key.startswith("refund:"):
         status = "back" if key.endswith(":back") else "ignored"
         wid = key.split(":")[1]
         db.execute("UPDATE refund_watch SET status = ? WHERE id = ? AND user_id = ?", (status, wid, user_id))
+        track(user_id, "refund_back" if status == "back" else "check_dismissed", "" if status == "back" else "refund")
     else:
+        track(user_id, "check_dismissed", {"double": "double", "price": "price"}.get(kind, "other"))
         db.execute("INSERT OR IGNORE INTO dismissed_checks (user_id, check_key) VALUES (?,?)", (user_id, key[:120]))
     db.commit()
 
@@ -159,5 +170,13 @@ def price_rises(user_id, lookback_days=120):
 
 def all_checks(user_id):
     hidden = _dismissed(user_id)
-    found = refund_checks(user_id) + double_charges(user_id) + price_rises(user_id)
-    return [c for c in found if c["key"] not in hidden]
+    found = [c for c in refund_checks(user_id) + double_charges(user_id) + price_rises(user_id) if c["key"] not in hidden]
+    if found:  # count each check once, the first time it is shown
+        from .analytics import track
+
+        db = get_db()
+        for c in found:
+            if db.execute("INSERT OR IGNORE INTO seen_checks (user_id, check_key) VALUES (?,?)", (user_id, c["key"][:120])).rowcount:
+                track(user_id, "check_found", c["type"])
+        db.commit()
+    return found

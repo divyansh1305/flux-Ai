@@ -43,6 +43,10 @@ def execute(cmd):
     uid = u["id"]
     intent = cmd.get("intent")
     out = {"intent": intent, "refresh": False}
+    from .. import analytics
+
+    analytics.track(uid, "asked_flux", intent)
+    get_db().commit()
 
     if intent in ("add_expense", "add_income"):
         kind = "expense" if intent == "add_expense" else "income"

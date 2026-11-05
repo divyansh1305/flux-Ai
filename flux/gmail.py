@@ -235,7 +235,10 @@ def sync(user, force=False, min_minutes=10):
             if row is None:
                 from .checks import detect_failed
 
-                detect_failed(user["id"], text, received)
+                if not detect_failed(user["id"], text, received):
+                    from .analytics import track
+
+                    track(user["id"], "message_unread", "email")
                 skipped += 1
                 continue
             row["origin"] = "gmail"

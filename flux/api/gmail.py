@@ -36,6 +36,9 @@ def callback():
     try:
         data = gmail.exchange_code(request.args["code"], _redirect_uri())
         gmail.save_account(user["id"], data)
+        from .. import analytics
+
+        analytics.track(user["id"], "connected", "gmail")
         get_db().commit()
     except gmail.GmailError as e:
         current_app.logger.warning("Gmail connect failed: %s", e)

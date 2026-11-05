@@ -23,6 +23,7 @@
           row("Goals and budgets", `${c.goals} · ${c.budgets}`),
           row("Your category choices", String(c.merchant_rules), "e.g. \"Always file Rapido as Travel\""),
           row("Bank balances seen in alerts", String(c.bank_balances), "Used to check Flux matches your bank"),
+          row("Usage counts", String(c.usage_events), "Which screens you opened, never amounts or merchants. Only totals across everyone are looked at"),
           row("Masked message samples", k.contribute_samples ? String(c.masked_samples) : "Off", "Only if you turned on \"Help Flux read more banks\". Numbers and names are hidden first")),
         el("div", { class: "card" },
           el("h2", null, "What Flux never does"),
