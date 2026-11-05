@@ -7,7 +7,6 @@
     let step = 0;
     const data = { pattern: "monthly", payDay: 1, balance: "" };
     const wrap = el("div", { style: { maxWidth: "520px", margin: "6vh auto 0", padding: "0 16px" } });
-    main.style.marginLeft = "0";
     main.appendChild(wrap);
     const isAndroid = /Android/.test(navigator.userAgent);
     const gmailOn = (window.Kitna.config.features || {}).gmail;

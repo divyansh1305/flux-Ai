@@ -34,7 +34,7 @@
     const days = Math.ceil((new Date(g.deadline + "T00:00:00") - new Date()) / 86400000);
     if (days <= 0) return `Target date passed · ${inr0(g.remaining)} to go`;
     const perMonth = g.remaining / Math.max(days / 30, 1 / 30);
-    return `${inr0(g.remaining)} to go · ${inr0(Math.min(perMonth, g.remaining))}/month for ${days} days`;
+    return `${inr0(g.remaining)} to go · ${inr0(Math.min(perMonth, g.remaining))} a month to make it in time`;
   }
 
   async function render(main, user) {
@@ -51,7 +51,7 @@
         el("div", null, u.autosave_mode === "off" ? modeText : `${modeText}, and Kitna sets the difference aside for `, u.autosave_mode !== "off" ? el("b", null, autoGoal ? autoGoal.title : "no goal yet") : null,
           ". ", el("a", { class: "brand", href: "/app/settings" }, "Change")));
       const cards = goals.map((g) => el("div", { class: "card" },
-        el("div", { class: "row between" }, el("h3", null, g.title), g.id === u.autosave_goal_id ? el("span", { class: "badge autosave" }, "set-aside") : null),
+        el("div", { class: "row between" }, el("h3", null, g.title), g.id === u.autosave_goal_id ? el("span", { class: "badge autosave" }, "Round-ups go here") : null),
         el("div", { class: "row between", style: { margin: "16px 0 8px", alignItems: "flex-end" } },
           el("div", null, el("div", { class: "stat" }, el("div", { class: "value", style: { fontSize: "24px" } }, inr0(g.saved))), el("div", { class: "tiny faint" }, "of " + inr0(g.target))),
           el("div", { style: { fontSize: "22px", fontWeight: 800 }, class: g.complete ? "green" : "" }, g.percent + "%")),

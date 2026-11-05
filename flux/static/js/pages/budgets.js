@@ -36,7 +36,7 @@
         el("div", { class: "row between", style: { margin: "14px 0 8px" } },
           el("div", null, el("div", { class: "stat" }, el("div", { class: "value", style: { fontSize: "22px" } }, inr0(b.spent))), el("div", { class: "tiny faint" }, "of " + inr0(b.limit))),
           el("div", { style: { textAlign: "right" } }, el("div", { class: b.left < 0 ? "red" : "green", style: { fontWeight: 700 } }, b.left < 0 ? inr0(-b.left) + " over" : inr0(b.left) + " left"),
-            el("div", { class: "tiny faint" }, b.left > 0 && daysLeft > 0 ? `~${inr0(b.left / daysLeft)}/day for ${daysLeft} days` : ""))),
+            el("div", { class: "tiny faint" }, b.left > 0 && daysLeft > 0 ? `${inr0(b.left / daysLeft)} a day for ${daysLeft} days` : ""))),
         el("div", { class: "bar " + b.state }, el("i", { style: { width: Math.min(100, b.percent) + "%" } })),
         el("div", { class: "row", style: { marginTop: "14px", justifyContent: "flex-end" } },
           el("button", { class: "btn sm ghost", onclick: () => budgetModal(b) }, "Edit"),

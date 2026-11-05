@@ -78,7 +78,7 @@
         el("p", { class: "small muted", style: { marginTop: "14px" } }, cb.verdict));
       const rec = ins.recurring;
       const recCard = el("div", { class: "card" }, el("div", { class: "card-head" }, el("h2", null, "Regular payments"),
-        el("span", { class: "tiny faint" }, rec.length ? `≈ ${inr0(rec.reduce((a, b) => a + b.monthly_cost, 0))}/month` : "")),
+        el("span", { class: "tiny faint" }, rec.length ? `About ${inr0(rec.reduce((a, b) => a + b.monthly_cost, 0))} a month` : "")),
         rec.length ? el("div", { class: "tx-list" }, rec.map((b) => el("div", { class: "tx" },
           window.Kitna.avatar(b.name),
           el("div", { class: "tx-main" }, el("div", { class: "tx-title" }, b.name), el("div", { class: "tx-sub" }, `${b.cadence === "monthly" ? "Every month" : "Every week"} · next ${window.Kitna.dateFmt(b.next_date)}`)),
