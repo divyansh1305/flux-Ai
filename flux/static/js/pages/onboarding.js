@@ -33,6 +33,7 @@
         } }, "Continue");
         adult.onchange = () => { go.disabled = !adult.checked; };
         card.append(
+          el("p", { class: "tagline small", style: { margin: 0 } }, "Pehle Kitna, phir kharcha."),
           el("h1", { style: { margin: "10px 0 6px" } }, `Hi ${user.name.split(" ")[0]}, welcome to Kitna`),
           el("p", { class: "muted" }, "Kitna tells you how much you can safely spend today, and logs your payments by itself."),
           el("ul", { class: "small", style: { margin: "16px 0", paddingLeft: "18px", lineHeight: 1.8 } },

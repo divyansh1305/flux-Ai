@@ -410,3 +410,9 @@ table.table { width: 100%; border-collapse: collapse; font-size: 14px; }
 }
 
 img.logo-mark { background: none; padding: 0; object-fit: contain; }
+
+/* Kitna wordmark (the logo): takes the text colour; the coin dot stays marigold */
+.logo-wm { height: 26px; width: auto; display: block; color: var(--text); }
+.lp-nav .logo-wm { height: 30px; }
+.auth-side .logo-wm { height: 34px; color: #fff; }
+.tagline { color: var(--brand); font-weight: 700; letter-spacing: -0.01em; }

@@ -93,7 +93,10 @@ def create_app(overrides=None):
         return html
 
     def page(name):
-        resp = app.response_class(page_html(name), mimetype="text/html")
+        html = page_html(name)
+        if "__ORIGIN__" in html:  # share previews (WhatsApp, LinkedIn) need full image addresses
+            html = html.replace("__ORIGIN__", request.host_url.rstrip("/"))
+        resp = app.response_class(html, mimetype="text/html")
         resp.headers["Cache-Control"] = "no-cache"
         return resp
 

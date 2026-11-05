@@ -75,6 +75,18 @@
     return svg;
   }
 
+  // The Kitna wordmark (the logo). Constant markup only; it takes the text colour, the coin stays marigold.
+  const WORDMARK = '<g fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20V100M10 74L46 50M26 63L48 100"/><path d="M70 50V100"/><path d="M102 28V86Q102 100 116 100M92 54H118"/><path d="M142 100V50M142 72A20 20 0 0 1 182 72V100"/><circle cx="229" cy="75" r="25"/><path d="M254 50V100"/></g><circle cx="70" cy="28" r="9" fill="#f2a93b"/>';
+  function wordmark() {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "2 12 260 96");
+    svg.setAttribute("class", "logo-wm");
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", "Kitna");
+    svg.innerHTML = WORDMARK; // constant string only
+    return svg;
+  }
+
   // ─── Formatting ───────────────────────────────────────────
   const inrFmt = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 });
   const inr = (v) => (v < 0 ? "-₹" : "₹") + inrFmt.format(Math.abs(Number(v) || 0));
@@ -395,7 +407,7 @@
       const nav = el("nav", { class: "nav", "aria-label": "Main" }, NAV.filter(([href]) => featureOn(href)).map(([href, ic, label]) =>
         el("a", { href, class: path === href ? "active" : null, "aria-current": path === href ? "page" : null }, icon(ic), el("span", null, label))));
       const top = el("header", { class: "topbar" }, el("div", { class: "topbar-in" },
-        el("a", { href: "/app", class: "logo" }, el("img", { class: "logo-mark", src: "/static/img/icon.svg", alt: "" }), "Kitna"),
+        el("a", { href: "/app", class: "logo", "aria-label": "Kitna home" }, wordmark()),
         nav,
         el("div", { class: "top-actions" },
           (CONFIG.features || {}).admin ? el("a", { href: "/app/admin", class: "icon-link" + (path === "/app/admin" ? " active" : ""), title: "Kitna numbers (only you can see this)", "aria-label": "Kitna numbers" }, icon("trend")) : null,

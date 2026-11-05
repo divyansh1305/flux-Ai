@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Kitna: a ₹ in a speech bubble ("kitna?" = "how much?"). Same drawing as flux/static/img/icon.svg. -->
+<!-- Kitna app icon: a white "k" with the marigold coin on indigo. Same drawing as flux/static/img/icon.svg. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="64" android:viewportHeight="64">
     <path android:fillColor="#34378A"
         android:pathData="M15,0h34a15,15 0 0 1 15,15v34a15,15 0 0 1 -15,15h-34a15,15 0 0 1 -15,-15v-34a15,15 0 0 1 15,-15z" />
-    <path android:fillColor="#FFFFFF"
-        android:pathData="M32,10.5a19.5,19.5 0 1 1 -10.4,36L12.5,50l3.3,-8.3A19.5,19.5 0 0 1 32,10.5z" />
-    <path android:strokeColor="#34378A" android:strokeWidth="3.6" android:strokeLineCap="round"
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="6.5" android:strokeLineCap="round"
         android:strokeLineJoin="round" android:fillColor="#00000000"
-        android:pathData="M23.5,20H41M23.5,26.5H41M28,20c8.5,0 8.5,13 0,13h-4l12.5,12" />
-    <path android:fillColor="#F2A93B" android:pathData="M45.3,14.5a4.2,4.2 0 1 0 8.4,0a4.2,4.2 0 1 0 -8.4,0z" />
+        android:pathData="M22,13V51M22,38L39,26.5M29.5,33L40,51" />
+    <path android:fillColor="#F2A93B" android:pathData="M40,15a5,5 0 1 0 10,0a5,5 0 1 0 -10,0z" />
 </vector>

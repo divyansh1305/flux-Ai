@@ -1,4 +1,6 @@
-# Kitna: aaj kitna safe hai?
+# Kitna · Pehle Kitna, phir kharcha.
+
+**Know before you spend.**
 
 *Kitna* (कितना) means "how much?": the question this app answers every day. (Earlier name: Flux.)
 

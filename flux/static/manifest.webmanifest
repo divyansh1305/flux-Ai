@@ -1,7 +1,7 @@
 {
-  "name": "Kitna — know what you can spend today",
+  "name": "Kitna · Pehle Kitna, phir kharcha.",
   "short_name": "Kitna",
-  "description": "Know what you can safely spend today. Payments log themselves.",
+  "description": "Know before you spend. How much is safe to spend today, with UPI payments that log themselves.",
   "start_url": "/app",
   "scope": "/",
   "display": "standalone",
