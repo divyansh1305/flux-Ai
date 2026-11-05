@@ -61,6 +61,9 @@
     users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 20a6.5 6.5 0 0 0-3-5.5"/>',
     split: '<path d="M12 3v7M12 10l-6 6v5M12 10l6 6v5"/>',
     share: '<path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v7h14v-7"/>',
+    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+    chev: '<path d="M9 6l6 6-6 6"/>',
+    sliders: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
   };
   function icon(name) {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -196,7 +199,7 @@
   const SCREENS = { "/app": "home", "/app/transactions": "activity", "/app/plans": "plans", "/app/coach": "ask",
     "/app/goals": "goals", "/app/budgets": "budgets", "/app/settings": "settings", "/app/import": "import",
     "/app/share": "share", "/app/privacy-center": "privacy-center", "/onboarding": "onboarding", "/app/admin": "admin",
-    "/app/friends": "friends" };
+    "/app/friends": "friends", "/app/pay": "pay" };
   function track(name, value) {
     if (!USER) return;
     const prop = value || SCREENS[location.pathname.replace(/\/$/, "") || "/app"] || "other";
@@ -325,10 +328,15 @@
       el("div", { class: "grid g-2" }, el("label", { class: "field" }, "Amount (₹)", amount), el("label", { class: "field" }, "When", day)),
       sureRow, hint);
     const v = await modal(existing ? "Edit plan" : "Add a plan", body, [
-      { label: "Cancel", value: null, cls: "ghost" },
+      existing ? { label: "Delete", value: "delete", cls: "ghost danger-text" } : { label: "Cancel", value: null, cls: "ghost" },
       { label: "Save", submit: true, cls: "primary", value: () => ({ kind, title: title.value, amount: amount.value, date: day.value, sure: kind === "income" ? sure.checked : true }) },
     ]);
     if (!v) return null;
+    if (v === "delete") {
+      if (!(await confirmBox("Delete plan?", `${existing.title} · ${inr0(existing.amount)}`, true))) return null;
+      try { await api(`/api/plans/${existing.id}`, { method: "DELETE" }); ok("Plan deleted."); refresh(); } catch (e) { err(e); }
+      return null;
+    }
     try {
       const r = existing ? await api(`/api/plans/${existing.id}`, { method: "PATCH", body: v }) : await api("/api/plans", { method: "POST", body: v });
       ok(existing ? "Plan updated." : "Plan added. Today's number now keeps it aside.");
@@ -338,18 +346,42 @@
   }
 
   // ─── Shell ────────────────────────────────────────────────
+  // Four things people do every day are tabs; everything else lives in one "More" menu.
   const NAV = [
     ["/app", "home", "Home"],
     ["/app/transactions", "list", "Activity"],
-    ["/app/budgets", "pie", "Budgets"],
-    ["/app/goals", "target", "Goals"],
-    ["/app/plans", "calendar", "Plans"],
+    ["/app/pay", "qr", "Pay"],
     ["/app/friends", "users", "Friends"],
-    ["/app/coach", "spark", "Coach"],
+    ["/app/plans", "calendar", "Plans"],
   ];
-  // Centre button: quick "Add" (always works).
-  const MOBILE_NAV = [["/app", "home", "Home"], ["/app/transactions", "list", "Activity"], ["#add", "plus", "Add"],
-    ["/app/plans", "calendar", "Plans"], ["/app/friends", "users", "Friends"], ["/app/coach", "spark", "Ask"]];
+  const MOBILE_NAV = [["/app", "home", "Home"], ["/app/transactions", "list", "Activity"], ["/app/pay", "qr", "Pay"],
+    ["/app/friends", "users", "Friends"], ["#more", "menu", "More"]];
+  const MENU = [
+    ["/app/plans", "calendar", "Plans", "Money kept aside for what's coming"],
+    ["/app/budgets", "pie", "Budgets", "Monthly limits"],
+    ["/app/goals", "target", "Goals", "Saving for something"],
+    ["/app/coach", "spark", "Ask Kitna", "Questions about your money"],
+    ["/app/import", "upload", "Import a statement", "Bank PDF or CSV"],
+    ["/app/settings", "gear", "Settings", "Account, reminders, language"],
+  ];
+  function moreMenu() {
+    const items = MENU.concat((CONFIG.features || {}).admin ? [["/app/admin", "trend", "Kitna numbers", "Only you can see this"]] : []);
+    const close = () => { bg.remove(); document.removeEventListener("keydown", onKey); };
+    const onKey = (e) => { if (e.key === "Escape") close(); };
+    const initials = USER.name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+    const sheet = el("div", { class: "modal sheet", role: "dialog", "aria-modal": "true", "aria-label": "More" },
+      el("div", { class: "sheet-me" }, el("span", { class: "avatar" }, initials),
+        el("div", { style: { minWidth: 0 } }, el("b", null, USER.name), el("div", { class: "tiny faint", style: { overflow: "hidden", textOverflow: "ellipsis" } }, USER.email || ""))),
+      el("div", { class: "menu-list" }, items.map(([href, ic, label, sub]) =>
+        el("a", { href, class: "menu-item" }, el("span", { class: "menu-ic" }, icon(ic)),
+          el("span", { class: "menu-text" }, el("b", null, label), el("span", null, sub)), icon("chev")))),
+      el("button", { class: "menu-item plain", type: "button", onclick: () => { close(); feedbackModal(); } },
+        el("span", { class: "menu-ic" }, icon("chat")), el("span", { class: "menu-text" }, el("b", null, "Tell us something"), el("span", null, "A bug, an idea, anything"))),
+      el("button", { class: "btn ghost block", type: "button", onclick: close }, "Close"));
+    const bg = el("div", { class: "modal-bg sheet-bg", onclick: (e) => { if (e.target === bg) close(); } }, sheet);
+    document.body.appendChild(bg);
+    document.addEventListener("keydown", onKey);
+  }
   const featureOn = () => true;
   let USER = null;
   let CONFIG = {};
@@ -407,21 +439,21 @@
       const showDot = (r) => { dot.hidden = !(r && r.unread); };
       showDot(cacheGet("/api/reminders"));
       setTimeout(() => api("/api/reminders").then((r) => { cacheSet("/api/reminders", r); showDot(r); }).catch(() => {}), 1500);
-      const nav = el("nav", { class: "nav", "aria-label": "Main" }, NAV.filter(([href]) => featureOn(href)).map(([href, ic, label]) =>
+      const inMenu = MENU.some(([h]) => h === path) || path === "/app/admin";
+      const nav = el("nav", { class: "nav", "aria-label": "Main" }, NAV.map(([href, ic, label]) =>
         el("a", { href, class: path === href ? "active" : null, "aria-current": path === href ? "page" : null }, icon(ic), el("span", null, label))));
       const top = el("header", { class: "topbar" }, el("div", { class: "topbar-in" },
         el("a", { href: "/app", class: "logo", "aria-label": "Kitna home" }, wordmark()),
         nav,
         el("div", { class: "top-actions" },
-          (CONFIG.features || {}).admin ? el("a", { href: "/app/admin", class: "icon-link" + (path === "/app/admin" ? " active" : ""), title: "Kitna numbers (only you can see this)", "aria-label": "Kitna numbers" }, icon("trend")) : null,
           bell,
-          el("a", { href: "/app/import", class: "icon-link" + (path === "/app/import" ? " active" : ""), title: "Import statement or SMS", "aria-label": "Import" }, icon("upload")),
-          el("a", { href: "/app/settings", class: "icon-link" + (path === "/app/settings" ? " active" : ""), title: "Settings", "aria-label": "Settings" }, icon("gear")),
-          el("a", { href: "/app/settings", class: "avatar", title: USER.name, "aria-label": "Account" }, initials))));
+          el("button", { type: "button", class: "avatar", title: USER.name, "aria-label": "More", onclick: moreMenu }, initials))));
       const bottom = el("nav", { class: "bottom-nav", "aria-label": "Main" }, MOBILE_NAV.map(([href, ic, label]) =>
-        href === "#add"
-          ? el("a", { href: "#", class: "pay", onclick: (e) => { e.preventDefault(); addTransactionModal("expense"); } }, el("span", { class: "pay-dot" }, icon(ic)), label)
-          : el("a", { href, class: path === href ? "active" : null }, icon(ic), label)));
+        href === "#more"
+          ? el("a", { href: "#", class: inMenu ? "active" : null, onclick: (e) => { e.preventDefault(); moreMenu(); } }, icon(ic), label)
+          : href === "/app/pay"
+            ? el("a", { href, class: "pay" + (path === href ? " active" : "") }, el("span", { class: "pay-dot" }, icon(ic)), label)
+            : el("a", { href, class: path === href ? "active" : null, "aria-current": path === href ? "page" : null }, icon(ic), label)));
       document.body.append(top, main, bottom);
     } else {
       document.body.append(main);
@@ -430,7 +462,7 @@
       await renderPage(main, USER);
     } catch (e) { err(e); }
     track("screen_opened");
-    if (window.FluxVoice && location.pathname !== "/onboarding") window.FluxVoice.init(USER);
+    if (window.FluxVoice && location.pathname !== "/onboarding") window.FluxVoice.init(USER, { fab: false });
   }
 
   function pageHead(title, subtitle, ...actions) {
@@ -455,7 +487,7 @@
         el("div", { class: "tx-title" }, title),
         el("div", { class: "tx-sub" }, dateFmt(t.date), " · ", t.category, " ", badge)),
       el("div", { class: "tx-amt " + amtCls }, sign + inr(Math.abs(t.amount))),
-      onDelete && t.source !== "autosave" ? el("button", { class: "icon-btn", title: "Delete", "aria-label": "Delete transaction", onclick: () => onDelete(t) }, icon("trash")) : null);
+      onDelete && !editable && t.source !== "autosave" ? el("button", { class: "icon-btn", title: "Delete", "aria-label": "Delete transaction", onclick: () => onDelete(t) }, icon("trash")) : null);
   }
 
   async function editTx(t) {
@@ -473,12 +505,13 @@
       el("label", { class: "field" }, "Category", cat),
       el("label", { class: "field" }, "Note / merchant", note),
       el("label", { class: "row", style: { gap: "8px", alignItems: "center" } }, remember, rememberText), hint);
-    const v = await modal("Edit transaction", body, [
-      { label: "Cancel", value: null, cls: "ghost" },
-      t.kind === "expense" ? { label: "Split with friends", value: "split" } : null,
+    const v = await modal("Edit payment", body, [
+      { label: "Delete", value: "delete", cls: "ghost danger-text" },
+      t.kind === "expense" ? { label: "Split", value: "split" } : null,
       { label: "Save", submit: true, cls: "primary", value: () => ({ category: cat.value, note: note.value, remember: remember.checked }) },
     ].filter(Boolean));
     if (v === "split") { splitModal(t); return; }
+    if (v === "delete") { deleteTx(t); return; }
     if (!v) return;
     try {
       const r = await api(`/api/transactions/${t.id}`, { method: "PATCH", body: v });

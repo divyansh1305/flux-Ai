@@ -316,7 +316,11 @@ def export_account():
     phones = db.execute("SELECT COUNT(*) FROM push_subscriptions WHERE user_id = ?", (u["id"],)).fetchone()[0]
     feedback = [{"kind": r["kind"], "message": r["message"], "screen": r["screen"], "created_at": r["created_at"]}
                 for r in db.execute("SELECT * FROM feedback WHERE user_id = ? ORDER BY id", (u["id"],))]
-    resp = jsonify({"feedback": feedback, "profile": user_json(u), "transactions": tx, "budgets": budgets, "merchant_rules": rules,
+    payees = [{"upi_id": r["vpa"], "name": r["name"], "category": r["category"], "times_paid": r["times_paid"]}
+              for r in db.execute("SELECT * FROM payees WHERE user_id = ? ORDER BY times_paid DESC", (u["id"],))]
+    payments = [{"upi_id": r["payee_vpa"], "name": r["payee_name"], "amount": r["amount"] / 100, "status": r["status"],
+                 "created_at": r["created_at"]} for r in db.execute("SELECT * FROM payments WHERE user_id = ? ORDER BY id", (u["id"],))]
+    resp = jsonify({"feedback": feedback, "people_you_paid": payees, "scan_and_pay": payments, "profile": user_json(u), "transactions": tx, "budgets": budgets, "merchant_rules": rules,
                     "masked_samples": samples, "plans": plans, "usage_events": events, "friends": owed,
                     "reminders": notes, "phones_with_reminders": phones,
                     "goals": goals_with_progress(u["id"], include_archived=True)})
@@ -367,6 +371,7 @@ def what_flux_knows():
             "reminders": count("SELECT COUNT(*) FROM notifications WHERE user_id = ?"),
             "phones_with_reminders": count("SELECT COUNT(*) FROM push_subscriptions WHERE user_id = ?"),
             "feedback": count("SELECT COUNT(*) FROM feedback WHERE user_id = ?"),
+            "people_you_paid": count("SELECT COUNT(*) FROM payees WHERE user_id = ?"),
         },
         "contribute_samples": bool(u["contribute_samples"]),
     })

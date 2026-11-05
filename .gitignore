@@ -19,3 +19,4 @@ venv/
 qa-shots/
 qa-server.log
 qa-results.json
+*.egg-info/

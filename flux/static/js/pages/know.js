@@ -24,6 +24,7 @@
           row("Your category choices", String(c.merchant_rules), "e.g. \"Always file Rapido as Travel\""),
           row("Bank balances seen in alerts", String(c.bank_balances), "Used to check Kitna matches your bank"),
           row("Friends", String(c.friends || 0), "Names and amounts you added on the Friends screen"),
+          row("People you paid", String(c.people_you_paid || 0), "UPI IDs from Scan & Pay, so you can pay again in one tap"),
           row("Reminders", `${c.reminders || 0} · on ${c.phones_with_reminders || 0} phone${c.phones_with_reminders === 1 ? "" : "s"}`, "What Kitna told you, and the phones you turned notifications on for"),
           row("Feedback you sent", String(c.feedback || 0), "Your own words, so we can fix what you told us about"),
           row("Usage counts", String(c.usage_events), "Which screens you opened, never amounts or merchants. Only totals across everyone are looked at"),

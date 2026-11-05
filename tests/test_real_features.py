@@ -1,13 +1,10 @@
 """Only real, working features are shown; iPhone one-link auto-logging."""
 
 
-def test_pay_and_invest_are_gone(app, client, user):
-    feats = client.get("/api/auth/me").json["features"]
-    assert "pay" not in feats and "invest" not in feats
-    assert client.get("/app/pay").status_code == 404 and client.get("/app/invest").status_code == 404
-    assert client.get("/api/pay/pending").status_code == 404
-    r = client.post("/api/voice/command", json={"text": "pay 200 to rahul"}).json
-    assert "doesn't send money" in r["reply"] and not r.get("navigate")
+def test_invest_is_gone_and_pay_is_back(app, client, user):
+    assert client.get("/app/invest").status_code == 404
+    assert client.get("/app/pay").status_code == 200
+    assert client.get("/api/pay/pending").status_code == 200
 
 
 def test_iphone_one_link_accepts_raw_form_and_json(app, client, user):

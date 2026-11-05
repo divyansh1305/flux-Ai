@@ -217,8 +217,26 @@ def execute(cmd):
             out.update(reply=f"Removed the {inr(rupees(abs(row['amount'])))} {row['category']} entry.", refresh=True)
 
     elif intent == "pay":
-        out["reply"] = ("Kitna doesn't send money. Pay in your usual UPI app, and the payment shows up here "
-                        "automatically.")
+        from urllib.parse import urlencode
+
+        if not cmd.get("amount"):
+            out.update(reply="Opening the scanner. Point it at any UPI QR.", navigate="/app/pay")
+        else:
+            vpa = cmd.get("vpa")
+            name = cmd.get("payee") or ""
+            if not vpa and name:
+                rows = get_db().execute("SELECT vpa, name FROM payees WHERE user_id=? ORDER BY times_paid DESC", (uid,)).fetchall()
+                words = set(name.lower().split())
+                best = max(rows, key=lambda r: len(words & set((r["name"] + " " + r["vpa"].split("@")[0]).lower().split())), default=None)
+                if best and words & set((best["name"] + " " + best["vpa"].split("@")[0]).lower().split()):
+                    vpa, name = best["vpa"], best["name"]
+            q = {"amount": f"{float(cmd['amount']):.2f}"}
+            if vpa:
+                q.update(vpa=vpa, name=name)
+                reply = f"Opening a payment of {inr(cmd['amount'])} to {name or vpa}. You'll pay in your own UPI app."
+            else:
+                reply = f"Okay, {inr(cmd['amount'])}. Scan their QR or enter their UPI ID."
+            out.update(reply=reply, navigate="/app/pay?" + urlencode(q))
 
     elif intent == "navigate":
         out.update(reply=f"Opening {cmd.get('page_name', 'that')}.", navigate=cmd["page"])

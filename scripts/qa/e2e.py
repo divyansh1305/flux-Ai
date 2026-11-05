@@ -78,8 +78,11 @@ def main():
             else:
                 boxes.first.fill(code)
             btn = pg.get_by_role("button", name=re.compile("Verify"))
-            if btn.count() and btn.first.is_enabled():
-                btn.first.click()
+            try:  # the code auto-submits; the button may already be gone
+                if btn.count() and btn.first.is_enabled(timeout=1000):
+                    btn.first.click()
+            except Exception:
+                pass
             pg.wait_for_url(re.compile(r"/onboarding|/app"), timeout=8000)
         step("Sign up with email code", signup)
 
@@ -107,7 +110,7 @@ def main():
 
         # 3. Add an expense from the bottom bar
         def add_expense():
-            pg.locator(".bottom-nav a.pay").click()
+            pg.locator(".quick", has_text="Add").click()
             m = pg.locator(".modal")
             m.get_by_label("Amount in rupees").fill("250")
             m.get_by_label("Category").select_option("Food & Dining")
@@ -119,7 +122,7 @@ def main():
 
         # 4. Plan from Home
         def add_plan():
-            pg.get_by_role("button", name="Add a plan").first.click()
+            pg.locator(".quick", has_text="Plan").click()
             m = pg.locator(".modal")
             m.locator("input[placeholder='Dinner on Friday']").fill("Movie night")
             m.get_by_label("Amount in rupees").fill("800")
@@ -132,7 +135,7 @@ def main():
         def split():
             pg.goto(B + "/app/transactions")
             pg.locator(".tx-main.tx-edit", has_text="Chai Point").first.click()
-            pg.get_by_role("button", name="Split with friends").click()
+            pg.locator(".modal").get_by_role("button", name="Split", exact=True).click()
             m = pg.locator(".modal")
             m.get_by_label("Friends' names").fill("Rahul Sharma")
             expect(m.get_by_text(re.compile("Your share: ₹125"))).to_be_visible()
@@ -213,7 +216,7 @@ def main():
         # 8. Ask
         def ask():
             pg.goto(B + "/app/coach")
-            box = pg.get_by_placeholder(re.compile("Ask anything"))
+            box = pg.get_by_placeholder(re.compile("Ask about your money"))
             box.fill("aaj kitna safe hai")
             box.press("Enter")
             expect(pg.get_by_text(re.compile(r"₹[\d,]+")).last).to_be_visible(timeout=10000)

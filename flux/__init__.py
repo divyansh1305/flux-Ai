@@ -23,6 +23,7 @@ APP_PAGES = {
     "/app/coach": "coach.html",
     "/app/plans": "plans.html",
     "/app/friends": "friends.html",
+    "/app/pay": "pay.html",
     "/app/privacy-center": "know.html",
     "/app/admin": "admin.html",
     "/app/share": "share.html",
@@ -55,9 +56,9 @@ def create_app(overrides=None):
 
     backup.init_app(app)
 
-    from .api import admin, auth, gmail, ingest, money, plans, social, statement, voice
+    from .api import admin, auth, gmail, ingest, money, pay, plans, social, statement, voice
 
-    for bp in (auth.bp, money.bp, statement.bp, voice.bp, ingest.bp, gmail.bp, plans.bp, admin.bp, social.bp):
+    for bp in (auth.bp, money.bp, statement.bp, voice.bp, ingest.bp, gmail.bp, plans.bp, admin.bp, social.bp, pay.bp):
         app.register_blueprint(bp)
     from . import reminders
 

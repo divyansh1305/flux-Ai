@@ -9,22 +9,27 @@
     const state = { page: 1, kind: "", category: "", q: "", from: "", to: "" };
     const list = el("div", { class: "tx-list" });
     const more = el("button", { class: "btn block", style: { marginTop: "12px" } }, "Load more");
-    const kindSeg = el("div", { class: "seg" });
-    [["", "All"], ["expense", "Expenses"], ["income", "Income"], ["saving", "Savings"]].forEach(([k, label]) => {
+    const kindSeg = el("div", { class: "seg full" });
+    [["", "All"], ["expense", "Spent"], ["income", "Received"], ["saving", "Set aside"]].forEach(([k, label]) => {
       const b = el("button", { type: "button", class: k === "" ? "on" : "" }, label);
       b.onclick = () => { state.kind = k; [...kindSeg.children].forEach((c) => (c.className = "")); b.className = "on"; reload(); };
       kindSeg.appendChild(b);
     });
-    const cat = el("select", { class: "input", style: { width: "auto" }, "aria-label": "Category filter" },
+    const cat = el("select", { class: "input", "aria-label": "Category filter" },
       el("option", { value: "" }, "All categories"), [...m.expense_categories, ...m.income_categories].map((c) => el("option", { value: c }, c)));
-    cat.onchange = () => { state.category = cat.value; reload(); };
-    const q = el("input", { class: "input", placeholder: "Search notes…", style: { maxWidth: "220px" }, "aria-label": "Search" });
+    cat.onchange = () => { state.category = cat.value; reload(); markFilter(); };
+    const q = el("input", { class: "input", type: "search", placeholder: "Search", "aria-label": "Search" });
     let t;
     q.oninput = () => { clearTimeout(t); t = setTimeout(() => { state.q = q.value.trim(); reload(); }, 300); };
-    const from = el("input", { class: "input", type: "date", style: { width: "auto" }, "aria-label": "From date" });
-    const to = el("input", { class: "input", type: "date", style: { width: "auto" }, "aria-label": "To date" });
-    from.onchange = () => { state.from = from.value; reload(); };
-    to.onchange = () => { state.to = to.value; reload(); };
+    const from = el("input", { class: "input", type: "date", "aria-label": "From date" });
+    const to = el("input", { class: "input", type: "date", "aria-label": "To date" });
+    from.onchange = () => { state.from = from.value; reload(); markFilter(); };
+    to.onchange = () => { state.to = to.value; reload(); markFilter(); };
+    const filters = el("div", { class: "filters", hidden: true }, cat,
+      el("div", { class: "row", style: { gap: "8px" } }, from, el("span", { class: "faint" }, "to"), to));
+    const filterBtn = el("button", { class: "icon-link", type: "button", title: "Filters", "aria-label": "Filters", "aria-expanded": "false",
+      onclick: () => { filters.hidden = !filters.hidden; filterBtn.setAttribute("aria-expanded", String(!filters.hidden)); } }, icon("sliders"));
+    const markFilter = () => filterBtn.classList.toggle("active", !!(state.category || state.from || state.to));
 
     const qs = (extra = {}) => {
       const p = new URLSearchParams();
@@ -35,7 +40,14 @@
       try {
         const query = qs({ size: 30 });
         const show = (r) => {
-          const rows = r.items.map((x) => txRow(x, deleteTx));
+          // Day headings, like a bank statement: Today, Yesterday, 4 Nov…
+          const rows = [];
+          let lastDay = append ? list.dataset.lastDay : null;
+          r.items.forEach((x) => {
+            if (x.date !== lastDay) { rows.push(el("div", { class: "day-head" }, window.Kitna.dateFmt(x.date))); lastDay = x.date; }
+            rows.push(txRow(x, deleteTx));
+          });
+          list.dataset.lastDay = lastDay || "";
           if (append) list.append(...rows); else list.replaceChildren(...rows);
           if (!append && !r.items.length) list.replaceChildren(el("div", { class: "empty" }, el("b", null, "No transactions found"), "Try different filters, or add one."));
           more.classList.toggle("hidden", !r.has_more);
@@ -50,15 +62,17 @@
     more.onclick = () => { state.page += 1; load(true); };
     onRefresh(reload);
 
-    const exp = (fmt) => download("/api/transactions/export?" + qs({ format: fmt, page: "" }), `flux-transactions.${fmt}`).catch(err);
+    const exp = (fmt) => download("/api/transactions/export?" + qs({ format: fmt, page: "" }), `kitna-activity.${fmt}`).catch(err);
+    const dl = el("details", { class: "menu-pop" }, el("summary", { class: "btn", "aria-label": "Download" }, icon("download")),
+      el("div", { class: "menu-pop-in" },
+        el("button", { type: "button", class: "menu-item plain", onclick: () => exp("csv") }, "Download CSV"),
+        el("button", { type: "button", class: "menu-item plain", onclick: () => exp("pdf") }, "Download PDF")));
     main.replaceChildren(
-      pageHead("Transactions", "Every rupee in and out.",
-        el("button", { class: "btn", onclick: () => exp("csv") }, icon("download"), "CSV"),
-        el("button", { class: "btn", onclick: () => exp("pdf") }, icon("download"), "PDF"),
-        el("button", { class: "btn primary", onclick: () => addTransactionModal() }, icon("plus"), "Add")),
-      el("div", { class: "card" },
-        el("div", { class: "row wrap", style: { marginBottom: "12px" } }, kindSeg, cat, q, from, el("span", { class: "faint" }, "→"), to),
-        list, more));
+      el("div", { class: "narrow" },
+        pageHead("Activity", null, dl, el("button", { class: "btn primary", onclick: () => addTransactionModal() }, icon("plus"), "Add")),
+        el("div", { class: "stack", style: { gap: "10px", marginBottom: "14px" } }, kindSeg,
+          el("div", { class: "row", style: { gap: "8px" } }, q, filterBtn), filters),
+        el("div", { class: "card list-card" }, list, more)));
     reload();
   }
 

@@ -4,7 +4,7 @@
 
   async function render(main) {
     const content = el("div", { class: "stack narrow", style: { gap: "18px" } });
-    main.replaceChildren(pageHead("Friends", "Money you lent or borrowed. Ticked off by itself when the UPI payment arrives."), content);
+    main.replaceChildren(pageHead("Friends", "Ticked off by itself when the UPI payment arrives."), content);
     const load = () => window.Kitna.live("/api/friends", (d) => content.replaceChildren(...build(d).filter(Boolean)));
     onRefresh(load);
     await load();
@@ -67,24 +67,21 @@
         el("div", { class: "tx-amt" + (they ? " in" : "") }, (they ? "+" : "-") + inr0(r.amount))),
       r.settled ? null : el("div", { class: "item-actions" },
         they ? el("button", { class: "btn sm", onclick: () => remind(r) }, icon("share"), "Remind") : null,
-        el("button", { class: "btn sm ghost", onclick: () => settle(r) }, they ? "They paid" : "I paid"),
-        el("button", { class: "btn sm ghost", "aria-label": "Remove " + r.person, onclick: () => remove(r) }, icon("trash"), "Remove")));
+        el("button", { class: "btn sm", onclick: () => settle(r) }, icon("check"), they ? "Paid me" : "I paid"),
+        el("button", { class: "icon-btn", style: { marginLeft: "auto" }, title: "Remove", "aria-label": "Remove " + r.person, onclick: () => remove(r) }, icon("trash"))));
   }
 
   function build(d) {
     const t = d.totals;
-    const summary = el("div", { class: "grid g-2" },
-      el("div", { class: "card" }, el("div", { class: "small muted" }, "Friends owe you"),
-        el("div", { class: "big num green", style: { fontSize: "30px", marginTop: "4px" } }, inr0(t.they_owe)),
-        el("div", { class: "tiny faint", style: { marginTop: "4px" } }, t.they_owe ? "Not counted in today's number until it arrives." : "Split a payment to start.")),
-      el("div", { class: "card" }, el("div", { class: "small muted" }, "You owe friends"),
-        el("div", { class: "big num", style: { fontSize: "30px", marginTop: "4px" } }, inr0(t.i_owe)),
-        el("div", { class: "tiny faint", style: { marginTop: "4px" } }, t.i_owe ? "Already kept aside in today's number." : "Nothing to pay back.")));
+    const summary = el("div", { class: "card friends-totals" },
+      el("div", null, el("div", { class: "tiny faint" }, "They owe you"), el("div", { class: "v num green" }, inr0(t.they_owe)),
+        el("div", { class: "tiny faint" }, t.they_owe ? "Counts once it arrives" : "Nothing pending")),
+      el("div", null, el("div", { class: "tiny faint" }, "You owe"), el("div", { class: "v num" }, inr0(t.i_owe)),
+        el("div", { class: "tiny faint" }, t.i_owe ? "Already kept aside" : "All clear")));
 
-    const actions = el("div", { class: "chip-row" },
-      el("button", { class: "btn primary", onclick: pickPayment }, icon("split"), "Split a payment"),
-      el("button", { class: "btn", onclick: () => friendModal("they_owe") }, icon("plus"), "Someone owes me"),
-      el("button", { class: "btn ghost", onclick: () => friendModal("i_owe") }, "I owe someone"));
+    const actions = el("div", { class: "grid g-2 keep", style: { gap: "10px" } },
+      el("button", { class: "btn primary lg", onclick: pickPayment }, icon("split"), "Split a bill"),
+      el("button", { class: "btn lg", onclick: () => friendModal("they_owe") }, icon("plus"), "Add"));
 
     const asks = d.suggestions.map((s) => el("div", { class: "notice info", style: { alignItems: "flex-start" } }, icon("info"),
       el("div", { style: { flex: 1 } },
@@ -97,11 +94,11 @@
     const open = el("section", null, el("div", { class: "section-title" }, el("span", null, "Still open")),
       el("div", { class: "card", style: { padding: "4px 20px" } }, d.open.length
         ? el("div", { class: "tx-list" }, d.open.map(row))
-        : el("div", { class: "empty" }, el("b", null, "All square"), "Paid for dinner or a cab? Split it here, or from the payment in Activity.")));
+        : el("div", { class: "empty" }, el("b", null, "All square"), "Paid for dinner or a cab? Split it.")));
 
     const upi = d.upi_id ? null : el("div", { class: "card row", style: { gap: "12px", alignItems: "center", flexWrap: "wrap" } },
       el("div", { style: { flex: 1, minWidth: "200px" } }, el("h3", null, "Add your UPI ID"),
-        el("div", { class: "small muted" }, "Reminders you send will include it, so friends can pay in one go.")),
+        el("div", { class: "small muted" }, "So friends can pay you back in one tap.")),
       el("a", { class: "btn sm", href: "/app/settings#upi" }, "Add"));
 
     const done = d.settled.length ? el("details", { class: "card" },

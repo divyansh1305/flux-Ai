@@ -247,13 +247,13 @@
   }
 
   // ─── Init ─────────────────────────────────────────────────
-  function init(u) {
+  function init(u, opts) {
     user = u;
     lang = (u && u.voice_lang) || "en-IN";
-    fab = el("button", { class: "mic-fab", type: "button", "aria-label": "Talk to Kitna", onclick: () => open(true) }, icon("mic"));
-    const hint = el("div", { class: "mic-hint" }, SR ? "Ask Kitna anything" : "Type to Kitna");
-    document.body.append(fab, hint);
-    setTimeout(() => hint.remove(), 6000);
+    if (!opts || opts.fab !== false) {  // the floating mic is off by default now; Ask has its own mic button
+      fab = el("button", { class: "mic-fab", type: "button", "aria-label": "Talk to Kitna", onclick: () => open(true) }, icon("mic"));
+      document.body.append(fab);
+    }
     document.addEventListener("keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); overlay ? close() : open(true); }
       else if (e.key === "Escape" && overlay) close();

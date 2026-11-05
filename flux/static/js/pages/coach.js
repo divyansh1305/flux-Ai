@@ -5,7 +5,9 @@
   async function render(main) {
     const top = el("div", { class: "stack" });
     const log = el("div", { class: "coach-log", "aria-live": "polite" });
-    const q = el("input", { class: "input", maxlength: "500", placeholder: "Ask anything: “Why am I broke this month?”", "aria-label": "Ask the coach" });
+    const q = el("input", { class: "input", maxlength: "500", placeholder: "Ask about your money", "aria-label": "Ask Kitna" });
+    const micBtn = window.FluxVoice && window.FluxVoice.supported
+      ? el("button", { class: "btn", type: "button", "aria-label": "Speak", title: "Speak (English or Hindi)", onclick: () => window.FluxVoice.open(true) }, icon("mic")) : null;
     const askBtn = el("button", { class: "btn primary", type: "submit", "aria-label": "Ask" }, icon("send"));
     const ask = async (text) => {
       if (!text) return;
@@ -21,15 +23,15 @@
       askBtn.disabled = false;
       log.scrollTop = log.scrollHeight;
     };
-    const form = el("form", { class: "row", style: { marginTop: "12px" }, onsubmit: (e) => { e.preventDefault(); const t = q.value.trim(); q.value = ""; ask(t); } }, q, askBtn);
+    const form = el("form", { class: "row", style: { marginTop: "12px" }, onsubmit: (e) => { e.preventDefault(); const t = q.value.trim(); q.value = ""; ask(t); } }, q, micBtn, askBtn);
     const starters = ["How am I doing this month?", "Where can I cut spending?", "How long until I reach my goal?", "Is mahine ka summary do"];
     const coachCard = el("div", { class: "card" },
-      el("div", { class: "card-head" }, el("h2", null, "Ask your coach"), el("span", { class: "tiny faint", id: "ai-state" })),
-      el("p", { class: "small muted", style: { marginBottom: "12px" } }, "Answers use your real numbers. English, Hindi or Hinglish. Not financial advice."),
-      log, el("div", { class: "chips", style: { marginTop: "10px" } }, starters.map((s) => el("button", { class: "chip", type: "button", onclick: () => ask(s) }, s))), form);
+      el("div", { class: "card-head" }, el("h2", null, "Ask anything"), el("span", { class: "tiny faint", id: "ai-state" })),
+      log, el("div", { class: "chips", style: { marginTop: "10px" } }, starters.map((s) => el("button", { class: "chip", type: "button", onclick: () => ask(s) }, s))), form,
+      el("p", { class: "tiny faint", style: { marginTop: "8px" } }, "Not financial advice."));
 
-    main.replaceChildren(pageHead("Coach", "See how you're doing, and ask anything about your money.",
-      el("button", { class: "btn", onclick: () => download("/api/reports/monthly.pdf", "kitna-monthly-report.pdf").catch(err) }, icon("download"), "Monthly report (PDF)")),
+    main.replaceChildren(pageHead("Ask Kitna", "Uses your real numbers. English, Hindi or Hinglish. Not financial advice.",
+      el("button", { class: "btn", title: "Monthly report (PDF)", onclick: () => download("/api/reports/monthly.pdf", "kitna-monthly-report.pdf").catch(err) }, icon("download"), "Report")),
       el("div", { class: "coach-layout" }, coachCard, top));
 
     async function load() { await window.Kitna.live("/api/insights", (ins) => paint(ins, window.Kitna.config)); }

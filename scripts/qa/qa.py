@@ -102,7 +102,7 @@ def main():
         api("POST", "/api/goals", {"title": "New laptop", "target": 60000, "deadline": (today + dt.timedelta(days=200)).isoformat()})
         ctx.close()
 
-        screens = ["/", "/login", "/privacy", "/app", "/app/transactions", "/app/budgets", "/app/goals", "/app/plans", "/app/friends",
+        screens = ["/", "/login", "/privacy", "/app", "/app/transactions", "/app/budgets", "/app/goals", "/app/plans", "/app/friends", "/app/pay",
                    "/app/coach", "/app/settings", "/app/import", "/app/share", "/app/privacy-center", "/app/admin", "/no-such-page"]
         for scheme in ("light", "dark"):
             for mobile in (True, False):

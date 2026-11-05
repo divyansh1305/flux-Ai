@@ -87,18 +87,20 @@
       else if (st.key === "plan") planModal();
       else if (st.href) location.href = st.href;
     };
-    const card = el("div", { class: "card" },
-      el("div", { class: "row between", style: { marginBottom: "6px" } },
-        el("div", null, el("h2", null, "Make today's number yours"), el("div", { class: "progress-text", style: { marginTop: "2px" } }, `${s.done} of ${s.total} done`)),
-        el("button", { class: "btn sm ghost", onclick: () => { try { localStorage.setItem("flux_setup_hidden", String(s.done)); } catch (e) { /* ignore */ } card.remove(); } }, "Later")),
-      el("div", { class: "bar brand", style: { margin: "10px 0 6px" } }, el("i", { style: { width: (s.done / s.total) * 100 + "%" } })),
-      el("div", { class: "setup" }, s.steps.map((st) => el("div", {
+    const steps = el("div", { class: "setup", hidden: true }, s.steps.map((st) => el("div", {
         class: "setup-step" + (st.done ? " done" : ""), role: clickable(st) ? "button" : null, tabindex: clickable(st) ? "0" : null,
         style: { cursor: clickable(st) ? "pointer" : "default" },
         onclick: () => run(st), onkeydown: (e) => { if (e.key === "Enter") run(st); } },
         el("span", { class: "tick" }, icon("check")),
         el("div", { class: "s-main" }, el("div", { class: "s-title" }, st.title), st.done ? null : el("div", { class: "s-sub" }, st.sub)),
-        clickable(st) ? el("span", { class: "faint", style: { display: "grid" } }, icon("arrow")) : null))));
+        clickable(st) ? el("span", { class: "faint", style: { display: "grid" } }, icon("chev")) : null)));
+    const head = el("button", { type: "button", class: "setup-head", "aria-expanded": "false", onclick: () => {
+        steps.hidden = !steps.hidden; head.setAttribute("aria-expanded", String(!steps.hidden)); } },
+      el("span", { class: "ring", style: { "--p": Math.round((s.done / s.total) * 100) } }, el("span", null, `${s.done}/${s.total}`)),
+      el("span", { class: "s-main" }, el("b", null, "Finish setting up"), el("span", { class: "tiny faint" }, "So today's number is exactly right")),
+      icon("chev"));
+    steps.appendChild(el("button", { class: "btn sm ghost", style: { margin: "6px 0 8px" }, onclick: () => { try { localStorage.setItem("flux_setup_hidden", String(s.done)); } catch (e) { /* ignore */ } card.remove(); } }, "Hide for now"));
+    const card = el("div", { class: "card setup-card" }, head, steps);
     return card;
   }
 
@@ -145,32 +147,32 @@
     const safe = Math.max(0, Math.floor(sf.left_today));
 
     // ── Hero: one number that answers "can I spend today?", with the maths one tap away
-    const why = el("div", { hidden: true, style: { marginTop: "12px" } },
-      ...sf.lines.map((l) => el("div", { class: "row between small", style: { padding: "4px 0" } },
+    const why = el("div", { class: "why", hidden: true },
+      ...sf.lines.map((l) => el("div", { class: "row between small" },
         el("span", { class: "muted" }, l.label), el("span", { class: "num" }, (l.amount < 0 ? "− " : "") + inr0(Math.abs(l.amount))))),
-      el("div", { class: "row between small", style: { padding: "6px 0", borderTop: "1px solid var(--line)", marginTop: "4px" } },
+      el("div", { class: "row between small why-total" },
         el("span", null, `÷ ${sf.days_left} day${sf.days_left === 1 ? "" : "s"} until ${shortDate(sf.until)}`), el("b", { class: "num" }, inr0(sf.daily) + " a day")),
-      sf.spent_today ? el("div", { class: "row between small", style: { padding: "4px 0" } }, el("span", { class: "muted" }, "Spent today"), el("span", { class: "num" }, "− " + inr0(sf.spent_today))) : null,
-      el("p", { class: "tiny faint", style: { marginTop: "6px" } }, "Whatever you don't spend today stays in the pool, so tomorrow's number goes up."));
-    const whyBtn = el("button", { class: "link", type: "button", style: { background: "none", border: 0, padding: "10px 0", margin: "-10px 0", cursor: "pointer", font: "inherit" },
-      onclick: () => { why.hidden = !why.hidden; whyBtn.textContent = why.hidden ? "How is this worked out?" : "Hide the maths"; } }, "How is this worked out?");
+      sf.spent_today ? el("div", { class: "row between small" }, el("span", { class: "muted" }, "Spent today"), el("span", { class: "num" }, "− " + inr0(sf.spent_today))) : null,
+      sf.maybe_extra_daily ? el("div", { class: "tiny faint" }, `If the money you're unsure about arrives: about ${inr0(sf.maybe_extra_daily)} more a day.`) : null,
+      sf.owed_to_you ? el("a", { href: "/app/friends", class: "tiny faint" }, `Friends owe you ${inr0(sf.owed_to_you)}. It counts once it arrives.`) : null,
+      el("div", { class: "tiny faint" }, "Whatever you don't spend today is added to tomorrow."));
+    const whyBtn = el("button", { class: "why-btn", type: "button", "aria-expanded": "false", title: "How is this worked out?",
+      onclick: () => { why.hidden = !why.hidden; whyBtn.setAttribute("aria-expanded", String(!why.hidden)); } }, icon("info"));
 
-    const heroText = sf.status === "ok"
-      ? `Until ${shortDate(sf.until)}, ${sf.until_label}.` + (sf.bills_due || sf.plans_reserved ? " Bills and plans are already kept aside." : "")
-      : sf.message;
+    const heroText = sf.status === "ok" ? `Until ${shortDate(sf.until)}. Bills and plans are already kept aside.` : sf.message;
+    const quick = (ic, label, fn) => el("button", { class: "quick", type: "button", onclick: fn }, el("span", { class: "quick-ic" }, icon(ic)), label);
     const hero = el("section", { class: "hero-card" },
-      el("div", { class: "eyebrow" }, greeting(user.name)),
-      el("div", { class: "hero-label", style: { marginTop: "14px" } }, sf.confirmed || sf.status === "setup" ? "Safe to spend today" : "Safe to spend today (about)"),
-      el("div", { class: "hero" }, el("div", { class: "big" + (sf.status === "ok" ? "" : " amber"), style: { marginTop: "4px" } },
-        sf.status === "setup" ? "—" : inr0(safe))),
-      el("div", { class: "muted", style: { fontSize: "15px" } }, heroText),
-      sf.maybe_extra_daily ? el("div", { class: "small muted", style: { marginTop: "6px" } }, `If the money you're not sure about arrives: about ${inr0(sf.maybe_extra_daily)} more a day.`) : null,
-      sf.owed_to_you ? el("a", { href: "/app/friends", class: "small muted", style: { display: "block", marginTop: "6px" } },
-        `Friends owe you ${inr0(sf.owed_to_you)}. Counted once it arrives →`) : null,
-      sf.status === "setup" ? null : el("div", { style: { marginTop: "10px" } }, whyBtn, why),
-      el("div", { class: "hero-actions" },
-        el("button", { class: "btn primary", onclick: () => addTransactionModal("expense") }, icon("plus"), "Add expense"),
-        el("button", { class: "btn", onclick: () => planModal() }, icon("calendar"), "Add a plan")));
+      el("div", { class: "hero-top" },
+        el("div", { class: "hero-label" }, sf.confirmed || sf.status === "setup" ? "Safe to spend today" : "Safe to spend today, about"),
+        sf.status === "setup" ? null : whyBtn),
+      el("div", { class: "hero-num" + (sf.status === "ok" ? "" : " amber") }, sf.status === "setup" ? "—" : inr0(safe)),
+      el("div", { class: "hero-sub" }, heroText),
+      why,
+      el("div", { class: "quick-row" },
+        quick("qr", "Scan & Pay", () => { location.href = "/app/pay"; }),
+        quick("plus", "Add", () => addTransactionModal("expense")),
+        quick("split", "Split", () => window.Kitna.splitModal()),
+        quick("calendar", "Plan", () => planModal())));
 
     // ── Things that need the user (only when real)
     const g = d.gmail || {};
@@ -206,32 +208,21 @@
         ? el("div", { class: "tx-list" }, upcoming.map((u) => el("div", { class: "tx" }, avatar(u.name),
             el("div", { class: "tx-main" }, el("div", { class: "tx-title" }, u.name), el("div", { class: "tx-sub" }, `${u.sub} · ${dateFmt(u.date)}`)),
             el("div", { class: "tx-amt" + (u.income ? " green" : "") }, (u.income ? "+" : "") + inr0(u.amount)))))
-        : el("div", { class: "empty" }, el("b", null, "Nothing planned yet"), "Going out on Friday? Add it as a plan and Kitna keeps the money aside.")));
+        : el("div", { class: "empty" }, el("b", null, "Nothing coming up"), "Add a plan and Kitna keeps the money aside.")));
 
     const recent = section("Recent", el("a", { class: "link", href: "/app/transactions" }, "See all"),
       el("div", { class: "card", style: { padding: "4px 20px" } }, d.recent.length
         ? el("div", { class: "tx-list" }, d.recent.map((t) => txRow(t)))
-        : el("div", { class: "empty" }, el("b", null, "No payments yet"), "Connect your payments in Settings, or tap Add expense.")));
+        : el("div", { class: "empty" }, el("b", null, "No payments yet"), "Scan & Pay, or tap Add.")));
 
     const month = section("This month", el("a", { class: "link", href: "/app/coach" }, "Details"),
-      el("div", { class: "card", style: { padding: "6px 20px" } },
-        el("div", { class: "kv" }, el("div", { class: "k" }, "Spent", el("small", null, m.expenses ? `About ${inr0(d.forecast.daily_average)} a day` : "Nothing yet this month")), el("div", { class: "v" }, inr0(m.expenses))),
-        el("div", { class: "kv" }, el("div", { class: "k" }, "Money in"), el("div", { class: "v green" }, inr0(m.income))),
-        m.saved ? el("div", { class: "kv" }, el("div", { class: "k" }, "Set aside for goals", el("small", null, "Still in your bank, not counted as spendable")), el("div", { class: "v" }, inr0(m.saved))) : null));
+      el("div", { class: "card month-card" },
+        el("div", null, el("div", { class: "tiny faint" }, "Spent"), el("div", { class: "month-v num" }, inr0(m.expenses)),
+          m.expenses ? el("div", { class: "tiny faint" }, `about ${inr0(d.forecast.daily_average)} a day`) : null),
+        el("div", null, el("div", { class: "tiny faint" }, "Money in"), el("div", { class: "month-v num green" }, inr0(m.income))),
+        m.saved ? el("div", null, el("div", { class: "tiny faint" }, "Set aside"), el("div", { class: "month-v num" }, inr0(m.saved))) : null));
 
-    const cats = m.by_category.slice(0, 5);
-    const spending = cats.length || d.series.some((x) => x.expense) ? section("Where your money went", null,
-      el("div", { class: "card" },
-        d.series.some((x) => x.expense) ? el("div", null, el("div", { class: "tiny faint", style: { marginBottom: "6px" } }, `Last 30 days · about ${inr0(d.forecast.daily_average)} a day`), C.bars(d.series)) : null,
-        cats.length ? el("div", { class: "row wrap", style: { gap: "22px", alignItems: "center", marginTop: "16px" } },
-          C.donut(cats, CAT_COLORS, { size: 120, label: inr0(m.expenses) }),
-          el("div", { class: "legend", style: { flex: 1, minWidth: "180px" } }, cats.map((c, i) =>
-            el("div", { class: "row between" }, el("span", null, el("span", { class: "dot", style: { background: CAT_COLORS[i] } }), c.category),
-              el("span", { class: "num muted" }, inr0(c.amount)))))) : null)) : null;
-
-    const tell = el("p", { class: "small muted", style: { textAlign: "center", margin: "8px 0 0" } }, "Something not right? ",
-      el("button", { class: "link", type: "button", style: { background: "none", border: 0, cursor: "pointer", font: "inherit" }, onclick: () => window.Kitna.feedbackModal() }, "Tell us"));
-    return [hero, reconnect, ...checks, ...asks, weekSlot, remindSlot, setupCard(d.setup), bankCard, drift, coming, recent, month, spending, tell];
+    return [el("div", { class: "greet" }, greeting(user.name)), hero, reconnect, ...checks, ...asks, weekSlot, remindSlot, setupCard(d.setup), bankCard, drift, coming, recent, month];
   }
 
   document.addEventListener("DOMContentLoaded", () => window.Kitna.boot(render));
