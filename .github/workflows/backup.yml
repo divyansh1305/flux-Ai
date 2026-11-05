@@ -1,16 +1,18 @@
-# Off-site backup: every day, download the newest database backup from your Render app,
-# encrypt it, and keep it as a private workflow artifact for 30 days.
+# Off-site backup: every day, download the newest database backup from the live site, encrypt it with
+# BACKUP_PASSPHRASE, and keep it as a workflow artifact for 30 days. Encrypted, because artifacts of a public repo can
+# be downloaded by anyone signed in to GitHub. Without the passphrase the file is useless.
 #
-# One-time setup (GitHub repo → Settings → Secrets and variables → Actions → New secret):
-#   FLUX_URL           https://<your-app>.onrender.com
-#   BACKUP_TOKEN       same value as BACKUP_TOKEN in Render (Render → Environment → reveal)
-#   BACKUP_PASSPHRASE  a long random password you keep in your password manager
+# One-time setup (GitHub repo → Settings → Secrets and variables → Actions → New repository secret):
+#   FLUX_URL           https://kitna.pythonanywhere.com   (or https://fluxai.pythonanywhere.com)
+#   BACKUP_TOKEN       the same value as BACKUP_TOKEN in the site's .env
+#   BACKUP_PASSPHRASE  a long random password; keep a copy somewhere safe (password manager)
+# and in the site's .env: BACKUP_TOKEN=... and BACKUP_DIR=/home/<you>/flux-ai/instance/backups, then Reload.
 #
 # Restore: download the artifact → gpg -d flux-backup.db.gpg > flux.db (asks for the passphrase)
 name: off-site backup
 on:
   schedule:
-    - cron: "17 21 * * *"   # 02:47 IST daily
+    - cron: "17 4 * * *"   # 09:47 IST daily, an hour after the site's 03:15 UTC daily task makes a fresh backup
   workflow_dispatch: {}
 jobs:
   backup:

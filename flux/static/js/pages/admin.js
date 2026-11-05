@@ -22,10 +22,21 @@
       } }, "Update daily totals")), box);
 
     async function load() {
-      const d = await api("/api/admin/overview");
+      const [d, fb] = await Promise.all([api("/api/admin/overview"), api("/api/admin/feedback").catch(() => [])]);
+      const KIND = { broken: "Broken", confusing: "Confusing", idea: "Idea", love: "Love it" };
+      const fbCard = section(`Feedback (${fb.filter((f) => f.status === "new").length} new)`, "What people told you from inside the app. Their own words.",
+        fb.length ? el("div", { class: "tx-list" }, fb.slice(0, 50).map((f) => el("div", { class: "tx-item" },
+          el("div", { class: "tx", style: { alignItems: "flex-start" } },
+            el("div", { class: "tx-main" },
+              el("div", { class: "tx-title wrap" }, `${KIND[f.kind]} · ${f.screen || "app"}`),
+              el("div", { class: "small", style: { whiteSpace: "pre-wrap", marginTop: "4px" } }, f.message),
+              el("div", { class: "tx-sub" }, `${f.email} · ${f.created_at.slice(0, 16)}`)),
+            f.status === "new" ? el("button", { class: "btn sm ghost", onclick: async (e) => {
+              try { await api(`/api/admin/feedback/${f.id}/read`, { method: "POST" }); e.target.remove(); } catch (x) { err(x); }
+            } }, "Mark read") : el("span", { class: "tiny faint" }, "read"))))) : el("p", { class: "small muted" }, "No feedback yet."));
       const t = d.totals, r = d.retention;
       const maxDaily = Math.max(1, ...d.daily.map((x) => Math.max(x.signups, x.active_users)));
-      box.replaceChildren(
+      box.replaceChildren(fbCard,
         el("div", { class: "grid g-3" },
           stat("People signed up", t.users, `${t.setup_done} finished setup`),
           stat("Active in the last 7 days", t.active_7d, `${t.active_30d} in the last 30 days`),

@@ -1,6 +1,8 @@
 # Builds the Kitna Android companion app on GitHub's servers and publishes it as a download:
 #   https://github.com/<owner>/<repo>/releases/download/android-latest/kitna-android.apk
-# It is a debug-signed build, which installs from a link (sideload). For Google Play, add a release key later.
+# Signed with the Kitna release key when the repo has these Actions secrets (Settings → Secrets → Actions):
+#   ANDROID_KEYSTORE_B64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+# Without them it falls back to a debug-signed build. Either way it installs from a link (sideload).
 name: android
 on:
   push:
@@ -24,10 +26,25 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.10.2"
-      - name: Build
-        run: gradle -p android assembleDebug --no-daemon
-      - name: Rename
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk kitna-android.apk
+      - name: Build (signed release if the key is set up, else debug)
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KITNA_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KITNA_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KITNA_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/kitna.jks"
+            export KITNA_KEYSTORE="$RUNNER_TEMP/kitna.jks"
+            gradle -p android assembleRelease --no-daemon
+            cp android/app/build/outputs/apk/release/app-release.apk kitna-android.apk
+            rm -f "$RUNNER_TEMP/kitna.jks"
+            echo "Signed release build."
+          else
+            gradle -p android assembleDebug --no-daemon
+            cp android/app/build/outputs/apk/debug/app-debug.apk kitna-android.apk
+            echo "No signing key set up: debug build."
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: kitna-android

@@ -281,3 +281,15 @@ CREATE TABLE IF NOT EXISTS owed (
     created_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_owed_user_open ON owed(user_id, settled_at);
+
+-- What people tell us from inside the app ("Send feedback"). Their own words, kept with the account (deleted with it).
+CREATE TABLE IF NOT EXISTS feedback (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind            TEXT NOT NULL CHECK (kind IN ('broken','confusing','idea','love')),
+    message         TEXT NOT NULL,
+    screen          TEXT NOT NULL DEFAULT '',
+    status          TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new','read')),
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_feedback_time ON feedback(created_at);

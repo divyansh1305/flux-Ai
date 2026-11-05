@@ -229,7 +229,9 @@
             el("div", { class: "row between" }, el("span", null, el("span", { class: "dot", style: { background: CAT_COLORS[i] } }), c.category),
               el("span", { class: "num muted" }, inr0(c.amount)))))) : null)) : null;
 
-    return [hero, reconnect, ...checks, ...asks, weekSlot, remindSlot, setupCard(d.setup), bankCard, drift, coming, recent, month, spending];
+    const tell = el("p", { class: "small muted", style: { textAlign: "center", margin: "8px 0 0" } }, "Something not right? ",
+      el("button", { class: "link", type: "button", style: { background: "none", border: 0, cursor: "pointer", font: "inherit" }, onclick: () => window.Kitna.feedbackModal() }, "Tell us"));
+    return [hero, reconnect, ...checks, ...asks, weekSlot, remindSlot, setupCard(d.setup), bankCard, drift, coming, recent, month, spending, tell];
   }
 
   document.addEventListener("DOMContentLoaded", () => window.Kitna.boot(render));

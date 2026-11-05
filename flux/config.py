@@ -67,6 +67,9 @@ class Config:
         self.ANDROID_APK_URL = os.environ.get(
             "ANDROID_APK_URL", "https://github.com/divyansh1305/flux-Ai/releases/download/android-latest/kitna-android.apk")
 
+        # Shown on the privacy and terms pages as the place for questions and complaints (DPDP grievance contact).
+        self.CONTACT_EMAIL = os.environ.get("CONTACT_EMAIL", "")
+
         # Who may open the private numbers page (/app/admin): comma-separated sign-in emails.
         self.ADMIN_EMAILS = os.environ.get("ADMIN_EMAILS", "")
 

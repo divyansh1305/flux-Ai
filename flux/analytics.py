@@ -42,6 +42,7 @@ EVENTS = {
     "weekly_opened": {""},
     "lang_set": {"en", "hinglish"},
     "statement_import": {"csv", "pdf"},
+    "feedback_sent": {"broken", "confusing", "idea", "love"},
     "error_shown": {"home", "activity", "plans", "ask", "goals", "budgets", "settings", "import", "share",
                     "privacy-center", "onboarding", "admin", "friends", "other"},
 }

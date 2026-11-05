@@ -12,7 +12,7 @@ from .security import (ApiError, apply_security_headers, check_csrf, current_use
 
 PAGES_DIR = os.path.join(os.path.dirname(__file__), "pages")
 
-PUBLIC_PAGES = {"/": "landing.html", "/login": "login.html", "/privacy": "privacy.html"}
+PUBLIC_PAGES = {"/": "landing.html", "/login": "login.html", "/privacy": "privacy.html", "/terms": "terms.html"}
 APP_PAGES = {
     "/onboarding": "onboarding.html",
     "/app": "dashboard.html",
@@ -96,6 +96,10 @@ def create_app(overrides=None):
         html = page_html(name)
         if "__ORIGIN__" in html:  # share previews (WhatsApp, LinkedIn) need full image addresses
             html = html.replace("__ORIGIN__", request.host_url.rstrip("/"))
+        if "__CONTACT__" in html:  # grievance / support address on the legal pages
+            contact = (app.config.get("CONTACT_EMAIL") or app.config.get("MAIL_SENDER")
+                       or (app.config.get("ADMIN_EMAILS") or "").split(",")[0].strip())
+            html = html.replace("__CONTACT__", contact or "the address your sign-in codes come from")
         resp = app.response_class(html, mimetype="text/html")
         resp.headers["Cache-Control"] = "no-cache"
         return resp

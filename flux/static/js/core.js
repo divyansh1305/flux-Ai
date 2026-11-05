@@ -187,7 +187,10 @@
     setTimeout(() => t.remove(), action ? 7000 : 4000);
   }
   const ok = (m, a) => toast(m, "ok", a);
-  const err = (e) => { toast(e && e.message ? e.message : String(e), "err"); track("error_shown"); };
+  const err = (e) => {
+    toast(e && e.message ? e.message : String(e), "err", USER ? { label: "Tell us", run: () => feedbackModal("broken") } : undefined);
+    track("error_shown");
+  };
 
   // Usage counting: which screen was opened, and that an error was shown. Never amounts, merchants or text.
   const SCREENS = { "/app": "home", "/app/transactions": "activity", "/app/plans": "plans", "/app/coach": "ask",
@@ -559,6 +562,26 @@
     try { const r = await api("/api/friends", { method: "POST", body: v }); ok("Saved."); cacheDrop("/api/friends"); refresh(); return r; } catch (e) { err(e); return null; }
   }
 
+  // ─── Feedback: straight to the people who build Kitna ─────
+  async function feedbackModal(kind = "") {
+    const KINDS = [["broken", "Something's broken"], ["confusing", "Confusing"], ["idea", "An idea"], ["love", "I love it"]];
+    let pick = kind;
+    const chips = el("div", { class: "chips" });
+    const paint = () => chips.replaceChildren(...KINDS.map(([k, label]) =>
+      el("button", { type: "button", class: "chip" + (pick === k ? " on" : ""), "aria-pressed": pick === k ? "true" : "false", onclick: () => { pick = k; paint(); } }, label)));
+    paint();
+    const msg = el("textarea", { class: "input", rows: "4", maxlength: "1500", required: true, placeholder: "What happened, or what would make Kitna better?", "aria-label": "Your feedback" });
+    const v = await modal("Tell us", el("div", { class: "form" }, chips, msg,
+      el("p", { class: "tiny faint" }, "Goes straight to the people who build Kitna. Please don't include card numbers, PINs or passwords.")), [
+      { label: "Cancel", value: null, cls: "ghost" },
+      { label: "Send", submit: true, cls: "primary", value: () => ({ kind: pick, message: msg.value }) },
+    ]);
+    if (!v) return;
+    if (!v.kind) { err(new Error("Choose what kind of feedback this is.")); return feedbackModal(); }
+    const screen = SCREENS[location.pathname.replace(/\/$/, "") || "/app"] || "other";
+    try { await api("/api/feedback", { method: "POST", body: { ...v, screen } }); ok("Thank you. We read every message."); } catch (e) { err(e); }
+  }
+
   // ─── Reminders on this phone (Web Push) ───────────────────
   const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const standalone = () => window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
@@ -616,7 +639,7 @@
 
   window.Kitna = {
     el, icon, api, download, toast, ok, err, modal, confirmBox, inr, inr0, dateFmt, todayISO, CAT_EMOJI, CAT_COLORS, avatar,
-    boot, pageHead, txRow, deleteTx, editTx, addTransactionModal, planModal, splitModal, friendModal, push: pushApi, live, prefetch, cacheClear, refresh, onRefresh, logout, meta,
+    boot, pageHead, txRow, deleteTx, editTx, addTransactionModal, planModal, splitModal, friendModal, feedbackModal, push: pushApi, live, prefetch, cacheClear, refresh, onRefresh, logout, meta,
     get user() { return USER; }, set user(u) { USER = u; }, get config() { return CONFIG; },
   };
 })();

@@ -73,6 +73,8 @@
       el("p", { class: "small muted", style: { margin: "6px 0 14px" } }, "You own your data. See exactly what Kitna has, download it, or delete your account permanently."),
       el("div", { class: "row wrap" },
         el("a", { class: "btn", href: "/app/privacy-center" }, icon("eye"), "What Kitna knows"),
+        el("a", { class: "btn ghost", href: "/privacy" }, "Privacy policy"),
+        el("a", { class: "btn ghost", href: "/terms" }, "Terms"),
         el("button", { class: "btn", onclick: () => download("/api/account/export", "kitna-my-data.json").catch(err) }, icon("download"), "Download my data"),
         el("button", { class: "btn", onclick: logout }, icon("out"), "Sign out"),
         el("button", { class: "btn danger", onclick: async () => {
@@ -303,7 +305,11 @@
           el("span", { class: "tiny faint" }, "Added to the reminder messages you send friends, so they can pay you back easily.")),
         el("div", null, el("button", { class: "btn primary", onclick: () => save({ upi_id: upi.value }, "UPI ID saved.") }, "Save"))));
 
-    main.replaceChildren(pageHead("Settings", null), el("div", { class: "grid g-2" }, remindCard, langCard, autoCard, learnCard, profile, autosave, voiceCard, data));
+    const feedbackCard = el("div", { class: "card" }, el("h2", null, "Help make Kitna better"),
+      el("p", { class: "small muted", style: { margin: "6px 0 14px" } }, "Something broken, confusing, or an idea? It goes straight to the people who build Kitna, and we read every message."),
+      el("div", { class: "row wrap", style: { gap: "8px" } },
+        el("button", { class: "btn primary", onclick: () => window.Kitna.feedbackModal() }, icon("chat"), "Send feedback")));
+    main.replaceChildren(pageHead("Settings", null), el("div", { class: "grid g-2" }, feedbackCard, remindCard, langCard, autoCard, learnCard, profile, autosave, voiceCard, data));
     if (location.hash) { const t = document.querySelector(location.hash); if (t) setTimeout(() => t.scrollIntoView({ behavior: "smooth", block: "start" }), 60); }
   }
 

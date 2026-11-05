@@ -15,10 +15,23 @@ android {
         versionName = "0.4.0"
     }
 
+    // Release signing comes from GitHub secrets (see docs/DEPLOY.md). Without them, only the debug build is made.
+    val keystorePath = System.getenv("KITNA_KEYSTORE")
+    signingConfigs {
+        if (keystorePath != null && file(keystorePath).exists()) {
+            create("release") {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("KITNA_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KITNA_KEY_ALIAS") ?: "kitna"
+                keyPassword = System.getenv("KITNA_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         release {
-            isMinifyEnabled = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+            // The app is tiny and has no libraries to shrink; no minify means no surprises from code stripping.
+            isMinifyEnabled = false
+            signingConfigs.findByName("release")?.let { signingConfig = it }
         }
     }
     compileOptions {

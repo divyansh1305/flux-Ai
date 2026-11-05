@@ -314,7 +314,9 @@ def export_account():
     notes = [{"kind": r["kind"], "title": r["title"], "body": r["body"], "created_at": r["created_at"]}
              for r in db.execute("SELECT * FROM notifications WHERE user_id = ? ORDER BY id", (u["id"],))]
     phones = db.execute("SELECT COUNT(*) FROM push_subscriptions WHERE user_id = ?", (u["id"],)).fetchone()[0]
-    resp = jsonify({"profile": user_json(u), "transactions": tx, "budgets": budgets, "merchant_rules": rules,
+    feedback = [{"kind": r["kind"], "message": r["message"], "screen": r["screen"], "created_at": r["created_at"]}
+                for r in db.execute("SELECT * FROM feedback WHERE user_id = ? ORDER BY id", (u["id"],))]
+    resp = jsonify({"feedback": feedback, "profile": user_json(u), "transactions": tx, "budgets": budgets, "merchant_rules": rules,
                     "masked_samples": samples, "plans": plans, "usage_events": events, "friends": owed,
                     "reminders": notes, "phones_with_reminders": phones,
                     "goals": goals_with_progress(u["id"], include_archived=True)})
@@ -364,6 +366,7 @@ def what_flux_knows():
             "friends": count("SELECT COUNT(*) FROM owed WHERE user_id = ?"),
             "reminders": count("SELECT COUNT(*) FROM notifications WHERE user_id = ?"),
             "phones_with_reminders": count("SELECT COUNT(*) FROM push_subscriptions WHERE user_id = ?"),
+            "feedback": count("SELECT COUNT(*) FROM feedback WHERE user_id = ?"),
         },
         "contribute_samples": bool(u["contribute_samples"]),
     })

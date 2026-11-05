@@ -81,3 +81,26 @@ invite friends so nobody has to switch.
 GitHub → the repo → **Settings → General → Repository name** → `kitna` → Rename. GitHub redirects the old address, so
 `git pull` on PythonAnywhere and the Android download link keep working. Then set
 `ANDROID_APK_URL=https://github.com/divyansh1305/kitna/releases/download/android-latest/kitna-android.apk` in `.env`.
+
+## Off-site backup and the signed Android app (one time, about 5 minutes)
+
+You received `KITNA-SECRETS-to-add.txt` and `kitna-release.jks`. Keep both private.
+
+1. **GitHub → the repo → Settings → Secrets and variables → Actions → New repository secret.** Add the seven secrets
+   from the file: `ANDROID_KEYSTORE_B64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`,
+   `FLUX_URL`, `BACKUP_TOKEN`, `BACKUP_PASSPHRASE`.
+2. **PythonAnywhere `.env`:** add `BACKUP_TOKEN=…` (same value) and
+   `BACKUP_DIR=/home/fluxAI/flux-ai/instance/backups`, then **Reload**.
+3. **GitHub → Actions:** run **off-site backup** (it should go green with an artifact), then **android** (its log
+   should say "Signed release build.").
+
+What you get:
+- Every day at 09:47 IST, GitHub downloads the newest backup, encrypts it with your passphrase and keeps 30 days of
+  copies. If PythonAnywhere ever loses the account, the data survives.
+- Kitna Companion is signed with your own key. Note: the first signed version can't update the old test build in
+  place, so uninstall Kitna Companion once and install it again.
+- Restore: download the artifact, then `gpg -d flux-backup.db.gpg > flux.db` (asks for the passphrase), upload as
+  `~/flux-ai/instance/flux.db`, Reload.
+
+Optional `.env` line: `CONTACT_EMAIL=you@example.com` sets the support/grievance address shown on the privacy and terms
+pages (otherwise the sign-in email sender is used).
