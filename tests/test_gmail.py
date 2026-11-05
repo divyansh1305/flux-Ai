@@ -102,3 +102,24 @@ def test_disconnect_revokes_and_forgets(app, client, user, google):
 
 def test_html_to_text():
     assert gmail.html_to_text("<p>Rs.120&nbsp;debited<br>to <b>X</b></p><style>p{}</style>") == "Rs.120 debited to X"
+
+
+def test_big_backlog_is_read_in_small_batches(app, client, user, google, monkeypatch):
+    many = {f"x{i}": {"subject": "UPI txn", "plain": f"Rs.{100 + i}.00 has been debited from account 1234 to VPA shop{i}@ybl SHOP on 02-11-26. Your UPI transaction reference number is 6307000{i:05d}."} for i in range(95)}
+    monkeypatch.setattr(gmail, "BATCH", 40)
+    original = dict(EMAILS)
+    EMAILS.clear()
+    EMAILS.update(many)
+    try:
+        r = client.get("/gmail/connect")
+        state = r.headers["Location"].split("state=")[1].split("&")[0]
+        client.get(f"/gmail/callback?code=abc&state={state}")           # first batch only: the redirect is quick
+        assert client.get("/api/gmail").json["imported"] == 40
+        r2 = client.post("/api/gmail/sync", json={"force": True}).json
+        assert r2["more"] is True and r2["logged"] == 40
+        r3 = client.post("/api/gmail/sync", json={"force": True}).json
+        assert r3["more"] is False and r3["logged"] == 15
+        assert client.get("/api/gmail").json["imported"] == 95
+    finally:
+        EMAILS.clear()
+        EMAILS.update(original)

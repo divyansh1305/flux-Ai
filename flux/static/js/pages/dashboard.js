@@ -9,11 +9,16 @@
   }
   const shortDate = (iso) => new Date(iso + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 
+  // Start loading Home's numbers in parallel with the sign-in check instead of after it.
+  let early = api("/api/dashboard", { allow401: true }).catch(() => null);
+
   async function render(main, user) {
     const content = el("div", { class: "stack narrow", style: { gap: "18px" } });
     main.replaceChildren(content);
     const load = async () => {
-      const d = await api("/api/dashboard");
+      const first = early ? await early : null;
+      early = null;
+      const d = first && first.safe ? first : await api("/api/dashboard");
       content.replaceChildren(...build(d, user).filter(Boolean));
     };
     onRefresh(load);
@@ -25,10 +30,19 @@
     }
     // Quietly check Gmail for new bank alerts (the server checks at most every 10 minutes).
     if ((window.Flux.config.features || {}).gmail) {
-      api("/api/gmail/sync", { method: "POST", body: {} }).then((r) => {
-        if (r && (r.logged || r.needs_reconnect)) load();
-        if (r && r.logged) window.Flux.ok(`${r.logged} new payment${r.logged === 1 ? "" : "s"} added from Gmail.`);
-      }).catch(() => {});
+      // Small batches, one after another, so the page never waits on Gmail and nothing else gets stuck behind it.
+      (async () => {
+        let added = 0;
+        for (let i = 0; i < 6; i++) {
+          let r;
+          try { r = await api("/api/gmail/sync", { method: "POST", body: { force: i > 0 } }); } catch (e) { return; }
+          if (!r || !r.connected) return;
+          added += r.logged || 0;
+          if (r.needs_reconnect) { load(); return; }
+          if (!r.more) break;
+        }
+        if (added) { window.Flux.ok(`${added} new payment${added === 1 ? "" : "s"} added from Gmail.`); load(); }
+      })();
     }
   }
 

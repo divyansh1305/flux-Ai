@@ -56,12 +56,16 @@
         } }, icon("trash"))));
   }
 
+  let early = api("/api/plans", { allow401: true }).catch(() => null);
+
   async function render(main) {
     const box = el("div", { class: "stack narrow" });
     main.replaceChildren(pageHead("Plans", "Tell Flux what's coming, so today's number is real. Tap a plan to edit it.",
       el("button", { class: "btn primary", onclick: () => planModal() }, icon("plus"), "Add a plan")), box);
     const load = async () => {
-      const [plans, me] = await Promise.all([api("/api/plans"), api("/api/auth/me")]);
+      const pre = early ? await early : null;
+      early = null;
+      const [plans, me] = await Promise.all([Array.isArray(pre) ? pre : api("/api/plans"), api("/api/auth/me")]);
       const today = window.Flux.todayISO();
       const open = plans.filter((p) => !p.done && p.date >= today);
       const old = plans.filter((p) => p.done || p.date < today);

@@ -1,6 +1,9 @@
 (function () {
   const { el, icon, api, download, err, pageHead, txRow, deleteTx, addTransactionModal, onRefresh, meta } = window.Flux;
 
+  // First page of Activity starts loading in parallel with the sign-in check.
+  let early = api("/api/transactions?page=1&size=30", { allow401: true }).catch(() => null);
+
   async function render(main) {
     const m = await meta();
     const state = { page: 1, kind: "", category: "", q: "", from: "", to: "" };
@@ -30,7 +33,10 @@
     };
     async function load(append) {
       try {
-        const r = await api("/api/transactions?" + qs({ size: 30 }));
+        const query = qs({ size: 30 });
+        const pre = early && query === "page=1&size=30" ? await early : null;
+        early = null;
+        const r = pre && pre.items ? pre : await api("/api/transactions?" + query);
         const rows = r.items.map((x) => txRow(x, deleteTx));
         if (append) list.append(...rows); else list.replaceChildren(...rows);
         if (!append && !r.items.length) list.replaceChildren(el("div", { class: "empty" }, el("b", null, "No transactions found"), "Try different filters, or add one."));

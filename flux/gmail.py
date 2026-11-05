@@ -34,6 +34,10 @@ QUERY = ('(debited OR credited OR "Sent Rs" OR "Received Rs" OR "UPI" OR "spent 
          '-category:promotions -category:social -category:forums')
 FIRST_SYNC_DAYS = 30
 MAX_PER_SYNC = 150
+# Emails read per sync call, fetched in parallel. Keeps each call to a second or two, so the one web worker
+# on a small server is never stuck for half a minute (the rest are picked up by the next call).
+BATCH = 40
+PARALLEL = 8
 _http = requests.Session()
 
 
@@ -201,10 +205,25 @@ def sync(user, force=False, min_minutes=10):
             raise GmailError(f"Gmail search failed ({r.status_code}).")
         ids = [m["id"] for m in r.json().get("messages", [])]
         seen = {row["msg_id"] for row in db.execute("SELECT msg_id FROM gmail_seen WHERE user_id = ?", (user["id"],))}
+        todo = list(reversed([i for i in ids if i not in seen]))      # oldest first
+        batch, more = todo[:BATCH], len(todo) > BATCH
+
+        def fetch(mid):
+            try:
+                return mid, _http.get(f"{API}/messages/{mid}", timeout=20, headers={"Authorization": f"Bearer {access}"},
+                                      params={"format": "full"})
+            except requests.RequestException:
+                return mid, None
+
+        from concurrent.futures import ThreadPoolExecutor
+
+        with ThreadPoolExecutor(max_workers=PARALLEL) as pool:
+            fetched = list(pool.map(fetch, batch))                    # network in parallel, database in order
         logged = skipped = 0
-        for mid in reversed([i for i in ids if i not in seen]):      # oldest first
-            m = _http.get(f"{API}/messages/{mid}", timeout=20, headers={"Authorization": f"Bearer {access}"},
-                          params={"format": "full"})
+        for mid, m in fetched:
+            if m is None:  # network hiccup: leave it unseen so the next call retries it
+                more = True
+                continue
             db.execute("INSERT OR IGNORE INTO gmail_seen (user_id, msg_id) VALUES (?,?)", (user["id"], mid))
             if m.status_code != 200:
                 continue
@@ -223,10 +242,14 @@ def sync(user, force=False, min_minutes=10):
             row["sample_text"] = text[:600]
             out = ingest_row(user, row, "email")
             logged += 1 if out.get("logged") else 0
-        db.execute("UPDATE gmail_accounts SET last_sync_at = ?, imported = imported + ?, last_error = NULL WHERE user_id = ?",
-                   (datetime.now(timezone.utc).replace(tzinfo=None).isoformat(timespec="seconds"), logged, user["id"]))
+        if more:  # keep the first-sync window (30 days) and the "check now" path open until the backlog is done
+            db.execute("UPDATE gmail_accounts SET imported = imported + ?, last_error = NULL WHERE user_id = ?",
+                       (logged, user["id"]))
+        else:
+            db.execute("UPDATE gmail_accounts SET last_sync_at = ?, imported = imported + ?, last_error = NULL WHERE user_id = ?",
+                       (datetime.now(timezone.utc).replace(tzinfo=None).isoformat(timespec="seconds"), logged, user["id"]))
         db.commit()
-        return {"connected": True, "logged": logged, "skipped": skipped, "checked": len(ids)}
+        return {"connected": True, "logged": logged, "skipped": skipped, "checked": len(batch), "more": more}
     except GmailError as e:
         db.execute("UPDATE gmail_accounts SET last_error = ?, needs_reconnect = ? WHERE user_id = ?",
                    (str(e)[:200], 1 if isinstance(e, GmailReconnect) else 0, user["id"]))
@@ -241,4 +264,11 @@ def sync_all():
     """For the daily scheduled task: sync every connected account."""
     db = get_db()
     users = db.execute("SELECT u.* FROM users u JOIN gmail_accounts g ON g.user_id = u.id").fetchall()
-    return [sync(u, force=True) for u in users]
+    out = []
+    for u in users:
+        for _ in range(10):  # a big backlog is read in batches
+            r = sync(u, force=True)
+            if not r.get("more"):
+                break
+        out.append(r)
+    return out

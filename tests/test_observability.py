@@ -35,3 +35,18 @@ def test_ingest_outcomes_are_counted(app, client, user):
 
 def test_readyz(client):
     assert client.get("/readyz").json == {"ok": True, "db": "up"}
+
+
+def test_static_files_are_versioned_cached_and_compressed(client):
+    import re
+
+    html = client.get("/login").get_data(as_text=True)
+    css = re.search(r'href="(/static/css/app\.css\?v=[0-9a-f]{12})"', html).group(1)
+    r = client.get(css, headers={"Accept-Encoding": "gzip, br"})
+    assert r.status_code == 200 and "immutable" in r.headers["Cache-Control"]
+    assert r.headers["Content-Encoding"] == "gzip" and int(r.headers["Content-Length"]) < 15000
+    import gzip
+
+    assert b".btn" in gzip.decompress(r.data)
+    # Without the version (or with an old one) the browser must re-check, so updates show up at once.
+    assert client.get("/static/css/app.css?v=old").headers["Cache-Control"] == "no-cache"

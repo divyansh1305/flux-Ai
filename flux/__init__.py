@@ -61,14 +61,30 @@ def create_app(overrides=None):
     def _before():
         check_csrf()
 
+    from . import speed
+
+    version = speed.asset_version(app.static_folder)
+
     @app.after_request
     def _after(resp):
         set_csrf_cookie(resp)
-        return apply_security_headers(resp)
+        resp = apply_security_headers(resp)
+        if request.path.startswith("/static/") and request.args.get("v") == version and resp.status_code == 200:
+            # The URL changes whenever any file changes, so the phone can keep it for a year without asking again.
+            resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return speed.gzip_response(resp)
 
     # ─── Pages ────────────────────────────────────────────────
+    page_cache = {}
+
     def page(name):
-        resp = send_from_directory(PAGES_DIR, name)
+        html = page_cache.get(name)
+        if html is None:
+            with open(os.path.join(PAGES_DIR, name), encoding="utf-8") as f:
+                html = speed.version_assets(f.read(), version)
+            if not app.config.get("TESTING") and not app.debug:
+                page_cache[name] = html
+        resp = app.response_class(html, mimetype="text/html")
         resp.headers["Cache-Control"] = "no-cache"
         return resp
 

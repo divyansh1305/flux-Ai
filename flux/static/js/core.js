@@ -174,8 +174,12 @@
 
   // ─── Shared "add transaction" modal (used by many pages) ──
   let META = null;
+  const BUILD = ((document.currentScript && document.currentScript.src) || "").split("v=")[1] || "dev";
   async function meta() {
-    if (!META) META = await api("/api/meta");
+    if (META) return META;
+    try { const c = JSON.parse(sessionStorage.getItem("flux_meta") || "null"); if (c && c.build === BUILD) return (META = c.data); } catch (e) { /* storage blocked */ }
+    META = await api("/api/meta");
+    try { sessionStorage.setItem("flux_meta", JSON.stringify({ build: BUILD, data: META })); } catch (e) { /* ignore */ }
     return META;
   }
   async function addTransactionModal(kind = "expense") {
@@ -299,8 +303,13 @@
     location.href = "/login";
   }
 
+  // Ask "who am I?" as soon as this file loads, not after the page is parsed: one less wait on slow networks.
+  const mePromise = location.pathname.startsWith("/app") || location.pathname === "/onboarding"
+    ? api("/api/auth/me", { allow401: true }).catch((e) => ({ error: e })) : null;
+
   async function boot(renderPage) {
-    const me = await api("/api/auth/me", { allow401: true });
+    const me = (mePromise && await mePromise) || await api("/api/auth/me", { allow401: true });
+    if (me.error) throw me.error;
     if (!me.user) { location.href = "/login"; return; }
     USER = me.user;
     CONFIG = me;

@@ -123,8 +123,11 @@
         g.error ? el("div", { class: "small", style: { color: "var(--red)" } }, g.error) : null,
         el("div", { class: "row wrap", style: { gap: "8px" } },
           el("button", { class: "btn sm", type: "button", onclick: async () => {
-            try { const r = await api("/api/gmail/sync", { method: "POST", body: { force: true } });
-              ok(r.error ? r.error : r.logged ? `Added ${r.logged} new payment${r.logged === 1 ? "" : "s"}.` : "No new payments."); drawAuto(); } catch (e) { err(e); } } }, "Check now"),
+            try {
+              let r, added = 0;
+              for (let i = 0; i < 6; i++) { r = await api("/api/gmail/sync", { method: "POST", body: { force: true } }); added += r.logged || 0; if (!r.more || r.error) break; }
+              ok(r.error ? r.error : added ? `Added ${added} new payment${added === 1 ? "" : "s"}.` : "No new payments."); drawAuto();
+            } catch (e) { err(e); } } }, "Check now"),
           el("button", { class: "btn sm danger", type: "button", onclick: async () => {
             await api("/api/gmail", { method: "DELETE" }); ok("Gmail disconnected."); drawAuto(); } }, "Disconnect")));
     }
