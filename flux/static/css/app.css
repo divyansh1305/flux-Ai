@@ -1,80 +1,82 @@
 /* Kitna design system — "calm money".
-   Warm paper surfaces, one ink-indigo brand colour with a marigold accent (the coin in the logo),
-   green/red only for money in and out, soft status colours.
+   Paper surfaces and one ink colour for everything you press. The marigold coin lives in the logo.
+   Green only for money in, red only for problems, amber only for a heads-up.
    Light by default, dark automatically when the phone is in dark mode.
    No neon, no glows, no gradients. System fonts so it feels native on iPhone and Android. */
 :root {
   color-scheme: light;
-  --bg: #f6f4ef;
+  --bg: #f6f5f2;
   --surface: #ffffff;
-  --surface-2: #f1eee8;
-  --surface-3: #e7e3db;
-  --line: #e8e4dc;
-  --line-2: #d9d4c9;
-  --text: #1d1c1a;
-  --muted: #5f5b54;
-  --faint: #6e6960;
-  --brand: #34378a;
-  --brand-hover: #2a2d73;
+  --surface-2: #f0efeb;
+  --surface-3: #e5e3de;
+  --line: #e6e4df;
+  --line-2: #d6d3cd;
+  --text: #17171a;
+  --muted: #5c5a57;
+  --faint: #6b6965;
+  /* One ink colour for everything you press. Green = money in, red = errors, amber = heads-up.
+     The marigold coin lives only in the logo. No lavender, no pastels. */
+  --brand: #17171a;
+  --brand-hover: #000000;
   --brand-ink: #ffffff;
-  --brand-soft: #e8e9f6;
+  --brand-soft: #ecebe7;
   --accent: #f2a93b;
-  --green: #1d7a4c;
-  --green-soft: #e3f1e8;
-  --amber: #9a5b00;
-  --amber-soft: #fbf0dc;
+  --green: #18794e;
+  --green-soft: #e6f2eb;
+  --amber: #8f5500;
+  --amber-soft: #f8efdf;
   --red: #b3261e;
-  --red-soft: #fbe8e6;
-  --blue: #2d5ba3;
-  --blue-soft: #e7eef8;
-  --overlay: rgba(29, 28, 26, .45);
-  --shadow: 0 1px 2px rgba(29, 28, 26, .05), 0 2px 8px rgba(29, 28, 26, .04);
+  --red-soft: #fbe9e7;
+  --blue: #5c5a57;
+  --blue-soft: #f0efeb;
+  --overlay: rgba(23, 23, 26, .45);
+  --shadow: none;
   --radius: 16px;
   --radius-sm: 12px;
-  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Noto Sans", "Noto Sans Devanagari", Inter, sans-serif;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Noto Sans", "Noto Sans Devanagari", sans-serif;
   --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
   --maxw: 1120px;
-  /* soft avatar tints (bg / fg) */
-  --t0b: #e8e9f6; --t0f: #34378a;
-  --t1b: #fbeedd; --t1f: #8a4f00;
-  --t2b: #e7eef8; --t2f: #2d5ba3;
-  --t3b: #f6e6ee; --t3f: #8c2f5c;
-  --t4b: #ece9f7; --t4f: #4b3f99;
-  --t5b: #eef0e4; --t5f: #56611f;
+  /* avatars: one neutral style for everyone */
+  --t0b: #ecebe7; --t0f: #17171a;
+  --t1b: #ecebe7; --t1f: #17171a;
+  --t2b: #ecebe7; --t2f: #17171a;
+  --t3b: #ecebe7; --t3f: #17171a;
+  --t4b: #ecebe7; --t4f: #17171a;
+  --t5b: #ecebe7; --t5f: #17171a;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --bg: #131420;
-    --surface: #1b1c2b;
-    --surface-2: #232435;
-    --surface-3: #2c2d40;
-    --line: #282a3b;
-    --line-2: #383a4e;
-    --text: #ecebf3;
-    --muted: #b0b1c4;
-    --faint: #8a8ca2;
-    --brand: #a3a7f0;
-    --brand-hover: #b8bbf4;
-    --brand-ink: #14152e;
-    --brand-soft: #23254a;
+    --bg: #111113;
+    --surface: #1a1a1d;
+    --surface-2: #222226;
+    --surface-3: #2c2c31;
+    --line: #2a2a2f;
+    --line-2: #3a3a40;
+    --text: #f2f1ee;
+    --muted: #b5b3ae;
+    --faint: #8f8d88;
+    --brand: #f2f1ee;
+    --brand-hover: #ffffff;
+    --brand-ink: #111113;
+    --brand-soft: #2a2a2f;
     --accent: #f2a93b;
-    --green: #74c296;
-    --green-soft: #1b2a21;
-    --amber: #e2b05c;
-    --amber-soft: #2c2416;
-    --red: #e88a80;
-    --red-soft: #2e1c1a;
-    --blue: #92b2e6;
-    --blue-soft: #1b2230;
+    --green: #6cc497;
+    --green-soft: #18271f;
+    --amber: #e0ae5a;
+    --amber-soft: #2a2316;
+    --red: #ee8b80;
+    --red-soft: #2d1b19;
+    --blue: #b5b3ae;
+    --blue-soft: #222226;
     --overlay: rgba(0, 0, 0, .6);
     --shadow: none;
-    --t0b: #23254a; --t0f: #b8bbf4;
-    --t1b: #2c2416; --t1f: #e2b05c;
-    --t2b: #1b2230; --t2f: #9ab8e8;
-    --t3b: #2c1d25; --t3f: #e3a3c3;
-    --t4b: #221f33; --t4f: #b5aaf0;
-    --t5b: #23261a; --t5f: #c3cf8a;
+    --t0b: #2a2a2f; --t0f: #f2f1ee;
+    --t1b: #2a2a2f; --t1f: #f2f1ee;
+    --t2b: #2a2a2f; --t2f: #f2f1ee;
+    --t3b: #2a2a2f; --t3f: #f2f1ee;
+    --t4b: #2a2a2f; --t4f: #f2f1ee;
+    --t5b: #2a2a2f; --t5f: #f2f1ee;
   }
 }
 
@@ -680,3 +682,37 @@ body { text-rendering: optimizeLegibility; }
   .bottom-nav { box-shadow: none; border-top: 1px solid var(--line); }
   .bottom-nav a.pay .pay-dot, .bottom-nav a.pay.active .pay-dot { box-shadow: none; }
 }
+
+/* ═══ No AI-template tells: no glows, no tinted boxes behind icons, one ink colour ═══ */
+.input:focus, select.input:focus, textarea.input:focus { box-shadow: none; border-color: var(--text); }
+:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; box-shadow: none; }
+.btn.primary { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+.link { color: var(--text); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+.section-title .link { text-decoration: none; color: var(--muted); font-weight: 600; }
+.badge, .badge.autosave, .badge.upi, .badge.voice, .badge.import, .badge.sms { background: transparent; border: 1px solid var(--line-2); color: var(--muted); }
+/* Quick actions: plain circles, the main one filled */
+.quick-ic { border-radius: 50%; background: var(--surface); border: 1px solid var(--line-2); color: var(--text); }
+.quick:first-child .quick-ic { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+/* Menus: the icon sits in the line, no little box behind it */
+.menu-ic { width: 24px; height: 24px; background: none; border-radius: 0; color: var(--text); }
+.menu-item { gap: 16px; padding: 13px 8px; }
+/* Website feature cards: icon in line with the heading, no rounded square */
+.feature .ico { width: auto; height: auto; background: none; border-radius: 0; color: var(--text); margin-bottom: 10px; display: block; }
+.feature .ico svg { width: 22px; height: 22px; }
+/* Tabs: neutral pill, ink icon */
+@media (max-width: 860px) {
+  .bottom-nav a.active .ni { background: var(--surface-3); color: var(--text); }
+  .bottom-nav a.pay .pay-dot { background: var(--brand); border-color: var(--surface); }
+}
+.nav a.active { background: var(--surface-3); color: var(--text); }
+/* Laptop: logo left, tabs in the exact middle (Pay in the centre), bell and you on the right */
+@media (min-width: 861px) {
+  .topbar-in { display: grid; grid-template-columns: 1fr auto 1fr; gap: 24px; }
+  .topbar-in .nav { flex: none; justify-self: center; }
+  .topbar-in .top-actions { justify-self: end; }
+  .nav a[href="/app/pay"] { background: var(--brand); color: var(--brand-ink); }
+  .nav a[href="/app/pay"].active { background: var(--brand); color: var(--brand-ink); outline: 2px solid var(--line-2); outline-offset: 2px; }
+}
+.notice.info { background: var(--surface-2); color: var(--text); border-color: var(--line); }
+.tagline { color: var(--text); }
+.auth-side .logo-wm { color: var(--brand-ink); }

@@ -117,7 +117,7 @@
     const m = String(name || "").match(/[A-Za-z0-9\u0900-\u097F]/);
     return el("div", { class: "tx-icon " + tintFor(name), "aria-hidden": "true" }, ic ? icon(ic) : (m ? m[0].toUpperCase() : "•"));
   }
-  const CAT_COLORS = ["#34378a", "#d0913a", "#4f7cc4", "#b9638a", "#7a6ec9", "#8f9d45", "#a39d92", "#c8c2b6"];
+  const CAT_COLORS = ["#17171a", "#4b4a4e", "#737176", "#9a989c", "#bcbabd", "#d6d4d6", "#e6e4e5", "#efeeee"];  // one ink, in steps
 
   // ─── API client ───────────────────────────────────────────
   function csrf() {
@@ -360,7 +360,7 @@
     ["/app/plans", "calendar", "Plans", "Money kept aside for what's coming"],
     ["/app/budgets", "pie", "Budgets", "Monthly limits"],
     ["/app/goals", "target", "Goals", "Saving for something"],
-    ["/app/coach", "spark", "Ask Kitna", "Questions about your money"],
+    ["/app/coach", "chat", "Ask Kitna", "Questions about your money"],
     ["/app/import", "upload", "Import a statement", "Bank PDF or CSV"],
     ["/app/settings", "gear", "Settings", "Account, reminders, language"],
   ];
@@ -668,7 +668,7 @@
     const when = (ts) => { const d = new Date(String(ts).replace(" ", "T") + "Z"); return isNaN(d) ? "" : dateFmt(new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)); };
     const body = el("div", { class: "stack", style: { gap: "4px", maxHeight: "60vh", overflow: "auto" } },
       r.inbox.length ? r.inbox.map((n) => el("a", { href: n.url, class: "tx", style: { textDecoration: "none", color: "inherit" } },
-        avatar(n.title, n.kind === "friends" ? "users" : n.kind === "bills" ? "calendar" : n.kind === "weekly" ? "trend" : n.kind === "morning" ? "spark" : "alert"),
+        avatar(n.title, n.kind === "friends" ? "users" : n.kind === "bills" ? "calendar" : n.kind === "weekly" ? "trend" : n.kind === "morning" ? "bell" : "alert"),
         el("div", { class: "tx-main" }, el("div", { class: "tx-title wrap", style: { fontWeight: n.read ? 500 : 700 } }, n.title),
           el("div", { class: "tx-sub", style: { whiteSpace: "normal" } }, n.body)),
         el("div", { class: "tiny faint" }, when(n.created_at))))
