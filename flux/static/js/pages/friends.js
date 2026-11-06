@@ -92,7 +92,7 @@
           el("button", { class: "btn sm ghost", onclick: () => notThem(s) }, "No")))));
 
     const open = el("section", null, el("div", { class: "section-title" }, el("span", null, "Still open")),
-      el("div", { class: "card", style: { padding: "4px 20px" } }, d.open.length
+      el("div", { class: "card list-card" }, d.open.length
         ? el("div", { class: "tx-list" }, d.open.map(row))
         : el("div", { class: "empty" }, el("b", null, "All square"), "Paid for dinner or a cab? Split it.")));
 

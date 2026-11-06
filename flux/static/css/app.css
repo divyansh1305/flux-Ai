@@ -817,3 +817,46 @@ body { font-size: 16px; }
 .lp-list li { padding: 18px 0; border-top: 1px solid var(--line); font-size: 17px; line-height: 1.55; }
 .lp-list li:last-child { border-bottom: 1px solid var(--line); }
 .lp-list b { color: var(--text); }
+
+/* ═══ Flat, not boxed ═════════════════════════════════════════════════════════
+   Only the main number sits on a surface. Lists sit on the page with thin lines
+   between rows. One small radius scale (8 / 10 / 14) instead of ovals and pills. */
+:root { --radius: 14px; --radius-sm: 10px; }
+.card { border-radius: 14px; }
+.list-card { background: none; border: 0; border-radius: 0; padding: 0 !important; }
+.list-card .tx { border-bottom: 1px solid var(--line); }
+.list-card .tx:last-child { border-bottom: 0; }
+.list-card .day-head { border-bottom: 1px solid var(--line); padding-left: 0; }
+.today { border-radius: 14px; }
+.big-acts { gap: 4px; }
+.big-act { background: none; border: 0; border-radius: 10px; padding: 6px 2px; }
+.next-step { background: none; border: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); border-radius: 0; }
+.next-main { padding-left: 0; }
+.friends-totals { background: none; border: 0; border-radius: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.friends-totals > div { padding: 14px 0; }
+.friends-totals > div + div { padding-left: 18px; }
+/* Controls: squared-off, one radius each */
+.btn, .input, select.input, textarea.input { border-radius: 10px; }
+.btn.lg { border-radius: 12px; }
+.btn.sm { border-radius: 8px; }
+.seg { border-radius: 10px; padding: 3px; }
+.seg button { border-radius: 8px; }
+.chip { border-radius: 8px; }
+.badge, .pill { border-radius: 6px; }
+.nav a { border-radius: 8px; }
+.icon-btn, .icon-link { border-radius: 10px; }
+.cat-pick { border-radius: 12px; }
+.modal { border-radius: 14px; }
+@media (max-width: 860px) { .modal, .sheet { border-radius: 16px 16px 0 0; } }
+.menu-pop-in { border-radius: 10px; }
+.toast { border-radius: 10px; }
+/* Tabs: the active tab is shown by ink colour and a bold label, no oval behind it */
+@media (max-width: 860px) {
+  .bottom-nav a.active .ni, .bottom-nav a .ni { background: none; }
+  .bottom-nav a.active { color: var(--text); }
+  .bottom-nav a:not(.active):not(.pay) { color: var(--faint); }
+}
+.nav a.active { background: none; color: var(--text); box-shadow: inset 0 -2px 0 var(--text); border-radius: 0; }
+.nav a[href="/app/pay"], .nav a[href="/app/pay"].active { border-radius: 8px; box-shadow: none; }
+/* Motion: only what explains something (sheets sliding up, loading rows) */
+.big-act:active, .quick:active .quick-ic, .person:active .avatar { transform: none; }

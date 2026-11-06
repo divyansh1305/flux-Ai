@@ -81,14 +81,14 @@
       const today = window.Kitna.todayISO();
       const open = plans.filter((p) => !p.done && p.date >= today);
       const old = plans.filter((p) => p.done || p.date < today);
-      const list = el("div", { class: "card", style: { padding: "4px 20px" } }, open.length
+      const list = el("div", { class: "card list-card" }, open.length
         ? el("div", { class: "tx-list" }, open.map((p) => planRow(p, false)))
         : el("div", { class: "empty" }, el("b", null, "No plans yet"),
             "Dinner on Friday? Rent on the 5th? Add it, and Kitna keeps the money aside."));
       box.replaceChildren(...[
         el("section", null, el("div", { class: "section-title" }, el("span", null, "Coming up")), list),
         old.length ? el("section", null, el("div", { class: "section-title" }, el("span", null, "Past and done")),
-          el("div", { class: "card", style: { padding: "4px 20px" } }, el("div", { class: "tx-list" }, old.map((p) => planRow(p, true))))) : null,
+          el("div", { class: "card list-card" }, el("div", { class: "tx-list" }, old.map((p) => planRow(p, true))))) : null,
         moneyCard(me.user, load)].filter(Boolean));
       if (location.hash === "#money") setTimeout(() => { const m = document.getElementById("money"); if (m) m.scrollIntoView({ behavior: "smooth" }); }, 50);
     };
