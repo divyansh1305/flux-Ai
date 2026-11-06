@@ -928,3 +928,41 @@ html[data-theme="dark"] { color-scheme: dark;
 .settings-list > .card h2 { font-size: 18px; font-weight: 700; margin: 0 0 6px; }
 .settings-list > .card > p { margin: 0 0 14px; }
 .settings-list .card .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+
+/* ═══ Livelier colour: brighter greens, a bold green card for today's number ═══ */
+:root { --bg: #F4F7F4; --surface: #FFFFFF; --surface-2: #EDF2EE; --surface-3: #E1E9E3; --line: #E0E7E2; --line-2: #C9D4CC;
+  --text: #0F1A14; --muted: #4F5D54; --faint: #5F6D64;
+  --brand: #0E7A4E; --brand-hover: #0A6640; --brand-ink: #FFFFFF; --brand-soft: #DDF2E6;
+  --green: #0E7A4E; --green-soft: #DDF2E6; --red: #C2362F; --red-soft: #FCE8E6; --amber: #8A5A00; --amber-soft: #FBF0D9;
+  --blue: #1F6FB2; --blue-soft: #E3EFFA; }
+@media (prefers-color-scheme: dark) { :root { --bg: #0A0D0B; --surface: #141A16; --surface-2: #1C241F; --surface-3: #26302A; --line: #222B25; --line-2: #34403A;
+  --text: #F4F7F4; --muted: #B9C4BC; --faint: #96A39A;
+  --brand: #2FC883; --brand-hover: #3DD892; --brand-ink: #04130B; --brand-soft: #143A27;
+  --green: #45D18F; --green-soft: #12301F; --red: #FF8A80; --red-soft: #3A1B19; --amber: #F2BE5C; --amber-soft: #33270F;
+  --blue: #7FBFF2; --blue-soft: #162B3D; } }
+html[data-theme="light"] { --bg: #F4F7F4; --surface: #FFFFFF; --surface-2: #EDF2EE; --surface-3: #E1E9E3; --line: #E0E7E2; --line-2: #C9D4CC;
+  --text: #0F1A14; --muted: #4F5D54; --faint: #5F6D64;
+  --brand: #0E7A4E; --brand-hover: #0A6640; --brand-ink: #FFFFFF; --brand-soft: #DDF2E6;
+  --green: #0E7A4E; --green-soft: #DDF2E6; --red: #C2362F; --red-soft: #FCE8E6; --amber: #8A5A00; --amber-soft: #FBF0D9;
+  --blue: #1F6FB2; --blue-soft: #E3EFFA; }
+html[data-theme="dark"] { --bg: #0A0D0B; --surface: #141A16; --surface-2: #1C241F; --surface-3: #26302A; --line: #222B25; --line-2: #34403A;
+  --text: #F4F7F4; --muted: #B9C4BC; --faint: #96A39A;
+  --brand: #2FC883; --brand-hover: #3DD892; --brand-ink: #04130B; --brand-soft: #143A27;
+  --green: #45D18F; --green-soft: #12301F; --red: #FF8A80; --red-soft: #3A1B19; --amber: #F2BE5C; --amber-soft: #33270F;
+  --blue: #7FBFF2; --blue-soft: #162B3D; }
+/* Today's number on solid green: the one bold thing on the screen */
+.today { background: var(--brand); border: 0; color: var(--brand-ink); }
+.today .today-label, .today .today-sub, .today .as-of, .today .today-num .cur { color: var(--brand-ink); opacity: .88; }
+.today .today-num { color: var(--brand-ink); }
+.today .today-foot { border-top-color: color-mix(in srgb, var(--brand-ink) 22%, transparent); }
+.today .today-how { color: var(--brand-ink); }
+.today .dot-live { background: var(--brand-ink); }
+.today.careful { background: var(--amber); }
+.today.careful .today-num { color: var(--brand-ink); }
+.today .btn.primary { background: var(--brand-ink); color: var(--brand); border-color: var(--brand-ink); }
+/* Main buttons: green circles with green icons, Scan & Pay filled */
+.big-ic { background: var(--brand-soft); color: var(--brand); }
+.big-act.main .big-ic { background: var(--brand); color: var(--brand-ink); }
+.next-ic { background: var(--brand); color: var(--brand-ink); }
+.cat-ic.in { background: var(--green-soft); color: var(--green); }
+.tx-amt.green, .green { color: var(--green); }
