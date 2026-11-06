@@ -1,6 +1,9 @@
 /* Kitna core: safe DOM helpers, API client, app shell, toasts, modals.
    Rule: user data is ALWAYS inserted with textContent (via el()), never innerHTML. */
 (function () {
+  // Appearance chosen in Settings (Light / Dark); Auto follows the phone.
+  try { const t = localStorage.getItem("kitna_theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) { /* storage blocked */ }
+
   "use strict";
 
   // ─── Safe element builder ─────────────────────────────────

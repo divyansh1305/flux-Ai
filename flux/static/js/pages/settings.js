@@ -309,7 +309,24 @@
       el("p", { class: "small muted", style: { margin: "6px 0 14px" } }, "Something broken, confusing, or an idea? It goes straight to the people who build Kitna, and we read every message."),
       el("div", { class: "row wrap", style: { gap: "8px" } },
         el("button", { class: "btn primary", onclick: () => window.Kitna.feedbackModal() }, icon("chat"), "Send feedback")));
-    main.replaceChildren(pageHead("Settings", null), el("div", { class: "grid g-2" }, feedbackCard, remindCard, langCard, autoCard, learnCard, profile, autosave, voiceCard, data));
+    // Appearance: Auto follows the phone; Light or Dark sticks on this device.
+    const curTheme = (() => { try { return localStorage.getItem("kitna_theme") || "auto"; } catch (e) { return "auto"; } })();
+    const themeSeg = el("div", { class: "seg full", role: "radiogroup", "aria-label": "Appearance" });
+    [["auto", "Auto"], ["light", "Light"], ["dark", "Dark"]].forEach(([k, label]) => {
+      const b = el("button", { type: "button", class: k === curTheme ? "on" : "", role: "radio", "aria-checked": String(k === curTheme) }, label);
+      b.onclick = () => {
+        try { if (k === "auto") localStorage.removeItem("kitna_theme"); else localStorage.setItem("kitna_theme", k); } catch (e) { /* storage blocked */ }
+        if (k === "auto") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = k;
+        [...themeSeg.children].forEach((c) => { c.className = ""; c.setAttribute("aria-checked", "false"); });
+        b.className = "on"; b.setAttribute("aria-checked", "true");
+      };
+      themeSeg.appendChild(b);
+    });
+    const looks = el("div", { class: "card", id: "look" }, el("h2", null, "Appearance"),
+      el("p", { class: "small muted" }, "Auto matches your phone. Light or Dark stays the same all day."), themeSeg);
+    // One column, most-used first, flat groups (no boxes)
+    main.replaceChildren(pageHead("Settings", null), el("div", { class: "settings-list" },
+      looks, autoCard, remindCard, langCard, profile, autosave, voiceCard, learnCard, data, feedbackCard));
     if (location.hash) { const t = document.querySelector(location.hash); if (t) setTimeout(() => t.scrollIntoView({ behavior: "smooth", block: "start" }), 60); }
   }
 

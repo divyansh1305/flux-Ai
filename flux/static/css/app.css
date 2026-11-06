@@ -902,3 +902,29 @@ body { font-size: 16px; }
 /* Savings rows use the savings blue */
 .cat-ic.save { background: var(--blue-soft); color: var(--blue); }
 .avatar { background: var(--brand-soft); color: var(--text); }
+
+/* ═══ Appearance chosen in the app (overrides the phone setting) ═══ */
+html[data-theme="light"] { color-scheme: light;
+  --bg: #F5F6F0; --surface: #FFFFFF; --surface-2: #EEF0E9; --surface-3: #E3E7DE; --line: #E2E5DC; --line-2: #CFD5CA;
+  --text: #18231D; --muted: #5B675F; --faint: #66736A;
+  --brand: #245C43; --brand-hover: #1C4A36; --brand-ink: #FFFFFF; --brand-soft: #E4EEE6;
+  --green: #1C7A50; --green-soft: #E4F1E9; --red: #B8423F; --red-soft: #FAE9E8; --amber: #8F6211; --amber-soft: #F7EEDC;
+  --blue: #2F6E9F; --blue-soft: #E6EFF7; --overlay: rgba(24, 35, 29, .45);
+  --t0b: #EEF0E9; --t0f: #18231D; --t1b: #EEF0E9; --t1f: #18231D; --t2b: #EEF0E9; --t2f: #18231D;
+  --t3b: #EEF0E9; --t3f: #18231D; --t4b: #EEF0E9; --t4f: #18231D; --t5b: #EEF0E9; --t5f: #18231D; }
+html[data-theme="dark"] { color-scheme: dark;
+  --bg: #101412; --surface: #1B211E; --surface-2: #232B27; --surface-3: #2C3530; --line: #29312D; --line-2: #3A443F;
+  --text: #F3F5F2; --muted: #B3BCB5; --faint: #929C95;
+  --brand: #31A875; --brand-hover: #3BBA84; --brand-ink: #0B140F; --brand-soft: #1F3A2D;
+  --green: #4CC38A; --green-soft: #183326; --red: #E8807D; --red-soft: #3A1F1E; --amber: #E2B25E; --amber-soft: #33291A;
+  --blue: #7DB4E0; --blue-soft: #1B2B38; --overlay: rgba(0, 0, 0, .6);
+  --t0b: #232B27; --t0f: #F3F5F2; --t1b: #232B27; --t1f: #F3F5F2; --t2b: #232B27; --t2f: #F3F5F2;
+  --t3b: #232B27; --t3f: #F3F5F2; --t4b: #232B27; --t4f: #F3F5F2; --t5b: #232B27; --t5f: #F3F5F2; }
+
+/* ═══ Settings: one calm column of groups, like a phone's own settings ═══ */
+.settings-list { display: flex; flex-direction: column; max-width: 720px; }
+.settings-list > .card { background: none; border: 0; border-radius: 0; border-bottom: 1px solid var(--line); padding: 22px 0; margin: 0; grid-column: auto !important; box-shadow: none; }
+.settings-list > .card:last-child { border-bottom: 0; }
+.settings-list > .card h2 { font-size: 18px; font-weight: 700; margin: 0 0 6px; }
+.settings-list > .card > p { margin: 0 0 14px; }
+.settings-list .card .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
