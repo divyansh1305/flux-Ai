@@ -54,7 +54,7 @@ def transactions_pdf(user, txs):
     doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=16 * mm, rightMargin=16 * mm, topMargin=16 * mm,
                             bottomMargin=16 * mm, title="Kitna transactions")
     s = _styles()
-    story = [Paragraph("Kitna — Transactions", s["h1"]),
+    story = [Paragraph("Kitna: your payments", s["h1"]),
              Paragraph(f"{_esc(user['name'])} · generated {clock.now():%d %b %Y, %H:%M}", s["muted"]),
              Spacer(1, 8)]
     rows = [["Date", "Type", "Category", "Note", "Amount"]]
@@ -75,7 +75,7 @@ def monthly_pdf(user, snap):
                             bottomMargin=18 * mm, title="Kitna monthly report")
     s = _styles()
     m = snap["this_month"]
-    story = [Paragraph(f"Kitna monthly report — {_esc(m['month'])}", s["h1"]),
+    story = [Paragraph(f"Kitna monthly report, {_esc(m['month'])}", s["h1"]),
              Paragraph(f"Prepared for {_esc(user['name'])}", s["muted"]), Spacer(1, 10)]
 
     rate = f"{m['savings_rate']}%" if m["savings_rate"] is not None else "—"

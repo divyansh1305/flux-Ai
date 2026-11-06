@@ -810,3 +810,10 @@ body { font-size: 16px; }
   .modal-foot { position: sticky; bottom: 0; background: var(--surface); margin: 0 -18px; padding: 12px 18px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); z-index: 2; }
 }
 .big-acts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+/* Plain headings and lists (no ALL-CAPS labels, no identical icon cards) */
+.day-head { text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 700; color: var(--muted); }
+.lp-list { list-style: none; padding: 0; margin: 28px 0 0; max-width: 760px; }
+.lp-list li { padding: 18px 0; border-top: 1px solid var(--line); font-size: 17px; line-height: 1.55; }
+.lp-list li:last-child { border-bottom: 1px solid var(--line); }
+.lp-list b { color: var(--text); }

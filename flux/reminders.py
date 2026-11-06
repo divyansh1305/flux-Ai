@@ -108,10 +108,10 @@ def build(user, today=None):
         sf = insights.safe_to_spend(uid, user)
         if sf["status"] in ("ok", "stop"):
             if sf["status"] == "ok":
-                title = (f"Aaj {_inr(round(sf['left_today'] * 100))} safe hai" if hi
-                         else f"{_inr(round(sf['left_today'] * 100))} safe to spend today")
+                title = (f"Aaj {_inr(round(sf['left_today'] * 100))} kharch kar sakte ho" if hi
+                         else f"You can spend {_inr(round(sf['left_today'] * 100))} today")
                 body = (f"{_d(sf['until'])} tak ka hisaab. Bills aur plans pehle se alag rakhe hain." if hi
-                        else f"Worked out until {_d(sf['until'])}, with bills and plans already kept aside.")
+                        else f"Money for the days till {_d(sf['until'])}. Your bills are already counted.")
             else:
                 title = "Aaj sirf zaroori kharche" if hi else "Essentials only today"
                 body = sf["message"]
