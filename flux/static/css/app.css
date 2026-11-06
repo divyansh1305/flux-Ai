@@ -989,3 +989,41 @@ html[data-theme="dark"] { --bg: #0B0F17; --surface: #141A24; --surface-2: #1B223
   --green: #45D18F; --green-soft: #12301F; --red: #FF8A80; --red-soft: #3A1B19; --amber: #F2BE5C; --amber-soft: #33270F;
   --blue: #5B8CFF; --blue-soft: #18284A; }
 .today .today-num .cur { opacity: .8; }
+
+/* ═══ Standard and minimal: white or black, one system blue, no coloured cards ═══ */
+:root { --bg: #FFFFFF; --surface: #FFFFFF; --surface-2: #F2F2F7; --surface-3: #E5E5EA; --line: #E5E5EA; --line-2: #D1D1D6;
+  --text: #111111; --muted: #6C6C70; --faint: #6C6C70;
+  --brand: #0062E6; --brand-hover: #0052C2; --brand-ink: #FFFFFF; --brand-soft: #F2F2F7;
+  --green: #1A7F45; --green-soft: #F2F2F7; --red: #C2362F; --red-soft: #FCE8E6; --amber: #8A5A00; --amber-soft: #FBF0D9;
+  --blue: #0062E6; --blue-soft: #F2F2F7; }
+@media (prefers-color-scheme: dark) { :root { --bg: #000000; --surface: #1C1C1E; --surface-2: #1C1C1E; --surface-3: #2C2C2E; --line: #2C2C2E; --line-2: #3A3A3C;
+  --text: #FFFFFF; --muted: #A1A1A6; --faint: #A1A1A6;
+  --brand: #3D8BFF; --brand-hover: #5A9CFF; --brand-ink: #000000; --brand-soft: #1C1C1E;
+  --green: #4CD27F; --green-soft: #1C1C1E; --red: #FF7B72; --red-soft: #3A1B19; --amber: #F2BE5C; --amber-soft: #33270F;
+  --blue: #3D8BFF; --blue-soft: #1C1C1E; } }
+html[data-theme="light"] { --bg: #FFFFFF; --surface: #FFFFFF; --surface-2: #F2F2F7; --surface-3: #E5E5EA; --line: #E5E5EA; --line-2: #D1D1D6;
+  --text: #111111; --muted: #6C6C70; --faint: #6C6C70;
+  --brand: #0062E6; --brand-hover: #0052C2; --brand-ink: #FFFFFF; --brand-soft: #F2F2F7;
+  --green: #1A7F45; --green-soft: #F2F2F7; --red: #C2362F; --red-soft: #FCE8E6; --amber: #8A5A00; --amber-soft: #FBF0D9;
+  --blue: #0062E6; --blue-soft: #F2F2F7; }
+html[data-theme="dark"] { --bg: #000000; --surface: #1C1C1E; --surface-2: #1C1C1E; --surface-3: #2C2C2E; --line: #2C2C2E; --line-2: #3A3A3C;
+  --text: #FFFFFF; --muted: #A1A1A6; --faint: #A1A1A6;
+  --brand: #3D8BFF; --brand-hover: #5A9CFF; --brand-ink: #000000; --brand-soft: #1C1C1E;
+  --green: #4CD27F; --green-soft: #1C1C1E; --red: #FF7B72; --red-soft: #3A1B19; --amber: #F2BE5C; --amber-soft: #33270F;
+  --blue: #3D8BFF; --blue-soft: #1C1C1E; }
+.today, .today.careful { background: none; border: 0; padding: 4px 2px 0; color: var(--text); }
+.today .today-label, .today .today-sub { color: var(--muted); opacity: 1; }
+.today .today-num, .today.careful .today-num { color: var(--text); opacity: 1; }
+.today.careful .today-num { color: var(--amber); }
+.today .today-num .cur { color: var(--muted); opacity: 1; }
+.today .today-foot { border-top: 0; padding-top: 0; margin-top: 6px; }
+.today .today-how { color: var(--brand); padding-left: 0; }
+.home .as-of { display: none; }
+.big-ic, .next-ic { background: var(--surface-2); color: var(--text); }
+.big-act.main .big-ic { background: var(--brand); color: var(--brand-ink); }
+.cat-ic { background: var(--surface-2); color: var(--text); }
+.cat-ic.in, .cat-ic.save { background: var(--surface-2); color: var(--text); }
+.cat-pick.on { border-color: var(--brand); background: none; }
+.cat-pick.on .cat-ic { background: var(--brand); color: var(--brand-ink); }
+.bottom-nav a.active { color: var(--brand); }
+.page-head .menu-pop { display: none; }

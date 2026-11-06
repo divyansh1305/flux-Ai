@@ -210,7 +210,8 @@
         el("div", { class: "tx-main" }, el("div", { class: "tx-title" }, u.name), el("div", { class: "tx-sub" }, dateFmt(u.date))),
         el("div", { class: "tx-amt" }, inr0(u.amount))))))) : null;
 
-    return [el("div", { class: "greet" }, greeting(user.name)), today, actions, reconnect, drift, ...checks, ...asks, nextStep(d.setup), weekSlot, recent, coming];
+    // Only what matters: today's number, the four actions, anything that needs you, recent payments
+    return [el("div", { class: "greet" }, greeting(user.name)), today, actions, reconnect, drift, ...checks, ...asks, nextStep(d.setup), recent];
   }
 
   document.addEventListener("DOMContentLoaded", () => window.Kitna.boot(render));

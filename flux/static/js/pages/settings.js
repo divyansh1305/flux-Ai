@@ -326,7 +326,7 @@
       el("p", { class: "small muted" }, "Auto matches your phone. Light or Dark stays the same all day."), themeSeg);
     // One column, most-used first, flat groups (no boxes)
     main.replaceChildren(pageHead("Settings", null), el("div", { class: "settings-list" },
-      looks, autoCard, remindCard, langCard, profile, autosave, voiceCard, learnCard, data, feedbackCard));
+      looks, autoCard, remindCard, langCard, profile, data, feedbackCard));
     if (location.hash) { const t = document.querySelector(location.hash); if (t) setTimeout(() => t.scrollIntoView({ behavior: "smooth", block: "start" }), 60); }
   }
 
