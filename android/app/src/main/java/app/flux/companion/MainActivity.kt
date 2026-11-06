@@ -36,7 +36,7 @@ class MainActivity : Activity() {
     private val card = Color.parseColor("#FFFFFF")
     private val fg = Color.parseColor("#1D1C1A")
     private val muted = Color.parseColor("#5F5B54")
-    private val accent = Color.parseColor("#34378A")
+    private val accent = Color.parseColor("#245C43")
     private var linkMessage: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {

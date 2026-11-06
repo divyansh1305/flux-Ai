@@ -118,7 +118,7 @@ p { margin: 0; }
 .icon-link { width: 36px; height: 36px; border-radius: 999px; display: grid; place-items: center; color: var(--muted); border: 0; background: transparent; cursor: pointer; }
  .icon-link.active { background: var(--surface-2); color: var(--text); }
 .icon-link svg { width: 18px; height: 18px; }
-.avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: var(--brand-soft); color: var(--brand) !important; color: var(--text); font-size: 12px; flex-shrink: 0; letter-spacing: 0.02em; }
+.avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: var(--brand-soft); color: var(--text); font-size: 12px; flex-shrink: 0; letter-spacing: 0.02em; }
 
 .main { max-width: var(--maxw); margin: 0 auto; padding: 32px 24px 140px; }
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
@@ -860,3 +860,45 @@ body { font-size: 16px; }
 .nav a[href="/app/pay"], .nav a[href="/app/pay"].active { border-radius: 8px; box-shadow: none; }
 /* Motion: only what explains something (sheets sliding up, loading rows) */
 .big-act:active, .quick:active .quick-ic, .person:active .avatar { transform: none; }
+
+/* ═══ Colour: Alpine Forest (light) and Midnight Emerald (dark) ══════════════
+   One green for everything you press, in both themes. Off-white page, white
+   surfaces; near-black page, charcoal surfaces. Semantic colours are darkened
+   in light mode so every text colour passes 4.5:1. */
+:root {
+  --bg: #F5F6F0; --surface: #FFFFFF; --surface-2: #EEF0E9; --surface-3: #E3E7DE;
+  --line: #E2E5DC; --line-2: #CFD5CA;
+  --text: #18231D; --muted: #5B675F; --faint: #66736A;
+  --brand: #245C43; --brand-hover: #1C4A36; --brand-ink: #FFFFFF; --brand-soft: #E4EEE6;
+  --green: #1C7A50; --green-soft: #E4F1E9;
+  --red: #B8423F; --red-soft: #FAE9E8;
+  --amber: #8F6211; --amber-soft: #F7EEDC;
+  --blue: #2F6E9F; --blue-soft: #E6EFF7;
+  --overlay: rgba(24, 35, 29, .45);
+  --t0b: #EEF0E9; --t0f: #18231D; --t1b: #EEF0E9; --t1f: #18231D; --t2b: #EEF0E9; --t2f: #18231D;
+  --t3b: #EEF0E9; --t3f: #18231D; --t4b: #EEF0E9; --t4f: #18231D; --t5b: #EEF0E9; --t5f: #18231D;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #101412; --surface: #1B211E; --surface-2: #232B27; --surface-3: #2C3530;
+    --line: #29312D; --line-2: #3A443F;
+    --text: #F3F5F2; --muted: #B3BCB5; --faint: #929C95;
+    --brand: #31A875; --brand-hover: #3BBA84; --brand-ink: #0B140F; --brand-soft: #1F3A2D;
+    --green: #4CC38A; --green-soft: #183326;
+    --red: #E8807D; --red-soft: #3A1F1E;
+    --amber: #E2B25E; --amber-soft: #33291A;
+    --blue: #7DB4E0; --blue-soft: #1B2B38;
+    --overlay: rgba(0, 0, 0, .6);
+    --t0b: #232B27; --t0f: #F3F5F2; --t1b: #232B27; --t1f: #F3F5F2; --t2b: #232B27; --t2f: #F3F5F2;
+    --t3b: #232B27; --t3f: #F3F5F2; --t4b: #232B27; --t4f: #F3F5F2; --t5b: #232B27; --t5f: #F3F5F2;
+  }
+}
+/* Green is the action colour: the Pay circle, the main buttons, the chosen tab and picture */
+.bottom-nav a.active { color: var(--brand); }
+.nav a.active { color: var(--brand); box-shadow: inset 0 -2px 0 var(--brand); }
+.cat-pick.on { border-color: var(--brand); background: var(--brand-soft); }
+.link-inline, .today-how { color: var(--brand); }
+.dot-live { background: var(--green); }
+/* Savings rows use the savings blue */
+.cat-ic.save { background: var(--blue-soft); color: var(--blue); }
+.avatar { background: var(--brand-soft); color: var(--text); }
