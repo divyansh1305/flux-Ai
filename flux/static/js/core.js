@@ -154,7 +154,7 @@
     Subscriptions: "Subscriptions", "Investment Returns": "Returns", "Other Income": "Other", "Pocket Money": "Pocket money" };
   const catIcon = (c, extra) => el("div", { class: "cat-ic" + (extra ? " " + extra : ""), "aria-hidden": "true" }, icon(CAT_ICON[c] || "c-dots"));
   const catShort = (c) => CAT_SHORT[c] || c;
-  const CAT_COLORS = ["#245C43", "#3E7A5D", "#5C9678", "#8DAF91", "#A9C4AC", "#C6D8C8", "#DCE7DD", "#EEF3EE"];  // one green, in steps
+  const CAT_COLORS = ["#1F5BD6", "#4777E0", "#6F94E8", "#97B1EF", "#B8CAF4", "#D3DEF8", "#E5ECFB", "#F1F5FD"];  // one blue, in steps
 
   // ─── API client ───────────────────────────────────────────
   function csrf() {

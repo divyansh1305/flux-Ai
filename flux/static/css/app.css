@@ -966,3 +966,26 @@ html[data-theme="dark"] { --bg: #0A0D0B; --surface: #141A16; --surface-2: #1C241
 .next-ic { background: var(--brand); color: var(--brand-ink); }
 .cat-ic.in { background: var(--green-soft); color: var(--green); }
 .tx-amt.green, .green { color: var(--green); }
+
+/* ═══ Kitna blue: the colour people trust with money, plus the marigold coin ═══ */
+:root { --bg: #F4F6FA; --surface: #FFFFFF; --surface-2: #EDF1F8; --surface-3: #E1E7F1; --line: #E1E6EF; --line-2: #CBD3E1;
+  --text: #121826; --muted: #4F5A6E; --faint: #5E6A7E;
+  --brand: #1F5BD6; --brand-hover: #194CB5; --brand-ink: #FFFFFF; --brand-soft: #E3ECFC;
+  --green: #137A4B; --green-soft: #E1F3E9; --red: #C2362F; --red-soft: #FCE8E6; --amber: #8A5A00; --amber-soft: #FBF0D9;
+  --blue: #1F5BD6; --blue-soft: #E3ECFC; }
+@media (prefers-color-scheme: dark) { :root { --bg: #0B0F17; --surface: #141A24; --surface-2: #1B2230; --surface-3: #252E3E; --line: #222A38; --line-2: #333D50;
+  --text: #F3F6FB; --muted: #B6C0D0; --faint: #95A0B3;
+  --brand: #5B8CFF; --brand-hover: #739DFF; --brand-ink: #08101F; --brand-soft: #18284A;
+  --green: #45D18F; --green-soft: #12301F; --red: #FF8A80; --red-soft: #3A1B19; --amber: #F2BE5C; --amber-soft: #33270F;
+  --blue: #5B8CFF; --blue-soft: #18284A; } }
+html[data-theme="light"] { --bg: #F4F6FA; --surface: #FFFFFF; --surface-2: #EDF1F8; --surface-3: #E1E7F1; --line: #E1E6EF; --line-2: #CBD3E1;
+  --text: #121826; --muted: #4F5A6E; --faint: #5E6A7E;
+  --brand: #1F5BD6; --brand-hover: #194CB5; --brand-ink: #FFFFFF; --brand-soft: #E3ECFC;
+  --green: #137A4B; --green-soft: #E1F3E9; --red: #C2362F; --red-soft: #FCE8E6; --amber: #8A5A00; --amber-soft: #FBF0D9;
+  --blue: #1F5BD6; --blue-soft: #E3ECFC; }
+html[data-theme="dark"] { --bg: #0B0F17; --surface: #141A24; --surface-2: #1B2230; --surface-3: #252E3E; --line: #222A38; --line-2: #333D50;
+  --text: #F3F6FB; --muted: #B6C0D0; --faint: #95A0B3;
+  --brand: #5B8CFF; --brand-hover: #739DFF; --brand-ink: #08101F; --brand-soft: #18284A;
+  --green: #45D18F; --green-soft: #12301F; --red: #FF8A80; --red-soft: #3A1B19; --amber: #F2BE5C; --amber-soft: #33270F;
+  --blue: #5B8CFF; --blue-soft: #18284A; }
+.today .today-num .cur { opacity: .8; }
