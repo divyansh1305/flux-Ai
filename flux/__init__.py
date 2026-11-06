@@ -65,6 +65,18 @@ def create_app(overrides=None):
     reminders.init_app(app)
 
     @app.before_request
+    def _moved():
+        # After moving to a new address (e.g. kitna.pythonanywhere.com), set MOVED_TO on the OLD site:
+        # every visit is sent to the same page on the new address. Bank SMS forwarding keeps working
+        # because those requests are POSTs with a token, which a 308 redirect repeats as-is.
+        target = (app.config.get("MOVED_TO") or "").rstrip("/")
+        if target and not request.host_url.rstrip("/").startswith(target):
+            from flask import redirect
+            qs = request.query_string.decode()
+            return redirect(target + request.path + ("?" + qs if qs else ""), code=308)
+        return None
+
+    @app.before_request
     def _before():
         check_csrf()
 

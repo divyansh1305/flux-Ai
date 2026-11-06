@@ -104,3 +104,11 @@ What you get:
 
 Optional `.env` line: `CONTACT_EMAIL=you@example.com` sets the support/grievance address shown on the privacy and terms
 pages (otherwise the sign-in email sender is used).
+
+## Forward the old address
+
+After the app runs on the new account, add this line to the **old** site's `.env` and press Reload there:
+
+    MOVED_TO=https://kitna.pythonanywhere.com
+
+Every visit to the old address (any page, any link) is sent to the same page on the new one.

@@ -69,6 +69,7 @@ class Config:
 
         # Shown on the privacy and terms pages as the place for questions and complaints (DPDP grievance contact).
         self.CONTACT_EMAIL = os.environ.get("CONTACT_EMAIL", "")
+        self.MOVED_TO = os.environ.get("MOVED_TO", "")  # set on the old site only, e.g. https://kitna.pythonanywhere.com
 
         # Who may open the private numbers page (/app/admin): comma-separated sign-in emails.
         self.ADMIN_EMAILS = os.environ.get("ADMIN_EMAILS", "")
