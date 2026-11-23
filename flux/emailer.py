@@ -56,7 +56,11 @@ def send_email(to, subject, text, html_body):
             s.send_message(msg)
         return True
     except Exception:  # never leak SMTP details to the user
-        log.exception("Failed to send email to %s", to)
+        pw, sender = cfg["MAIL_PASSWORD"], cfg["MAIL_SENDER"]
+        # Shape only, never the value: tells the owner whether the pasted settings look right.
+        log.exception("Failed to send email to %s (sender looks like a Gmail address: %s; password is %d chars, "
+                      "16 letters like a Gmail App Password: %s)", to, sender.lower().endswith("@gmail.com"), len(pw),
+                      len(pw) == 16 and pw.isalpha())
         return False
 
 
