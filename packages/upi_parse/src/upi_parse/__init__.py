@@ -10,6 +10,7 @@ from .mask import mask_text
 from .model import Transaction
 from .narration import StatementError, parse_narration, parse_statement_csv
 from .notification import PACKAGES as NOTIFICATION_PACKAGES
+from .notification import SMS_APP_PACKAGES
 from .notification import parse_notification
 from .qr import UPIError, UPIRequest, build_upi_uri, parse_upi_uri, valid_vpa
 from .sms import parse_sms, split_messages
@@ -18,5 +19,5 @@ __version__ = "0.1.0"
 __all__ = [
     "Transaction", "mask_text", "parse_sms", "split_messages", "parse_notification", "parse_narration", "parse_statement_csv",
     "parse_upi_uri", "build_upi_uri", "valid_vpa", "categorize", "UPIRequest", "UPIError", "StatementError",
-    "EXPENSE_CATEGORIES", "INCOME_CATEGORIES", "MCC_CATEGORIES", "NOTIFICATION_PACKAGES",
+    "EXPENSE_CATEGORIES", "INCOME_CATEGORIES", "MCC_CATEGORIES", "NOTIFICATION_PACKAGES", "SMS_APP_PACKAGES",
 ]

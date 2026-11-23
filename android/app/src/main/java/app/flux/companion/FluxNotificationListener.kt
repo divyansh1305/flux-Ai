@@ -22,7 +22,7 @@ class FluxNotificationListener : NotificationListenerService() {
         if (!store.consented) return
 
         val pkg = sbn.packageName ?: return
-        if (pkg !in Filter.PACKAGES) return
+        if (!Filter.isWatched(this, pkg)) return
 
         val extras = sbn.notification?.extras ?: return
         val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty()
@@ -30,7 +30,7 @@ class FluxNotificationListener : NotificationListenerService() {
             ?: extras.getCharSequence(Notification.EXTRA_TEXT))?.toString().orEmpty()
         val text = "$title. $body".trim()
 
-        if (!Filter.shouldSend(pkg, text)) return
+        if (!Filter.shouldSend(this, pkg, text)) return
 
         val key = "$pkg|$text"
         synchronized(recent) {
@@ -38,6 +38,7 @@ class FluxNotificationListener : NotificationListenerService() {
             recent.addLast(key)
             if (recent.size > 30) recent.removeFirst()
         }
-        Uploader(this).enqueueAndFlush(pkg, title, body, sbn.postTime)
+        val smsApp = pkg !in Filter.PACKAGES  // the phone's own SMS app, not on the known list
+        Uploader(this).enqueueAndFlush(pkg, title, body, sbn.postTime, smsApp)
     }
 }

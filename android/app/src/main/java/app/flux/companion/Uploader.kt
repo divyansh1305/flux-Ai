@@ -19,11 +19,11 @@ class Uploader(private val context: Context) {
     private val store = SecureStore(context)
     private val queueFile = File(context.filesDir, "pending.json")
 
-    fun enqueueAndFlush(pkg: String, title: String, text: String, postedAt: Long) {
+    fun enqueueAndFlush(pkg: String, title: String, text: String, postedAt: Long, smsApp: Boolean = false) {
         io.execute {
             synchronized(lock) {
                 val q = readQueue()
-                q.put(JSONObject().put("package", pkg).put("title", title).put("body", text).put("posted_at", postedAt))
+                q.put(JSONObject().put("package", pkg).put("title", title).put("body", text).put("posted_at", postedAt).put("sms_app", smsApp))
                 while (q.length() > 200) q.remove(0)
                 writeQueue(q)
             }

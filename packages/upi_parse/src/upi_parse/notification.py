@@ -35,7 +35,14 @@ PACKAGES = {
     # Bank SMS also arrive as notifications from the SMS app; parsed with the SMS rules.
     "com.google.android.apps.messaging": "Messages",
     "com.samsung.android.messaging": "Samsung Messages",
+    "com.android.mms": "Messages",               # Xiaomi / Redmi / POCO and other phones' built-in SMS app
+    "com.oneplus.mms": "OnePlus Messages",
+    "com.truecaller": "Truecaller",              # many people read SMS in Truecaller
 }
+
+# Apps whose notifications are bank SMS: parsed with the SMS rules and treated as the SMS channel.
+SMS_APP_PACKAGES = frozenset({"com.google.android.apps.messaging", "com.samsung.android.messaging",
+                              "com.android.mms", "com.oneplus.mms", "com.truecaller"})
 
 PAID_RE = [
     re.compile(c.CURRENCY + r"\s*([\d,]+(?:\.\d{1,2})?)\s+(?:paid|sent)\s+to\s+(.+?)(?:\s+(?:from|via|using|on)\b|[.•]|$)", re.I),

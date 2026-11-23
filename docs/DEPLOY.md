@@ -10,7 +10,7 @@ Kitna runs at `https://fluxai.pythonanywhere.com` from the code in `~/flux-ai`.
    cd ~/flux-ai && git pull
    ~/.virtualenvs/flux/bin/pip install -r requirements.txt   # only needed if requirements.txt changed
    ```
-   **This update (reminders, friends, PDF statements) changed `requirements.txt`: run the pip line.** It adds the PDF reader.
+   **Kitna 2.0 update (new design, more SMS apps): run the pip line.** The bundled `upi-parse` library moved to 0.1.1 so it reinstalls and learns the new SMS apps.
 3. **Web** tab → green **Reload** button.
 4. Open the site. The database updates itself; phones pick up the new version on their own (open Kitna twice).
 

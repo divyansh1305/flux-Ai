@@ -28,6 +28,7 @@
 
   // Static, trusted SVG icons (no user data ever goes in here).
   const ICONS = {
+    person: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
     list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
     pie: '<path d="M21 12A9 9 0 1 1 12 3v9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/>',
@@ -399,23 +400,20 @@
   }
 
   // ─── Shell ────────────────────────────────────────────────
-  // Four things people do every day are tabs; everything else lives in one "More" menu.
+  // Four tabs for what people do every day; everything else sits under "You".
   const NAV = [
-    ["/app", "home", "Home"],
-    ["/app/transactions", "list", "History"],
-    ["/app/pay", "qr", "Pay"],
-    ["/app/friends", "users", "Friends"],
+    ["/app", "home", "Today"],
+    ["/app/transactions", "list", "Activity"],
+    ["/app/pay", "qr", "Scan"],
     ["/app/plans", "calendar", "Upcoming"],
   ];
-  const MOBILE_NAV = [["/app", "home", "Home"], ["/app/transactions", "list", "History"], ["/app/pay", "qr", "Pay"],
-    ["/app/friends", "users", "Friends"], ["#more", "menu", "More"]];
+  const MOBILE_NAV = [["/app", "home", "Today"], ["/app/transactions", "list", "Activity"], ["/app/pay", "qr", "Scan"],
+    ["/app/plans", "calendar", "Upcoming"], ["#more", "person", "You"]];
   const MENU = [
-    ["/app/plans", "calendar", "Upcoming", "Bills and plans coming up"],
-    ["/app/budgets", "pie", "Monthly limits", "Spend less on food, shopping…"],
-    ["/app/goals", "c-piggy", "Savings goals", "Save for a phone, a trip…"],
-    ["/app/coach", "chat", "Ask Kitna", "Ask anything about your money"],
+    ["/app/friends", "users", "Friends", "Split bills, get paid back"],
+    ["/app/coach", "chat", "Ask Kitna", "Questions about your money"],
     ["/app/import", "upload", "Add bank statement", "PDF or CSV from your bank"],
-    ["/app/settings", "gear", "Settings", "Account, reminders, language"],
+    ["/app/settings", "gear", "Settings", "Auto-log, reminders, account"],
   ];
   function moreMenu() {
     const items = MENU.concat((CONFIG.features || {}).admin ? [["/app/admin", "trend", "Kitna numbers", "Only you can see this"]] : []);

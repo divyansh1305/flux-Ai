@@ -164,17 +164,18 @@
               st.active ? "Make a new link" : "Get my personal link"),
             st.active ? el("span", { class: "small muted" }, "Making a new link stops the old one. Update your automations after.") : null);
         }
-        kids.push(el("div", { class: "stack", style: { gap: "10px" } },
-          el("label", { class: "field" }, "Your bank", bankSel),
-          linkBlock));
-        kids.push(numbered([
+        const steps = numbered([
           ["Open the ", el("b", null, "Shortcuts"), " app → ", el("b", null, "Automation"), " (bottom) → ", el("b", null, "+"), " → ", el("b", null, "Message"), "."],
           ["Tap ", el("b", null, "Message Contains"), " and type ", el("code", null, words[0]), " ", copy(words[0], "Word"), ". Leave Sender empty. Choose ", el("b", null, "Run Immediately"), " → ", el("b", null, "Next"), " → ", el("b", null, "New Blank Automation"), "."],
           ["Search ", el("b", null, "Get Contents of URL"), " and add it. Tap ", el("b", null, "URL"), " and paste your personal link."],
           ["Tap the small ", el("b", null, "›"), " on that block. Set ", el("b", null, "Method"), " to ", el("b", null, "POST"), ", ", el("b", null, "Request Body"), " to ", el("b", null, "File"), ", then tap ", el("b", null, "File"), " and pick ", el("b", null, "Shortcut Input"), ". Tap ", el("b", null, "Done"), "."],
           ["Do steps 1–4 once more with the word ", el("code", null, words[1]), " ", copy(words[1], "Word"), " so money you receive is added too."],
           ["Test it: send ₹1 by UPI. It shows up in Kitna under Recent within a few seconds."],
-        ]));
+        ]);
+        // The Shortcuts route takes a few minutes, so it stays folded until someone wants it.
+        kids.push(el("details", { class: "auto-more", open: (link || st.active) ? true : null },
+          el("summary", null, gm ? "No Gmail alerts? Use an iPhone Shortcut instead" : "Set up with an iPhone Shortcut (5 minutes)"),
+          el("div", { class: "stack", style: { gap: "10px" } }, el("label", { class: "field" }, "Your bank", bankSel), linkBlock), steps));
       } else {
         const apk = (window.Kitna.config.features || {}).android_apk;
         if (!apk) {

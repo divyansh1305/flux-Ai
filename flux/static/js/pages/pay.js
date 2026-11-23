@@ -32,6 +32,13 @@
     return null;
   }
 
+  window.addEventListener("pagehide", stopCamera);
+  let resumeCam = null;  // restarts the camera when you come back to the Scan screen
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopCamera();
+    else if (resumeCam && !stream) resumeCam();
+  });
+
   async function render(main) {
     const m = await meta();
     if ("BarcodeDetector" in window) {
@@ -77,32 +84,61 @@
         again,
         el("p", { class: "tiny faint pay-foot" }, icon("shield"), "You pay with your PIN in your own UPI app. Kitna never touches your money."),
         el("button", { class: "link pay-cash", type: "button", onclick: () => window.Kitna.addTransactionModal("expense") }, "Paid in cash? Add it"));
+      resumeCam = () => { if (video.isConnected) startCamera(video, msg, prefillAmount); };
       startCamera(video, msg, prefillAmount);
     }
 
     async function startCamera(video, msg, prefillAmount) {
+      // iPhone Safari only shows live video inline when these are set as properties, not just attributes.
+      video.muted = true; video.playsInline = true; video.autoplay = true;
+      video.setAttribute("playsinline", ""); video.setAttribute("webkit-playsinline", "");
+      const scanner = video.parentNode;
+      const tapToStart = (text) => {
+        msg.textContent = text;
+        const b = el("button", { class: "btn primary start-cam", type: "button", onclick: () => { b.remove(); startCamera(video, msg, prefillAmount); } }, icon("camera"), "Start camera");
+        scanner.appendChild(b);
+      };
+      if (!window.isSecureContext) { msg.textContent = "The camera needs a secure (https) link. Use a photo or a UPI ID."; return; }
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         msg.textContent = "No camera here. Use a photo or a UPI ID.";
         return;
       }
+      msg.textContent = "Starting camera…";
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
-        video.srcObject = stream;
-        await video.play();
-        msg.textContent = "Point at any UPI QR";
-        const tick = async () => {
-          if (!stream) return;
-          if (video.readyState >= 2) {
-            const w = Math.min(640, video.videoWidth), h = Math.round(w * video.videoHeight / video.videoWidth);
-            const code = await decodeFrame(video, w, h);
-            if (code) { stopCamera(); return handleCode(code, prefillAmount); }
-          }
-          scanTimer = requestAnimationFrame(tick);
-        };
-        tick();
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
       } catch (e) {
-        msg.textContent = e.name === "NotAllowedError" ? "Camera is blocked. Use a photo or a UPI ID." : "Couldn't start the camera.";
+        if (e.name === "NotAllowedError" || e.name === "SecurityError") {
+          msg.textContent = IS_IOS ? "Camera is off for Kitna. Settings → Safari → Camera → Allow, or use a photo." : "Camera is blocked. Allow it in the address bar, or use a photo.";
+        } else if (e.name === "NotFoundError" || e.name === "OverconstrainedError") {
+          msg.textContent = "No camera found. Use a photo or a UPI ID.";
+        } else if (e.name === "NotReadableError") {
+          msg.textContent = "Another app is using the camera. Close it and try again.";
+        } else {
+          tapToStart("Couldn't start the camera.");
+        }
+        return;
       }
+      video.srcObject = stream;
+      try { await video.play(); } catch (e) {
+        // The camera is on but the browser wants a tap before it shows video (some iPhones, Low Power Mode).
+        stopCamera();
+        tapToStart("Tap to start the camera");
+        return;
+      }
+      msg.textContent = "Point at any UPI QR";
+      let busy = false;
+      const tick = async () => {
+        if (!stream) return;
+        if (!busy && video.readyState >= 2 && video.videoWidth) {
+          busy = true;
+          const w = Math.min(640, video.videoWidth), h = Math.round(w * video.videoHeight / video.videoWidth);
+          const code = await decodeFrame(video, w, h);
+          busy = false;
+          if (code) { stopCamera(); return handleCode(code, prefillAmount); }
+        }
+        scanTimer = requestAnimationFrame(tick);
+      };
+      tick();
     }
 
     async function fromImage(file) {
@@ -129,6 +165,7 @@
     // ── 2. Amount
     function showPayee(d) {
       stopCamera();
+      resumeCam = null;
       const amount = el("input", { class: "pay-amount num", type: "number", inputmode: "decimal", min: "1", max: "100000", step: "0.01",
         value: d.amount || "", placeholder: "0", readonly: d.amount_locked ? true : null, "aria-label": "Amount in rupees" });
       // The category Kitna guessed, with a picture; tap Change to pick another

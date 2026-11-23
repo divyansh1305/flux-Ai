@@ -9,6 +9,10 @@
         <package android:name="com.google.android.apps.nbu.paisa.user" />
         <package android:name="com.phonepe.app" />
         <package android:name="net.one97.paytm" />
+        <!-- Lets Kitna find the phone's default SMS app (any brand) to watch its bank-SMS notifications. -->
+        <intent>
+            <action android:name="android.provider.Telephony.SMS_DELIVER" />
+        </intent>
     </queries>
 
     <application

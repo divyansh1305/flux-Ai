@@ -171,11 +171,10 @@
     // ── 2. Four big buttons
     const big = (ic, label, fn, main) => el("button", { class: "big-act" + (main ? " main" : ""), type: "button", onclick: fn },
       el("span", { class: "big-ic" }, icon(ic)), el("span", { class: "big-label" }, label));
-    const actions = el("div", { class: "big-acts" },
-      big("qr", "Scan & Pay", () => { location.href = "/app/pay"; }, true),
-      big("plus", "Add payment", () => addTransactionModal("expense")),
-      big("split", "Split bill", () => window.Kitna.splitModal()),
-      big("calendar", "Upcoming", () => { location.href = "/app/plans"; }));
+    const actions = el("div", { class: "big-acts three" },
+      big("qr", "Scan & pay", () => { location.href = "/app/pay"; }, true),
+      big("plus", "Add", () => addTransactionModal("expense")),
+      big("split", "Split", () => window.Kitna.splitModal()));
 
     // ── Only things that truly need you
     const g = d.gmail || {};
@@ -194,10 +193,10 @@
           el("button", { class: "btn sm ghost", onclick: async () => { try { await api(`/api/friends/${x.id}/not-them`, { method: "POST" }); window.Kitna.refresh(); } catch (e) { window.Kitna.err(e); } } }, "No")))));
 
     // ── 3. Recent payments
-    const recent = section("Recent payments", el("a", { class: "link", href: "/app/transactions" }, "See all"),
+    const recent = section("Recent", el("a", { class: "link", href: "/app/transactions" }, "See all"),
       el("div", { class: "card list-card" }, d.recent.length
         ? el("div", { class: "tx-list" }, d.recent.slice(0, 5).map((t) => txRow(t)))
-        : el("div", { class: "empty" }, el("b", null, "No payments yet"), "Tap Scan & Pay, or Add payment.")));
+        : el("div", { class: "empty" }, el("b", null, "No payments yet"), "Scan a QR to pay, or tap Add.")));
 
     // ── Coming up (only if something is)
     const upcoming = [
@@ -211,7 +210,9 @@
         el("div", { class: "tx-amt" }, inr0(u.amount))))))) : null;
 
     // Only what matters: today's number, the four actions, anything that needs you, recent payments
-    return [el("div", { class: "greet" }, greeting(user.name)), today, actions, reconnect, drift, ...checks, ...asks, nextStep(d.setup), recent];
+    const dateLine = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
+    return [el("header", { class: "large-title" }, el("div", { class: "lt-date" }, dateLine), el("h1", null, greeting(user.name))),
+      today, actions, reconnect, drift, ...checks, ...asks, nextStep(d.setup), coming, recent];
   }
 
   document.addEventListener("DOMContentLoaded", () => window.Kitna.boot(render));

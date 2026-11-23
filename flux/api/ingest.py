@@ -92,7 +92,7 @@ def ingest_ping():
     return jsonify({"ok": True, "name": user["name"].split()[0]})
 
 
-SMS_APPS = {"com.google.android.apps.messaging", "com.samsung.android.messaging"}
+from upi_parse import SMS_APP_PACKAGES as SMS_APPS  # noqa: E402  bank SMS shown by an SMS app
 
 
 def ingest_row(user, row, source):
@@ -208,7 +208,10 @@ def ingest_notification():
     db = get_db()
     data = request.get_json(silent=True) or {}
     package = str(data.get("package", ""))[:120]
-    if package not in NOTIFICATION_PACKAGES:
+    # The phone's default SMS app (whatever brand) is flagged by the companion app, so bank SMS on
+    # Vivo, Oppo, Realme or any other phone are not missed. Those are parsed with the SMS rules.
+    sms_app = data.get("sms_app") is True
+    if package not in NOTIFICATION_PACKAGES and not sms_app:
         db.commit()
         count_ingest("notification", "rejected")
         return jsonify({"logged": False, "reason": "App not supported."})
@@ -225,7 +228,7 @@ def ingest_notification():
            "ref": tx.reference, "balance": float(tx.balance) if tx.balance is not None else None,
            "account_last4": tx.account_last4,
            # A bank SMS displayed by the Messages app is the same channel as a forwarded SMS.
-           "origin": "sms" if package in SMS_APPS else package,
+           "origin": "sms" if (package in SMS_APPS or sms_app) else package,
            "posted_at": str(data.get("posted_at", ""))[:20] or None,
            "sample_text": f"{str(data.get('title', ''))[:200]}. {str(data.get('body', ''))[:400]}".strip(". ")}
     out = ingest_row(user, row, "notification")

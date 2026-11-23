@@ -17,8 +17,11 @@
     seg.append(bM, bV);
     paint();
     const cushionPick = el("div", { class: "chips" }, [0, 500, 1000, 2000].map((v) => el("button", { type: "button", class: "chip", onclick: () => { cushion.value = v; } }, v ? inr0(v) : "None")));
-    return el("div", { class: "card", id: "money" },
-      el("h2", null, "Your money setup"),
+    const ord = (n) => n + (n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th");
+    const summaryText = u.income_pattern === "unset" ? "Tell Kitna when your money comes in"
+      : (u.income_pattern === "monthly" ? `Money comes on the ${ord(u.pay_day || 1)}` : "Money comes in at different times") + ` · cushion ${inr0(u.cushion || 0)}`;
+    return el("details", { class: "card setup-card", id: "money", open: u.income_pattern === "unset" ? true : null },
+      el("summary", null, el("span", { class: "setup-sum" }, el("b", null, "Your money setup"), el("span", null, summaryText)), el("span", { class: "link" }, "Edit")),
       el("div", { style: { height: "14px" } }),
       el("div", { class: "form" },
         el("div", { class: "field" }, el("span", null, "When does your money come in?"), seg,

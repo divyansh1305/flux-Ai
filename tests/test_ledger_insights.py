@@ -193,3 +193,28 @@ def test_match_my_bank_sets_opening_balance_without_faking_income(app, client, u
     assert d2["month"]["income"] == before_month["income"]
     tb = client.get("/api/ledger").json["trial_balance"]
     assert tb["sum"] == 0 and tb["accounts"]["equity:opening_balance"] < 0
+
+
+# ─── Bank SMS on any Android brand ───────────────────────────
+SMS_TEXT = "Rs.180.00 debited from A/c XX4321 on 10-11-26 to VPA chaayos@ybl UPI Ref 523456789012. Avl Bal Rs 3,200.00"
+
+
+@pytest.mark.parametrize("package", ["com.android.mms", "com.oneplus.mms", "com.truecaller"])
+def test_built_in_sms_apps_of_other_brands_are_read(app, client, user, package):
+    r = notif(app, tok(client), package, "VM-HDFCBK", SMS_TEXT)
+    assert r["logged"], r
+
+
+def test_default_sms_app_flagged_by_the_phone_is_read_as_sms(app, client, user):
+    t = tok(client)
+    r = app.test_client().post("/api/ingest/notification", headers={"Authorization": f"Bearer {t}"},
+                               json={"package": "com.vivo.messaging.example", "title": "VM-HDFCBK", "body": SMS_TEXT, "sms_app": True}).json
+    assert r["logged"], r
+    # …and the same SMS forwarded another way is not counted twice
+    again = sms(app, t, SMS_TEXT)
+    assert not again.get("logged")
+
+
+def test_unknown_app_without_the_sms_flag_is_still_rejected(app, client, user):
+    r = notif(app, tok(client), "com.random.chat", "Rahul", "Rs.500 paid to you lol")
+    assert r["logged"] is False and r["reason"] == "App not supported."

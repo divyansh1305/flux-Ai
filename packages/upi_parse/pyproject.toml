@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "upi-parse"
-version = "0.1.0"
+version = "0.1.1"
 description = "Parse Indian bank SMS, UPI app notifications, UPI QR codes and bank statement narrations into clean, categorised transactions."
 readme = "README.md"
 requires-python = ">=3.9"

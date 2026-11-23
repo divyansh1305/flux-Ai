@@ -1,5 +1,8 @@
 package app.flux.companion
 
+import android.content.Context
+import android.provider.Telephony
+
 /**
  * On-device filter. A notification leaves the phone only if ALL of these hold:
  *  1. it comes from a known payment / bank app (allow-list below),
@@ -29,7 +32,18 @@ object Filter {
         "com.msf.kbank.mobile" to "Kotak",
         "com.google.android.apps.messaging" to "Messages",  // bank SMS shown as notifications
         "com.samsung.android.messaging" to "Samsung Messages",
+        "com.android.mms" to "Messages",            // Xiaomi / Redmi / POCO and other built-in SMS apps
+        "com.oneplus.mms" to "OnePlus Messages",
+        "com.truecaller" to "Truecaller",
     )
+
+    /** The phone's default SMS app, whatever the brand (Vivo, Oppo, Realme...). Null if none. */
+    fun defaultSmsApp(context: Context): String? =
+        try { Telephony.Sms.getDefaultSmsPackage(context) } catch (e: Exception) { null }
+
+    /** A known payment app, or the phone's own SMS app showing a bank SMS. */
+    fun isWatched(context: Context, packageName: String): Boolean =
+        packageName in PACKAGES || packageName == defaultSmsApp(context)
 
     private val AMOUNT = Regex("""(?i)(₹|rs\.?|inr)\s*:?\s*[0-9][0-9,]*(\.[0-9]{1,2})?""")
     private val MONEY_WORDS = Regex(
@@ -39,8 +53,8 @@ object Filter {
         """(?i)\b(otp|one[- ]time password|verification code|offer|cashback up to|win|reward points|request(ed)? (money|payment)|collect request|failed|declined|reminder|due (on|date)|will be debited|is due|auto-?pay (set|scheduled))\b"""
     )
 
-    fun shouldSend(packageName: String, text: String): Boolean {
-        if (packageName !in PACKAGES) return false
+    fun shouldSend(context: Context, packageName: String, text: String): Boolean {
+        if (!isWatched(context, packageName)) return false
         if (text.length < 12 || text.length > 1000) return false
         if (SKIP.containsMatchIn(text)) return false
         return AMOUNT.containsMatchIn(text) && MONEY_WORDS.containsMatchIn(text)
