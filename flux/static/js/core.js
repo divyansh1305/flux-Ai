@@ -499,7 +499,6 @@
         el("a", { href: "/app", class: "logo", "aria-label": "Kitna home" }, wordmark()),
         nav,
         el("div", { class: "top-actions" },
-          el("a", { href: "#", class: "icon-link", title: "Help", "aria-label": "Help", onclick: (e) => { e.preventDefault(); if (window.Kitna.helpChat) window.Kitna.helpChat(); } }, icon("help")),
           bell,
           el("button", { type: "button", class: "avatar", title: USER.name, "aria-label": "More", onclick: moreMenu }, initials))));
       const tab = (href, ic, label, extra) => el("a", Object.assign({ href, class: (href === "/app/pay" ? "pay " : "") + (path === href || (href === "#more" && inMenu) ? "active" : ""),

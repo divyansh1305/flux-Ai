@@ -147,4 +147,20 @@
   }
 
   K.helpChat = openHelp;
+
+  // The floating helper button, bottom right on every screen (like a chat companion). Hidden on Scan,
+  // where the camera needs the whole screen, and during setup.
+  function addFab() {
+    const path = location.pathname;
+    if (!path.startsWith("/app") || path === "/app/pay" || document.querySelector(".help-fab")) return;
+    const fab = el("button", { class: "help-fab", type: "button", "aria-label": "Ask the Kitna helper", title: "Ask the Kitna helper",
+      onclick: () => { fab.classList.add("seen"); store("kitna_help_seen", "1"); openHelp(); } },
+      el("svg", null), el("span", { class: "help-fab-dot", "aria-hidden": "true" }));
+    // Speech-bubble icon (static markup, no user data)
+    fab.firstChild.outerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.2 3.4c-.5.4-1.3 0-1.3-.6V16A2.5 2.5 0 0 1 4 13.5z"/><circle cx="8.5" cy="9.5" r="1.1"/><circle cx="12" cy="9.5" r="1.1"/><circle cx="15.5" cy="9.5" r="1.1"/></svg>';
+    if (store("kitna_help_seen") === "1") fab.classList.add("seen");
+    document.body.appendChild(fab);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => setTimeout(addFab, 300));
+  else setTimeout(addFab, 300);
 })();
