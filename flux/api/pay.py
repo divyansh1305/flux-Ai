@@ -32,7 +32,7 @@ def describe(parsed, uid):
         "vpa": parsed["pa"],
         "name": parsed["pn"] or (known["name"] if known else "") or parsed["pa"].split("@")[0],
         "amount": float(parsed["am"]) if parsed["am"] is not None else None,
-        "amount_locked": parsed["am"] is not None and bool(parsed.get("tr")),
+        "amount_locked": parsed["am"] is not None and (bool(parsed.get("tr")) or parsed["is_merchant"]),
         "note": parsed["tn"],
         "is_merchant": parsed["is_merchant"],
         "category": category,
@@ -78,7 +78,9 @@ def prepare():
     cur = db.execute("INSERT INTO payments (user_id, ref, payee_vpa, payee_name, amount, category, note) VALUES (?,?,?,?,?,?,?)",
                      (u["id"], ref, vpa, name, amount, category, note))
     db.commit()
-    links = upi.build_links(vpa, name, f"{amount / 100:.2f}", note or f"Kitna {category}", ref)
+    raw = data.get("code")
+    raw = raw.strip()[:1000] if isinstance(raw, str) else None
+    links = upi.build_links(vpa, name, f"{amount / 100:.2f}", raw)
     return jsonify({"payment_id": cur.lastrowid, "ref": ref, "check": check, "links": links,
                     "amount": rupees(amount), "name": name, "vpa": vpa, "category": category})
 

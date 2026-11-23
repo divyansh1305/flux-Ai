@@ -93,17 +93,55 @@ def category_for(parsed, fallback_categorize):
     return cat, ("merchant name" if kw else None)
 
 
-def build_links(pa, pn, amount, note, tr):
-    """Return a generic upi:// link plus app-specific links. All values are validated + percent-encoded."""
+# Fields a shop's QR may carry that the UPI app checks (signature etc.).
+# They must reach the UPI app exactly as printed on the QR.
+MERCHANT_KEYS = ("pa", "pn", "mc", "tr", "tn", "am", "mam", "cu", "url", "mode", "purpose", "orgid", "sign",
+                 "mid", "msid", "mtid", "tid", "qrmedium", "invoiceno", "invoicedate", "gstin", "gstbrkup",
+                 "ver", "category")
+
+
+def _qs(params):
+    return "&".join(f"{k}={quote(str(v), safe='@.-_')}" for k, v in params)
+
+
+def original_params(raw):
+    """The query of a scanned upi:// code as (key, value) pairs, in order, keys lower-cased."""
+    raw = (raw or "").strip()
+    if not raw.lower().startswith("upi://"):
+        return []
+    out = []
+    for pair in urlsplit(raw).query.split("&"):
+        if "=" not in pair:
+            continue
+        k, v = pair.split("=", 1)
+        k = k.strip().lower()
+        if k in MERCHANT_KEYS and k not in dict(out):
+            out.append((k, unquote(v).strip()))
+    return out
+
+
+def build_links(pa, pn, amount, raw_code=None):
+    """Return a generic upi:// link plus app-specific links.
+
+    GPay, PhonePe and others refuse links that look tampered with. So:
+    - a shop's QR is passed on exactly as scanned (only the amount is filled in if the QR had none);
+    - a person's UPI ID gets the bare minimum: pa, pn, am, cu. No reference or note added by Kitna,
+      because a made-up 'tr' makes GPay decline person-to-person payments.
+    """
     if not valid_vpa(pa):
         raise ApiError("Invalid UPI ID.")
     amt = parse_amount_str(amount)
-    params = [("pa", pa), ("pn", pn or pa.split("@")[0]), ("am", f"{amt:.2f}"), ("cu", "INR")]
-    if note:
-        params.append(("tn", note[:50]))
-    if tr:
-        params.append(("tr", tr))
-    query = "&".join(f"{k}={quote(str(v), safe='@.-_')}" for k, v in params)
+    orig = original_params(raw_code)
+    od = dict(orig)
+    mc = re.sub(r"\D", "", od.get("mc", ""))
+    if orig and od.get("pa", "").lower() == pa.lower() and mc and mc != "0000":
+        params = [(k, v) for k, v in orig if k != "am"]
+        params.insert(min(3, len(params)), ("am", od.get("am") or f"{amt:.2f}"))
+        if "cu" not in od:
+            params.append(("cu", "INR"))
+    else:
+        params = [("pa", pa), ("pn", pn or pa.split("@")[0]), ("am", f"{amt:.2f}"), ("cu", "INR")]
+    query = _qs(params)
     links = {"generic": f"upi://pay?{query}", "apps": []}
     for key, app in APPS.items():
         links["apps"].append({

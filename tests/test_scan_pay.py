@@ -28,14 +28,28 @@ def test_parse_rejects_bad_codes(bad):
 
 
 def test_links_are_encoded_and_cannot_be_injected():
-    links = build_links("shop@okhdfc", "Chai & Co", "45.5", "tea & snacks", "KTN1")
-    assert links["generic"].startswith("upi://pay?pa=shop@okhdfc&pn=Chai%20%26%20Co&am=45.50&cu=INR")
-    assert "tn=tea%20%26%20snacks" in links["generic"]
+    links = build_links("shop@okhdfc", "Chai & Co", "45.5")
+    assert links["generic"] == "upi://pay?pa=shop@okhdfc&pn=Chai%20%26%20Co&am=45.50&cu=INR"
     gpay = next(a for a in links["apps"] if a["id"] == "gpay")
     assert gpay["android"].endswith("package=com.google.android.apps.nbu.paisa.user;end")
     assert gpay["ios"].startswith("gpay://upi/pay?pa=shop@okhdfc")
     with pytest.raises(ApiError):
-        build_links("x@y\"><script>", "n", "10", "", "")
+        build_links("x@y\"><script>", "n", "10")
+
+
+def test_person_link_has_no_made_up_reference():
+    # GPay declines person-to-person links carrying a 'tr' the payee didn't issue.
+    g = build_links("friend@oksbi", "Ravi", "200", "upi://pay?pa=friend@oksbi&pn=Ravi")["generic"]
+    assert "tr=" not in g and "tn=" not in g
+    assert g == "upi://pay?pa=friend@oksbi&pn=Ravi&am=200.00&cu=INR"
+
+
+def test_shop_qr_is_passed_on_unchanged():
+    raw = "upi://pay?pa=shop@ybl&pn=Shop&mc=5411&tr=ABC123&mode=02&sign=xyz%2Babc&orgid=000000"
+    g = build_links("shop@ybl", "Shop", "99", raw)["generic"]
+    for part in ("mc=5411", "tr=ABC123", "mode=02", "orgid=000000", "am=99.00", "cu=INR"):
+        assert part in g
+    assert "sign=xyz%2Babc" in g
 
 
 def test_scan_and_pay_end_to_end(client, user):

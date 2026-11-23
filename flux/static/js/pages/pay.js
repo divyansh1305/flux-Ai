@@ -158,6 +158,7 @@
       try {
         const d = await api("/api/pay/parse", { method: "POST", body: { code } });
         if (d.amount == null && prefillAmount) d.amount = prefillAmount;
+        d.code = code;
         showPayee(d);
       } catch (e) { err(e); }
     }
@@ -202,7 +203,7 @@
         e.preventDefault();
         payBtn.disabled = true;
         try {
-          const r = await api("/api/pay/prepare", { method: "POST", body: { vpa: d.vpa, name: d.name, amount: amount.value, category: cat.value, note: note.value } });
+          const r = await api("/api/pay/prepare", { method: "POST", body: { vpa: d.vpa, name: d.name, amount: amount.value, category: cat.value, note: note.value, code: d.code || null } });
           showHandoff(r, d);
         } catch (ex) { err(new Error((ex.message || "Something went wrong.") + " No money has left your account.")); payBtn.disabled = false; }
       } },
