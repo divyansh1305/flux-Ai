@@ -95,3 +95,10 @@ def test_admin_people_view_shows_setup_not_money(app, client, user, monkeypatch)
 def test_gmail_auto_sync_without_account_is_quiet(client, user):
     r = client.post("/api/gmail/sync", json={"auto": True})
     assert r.status_code == 200 and r.json == {"connected": False}
+
+
+def test_masked_payee_gets_a_plain_label():
+    from flux.sms import friendly_note
+    assert friendly_note("******3484") == "UPI payment ••3484"
+    assert friendly_note("Zomato") == "Zomato"
+    assert friendly_note("XXXX12", "income") == "UPI received ••12"

@@ -12,13 +12,15 @@ from ..finance import rupees
 from ..security import (ApiError, clean_text, current_user, json_body, login_required, owned_or_404,
                         parse_amount, parse_date, rate_limit)
 
+from ..sms import friendly_note
+
 bp = Blueprint("money", __name__, url_prefix="/api")
 
 
 def tx_json(r):
     return {
         "id": r["id"], "kind": r["kind"], "amount": rupees(r["amount"]), "category": r["category"],
-        "note": r["note"], "date": r["date"], "goal_id": r["goal_id"], "source": r["source"],
+        "note": friendly_note(r["note"], r["kind"]), "date": r["date"], "goal_id": r["goal_id"], "source": r["source"],
         "parent_id": r["parent_id"],
         "auto_category": r["auto_category"] if "auto_category" in r.keys() else None,
     }
