@@ -66,6 +66,8 @@ def _loop(db_path, backup_dir, keep, every_hours):
 
 def init_app(app):
     global _started
+    if app.config.get("DATABASE_URL"):
+        return  # hosted database (Turso): it keeps its own point-in-time backups
     backup_dir = os.environ.get("BACKUP_DIR")
     db_path = app.config["DATABASE"]
     token = os.environ.get("BACKUP_TOKEN")

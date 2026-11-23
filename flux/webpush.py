@@ -67,6 +67,9 @@ def server_key(instance_dir):
         if env:
             key = ec.derive_private_key(int.from_bytes(unb64u(env), "big"), ec.SECP256R1())
         else:
+            if os.environ.get("VERCEL"):
+                # No lasting disk on Vercel: a key made here would change on every start and break reminders.
+                raise RuntimeError("Set VAPID_PRIVATE_KEY on Vercel. Make one with: python scripts/make_vapid_key.py")
             path = os.path.join(instance_dir, "vapid_private.key")
             if os.path.exists(path):
                 with open(path, "rb") as f:

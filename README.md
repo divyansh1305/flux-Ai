@@ -6,7 +6,7 @@
 
 **Kitna logs every UPI and bank payment automatically and keeps a ledger you can trust.** It tells you how much you can safely spend today, built from *your* payday, plans and safety cushion, checks itself against your bank, and catches real problems: failed payments whose money hasn't come back, double charges and subscription price rises. It never moves money, never offers loans and never sells data. For ages 18+.
 
-🛠 Deploy and update: [`docs/DEPLOY.md`](docs/DEPLOY.md) · 📄 Interview guide: [`docs/INTERVIEW.md`](docs/INTERVIEW.md) · 🚀 Launch plan: [`docs/LAUNCH.md`](docs/LAUNCH.md) · 📦 Open-source parser: [`packages/upi_parse`](packages/upi_parse) · 🤖 Android app: [`android/`](android)
+🛠 Deploy: [`docs/DEPLOY_VERCEL.md`](docs/DEPLOY_VERCEL.md) (Vercel + Turso, free) · [`docs/DEPLOY.md`](docs/DEPLOY.md) (PythonAnywhere) · 📄 Interview guide: [`docs/INTERVIEW.md`](docs/INTERVIEW.md) · 🚀 Launch plan: [`docs/LAUNCH.md`](docs/LAUNCH.md) · 📦 Open-source parser: [`packages/upi_parse`](packages/upi_parse) · 🤖 Android app: [`android/`](android)
 
 > **Safe to spend today: ₹404.** ₹13,502 you have − ₹2,000 Friday dinner plan − ₹1,000 cushion, ÷ 26 days until payday on 1 Dec · watching ₹850 failed payment to Myntra (refund due by 10 Nov)
 

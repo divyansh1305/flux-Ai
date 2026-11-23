@@ -187,7 +187,8 @@ def init_app(app):
     def _flush(resp):
         pending = g.pop("_push_pending", None)
         if pending and resp.status_code < 400:
-            if app.config.get("TESTING"):
+            if app.config.get("TESTING") or app.config.get("ON_VERCEL"):
+                # Serverless: work after the response may never run, so send before answering.
                 _send_pending(app, pending)
             else:
                 threading.Thread(target=_send_pending, args=(app, pending), daemon=True).start()

@@ -47,10 +47,20 @@ def app(tmp_path, monkeypatch):
     for k in ("EMAIL_SENDER", "EMAIL_PASSWORD", "GEMINI_API_KEY", "GOOGLE_CLIENT_ID", "SECRET_KEY", "FLUX_ENV"):
         monkeypatch.delenv(k, raising=False)
     limiter.reset()
-    app = create_app({"DATABASE": str(tmp_path / "test.db"), "TESTING": True,
-                      "SECRET_KEY": "test-secret-key-that-is-long-enough-1234", "GEMINI_API_KEY": ""})
+    cfg = {"DATABASE": str(tmp_path / "test.db"), "TESTING": True,
+           "SECRET_KEY": "test-secret-key-that-is-long-enough-1234", "GEMINI_API_KEY": ""}
+    fake = None
+    if os.environ.get("KITNA_TEST_REMOTE"):
+        # Run every test through the Turso (HTTP) connection, as on Vercel.
+        from fake_libsql import FakeLibsql
+
+        fake = FakeLibsql(str(tmp_path / "remote.db"))
+        cfg.update(DATABASE_URL=fake.url, DATABASE_TOKEN=fake.token)
+    app = create_app(cfg)
     yield app
     limiter.reset()
+    if fake:
+        fake.stop()
 
 
 @pytest.fixture

@@ -1,0 +1,9 @@
+android/
+tests/
+docs/
+scripts/loadtest.py
+instance/
+*.db
+.env
+packages/upi_parse/benchmarks/
+packages/upi_parse/tests/

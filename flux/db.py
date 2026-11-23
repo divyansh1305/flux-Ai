@@ -29,7 +29,17 @@ ADDED_COLUMNS = [
 ]
 
 
+def _remote():
+    from .remote_db import RemoteConnection
+
+    cfg = current_app.config
+    return RemoteConnection(cfg["DATABASE_URL"], cfg.get("DATABASE_TOKEN", ""))
+
+
 def get_db():
+    if "db" not in g and current_app.config.get("DATABASE_URL"):
+        g.db = _remote()
+        return g.db
     if "db" not in g:
         path = current_app.config["DATABASE"]
         if path != ":memory:":
@@ -54,6 +64,19 @@ def _columns(conn, table):
 
 def init_db(app):
     schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
+    if app.config.get("DATABASE_URL"):
+        # Hosted database: the tables are created if missing and new columns added. (The old file
+        # migrations below only matter for databases made before v5, which a new Turso database never is.)
+        with app.app_context():
+            conn = get_db()
+            with open(schema_path, encoding="utf-8") as f:
+                conn.executescript(f.read())
+            for table, column, decl in ADDED_COLUMNS:
+                if column not in _columns(conn, table):
+                    conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
+            conn.commit()
+        app.teardown_appcontext(close_db)
+        return
     with app.app_context():
         conn = get_db()
         if current_app.config["DATABASE"] != ":memory:":

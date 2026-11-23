@@ -40,6 +40,15 @@ class Config:
             "DATABASE_PATH", os.path.join(base_dir, "instance", "flux.db")
         )
 
+        # On Vercel (or anywhere without a lasting disk) the data lives in Turso, a hosted SQLite.
+        # Set TURSO_DATABASE_URL (libsql://kitna-you.turso.io) and TURSO_AUTH_TOKEN.
+        self.DATABASE_URL = overrides.get("DATABASE_URL", os.environ.get("TURSO_DATABASE_URL", "")).strip()
+        self.DATABASE_TOKEN = overrides.get("DATABASE_TOKEN", os.environ.get("TURSO_AUTH_TOKEN", "")).strip()
+        self.ON_VERCEL = bool(os.environ.get("VERCEL")) or bool(overrides.get("ON_VERCEL"))
+        if self.ON_VERCEL and not self.DATABASE_URL and not overrides.get("DATABASE"):
+            raise ConfigError("On Vercel, set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN (the disk there is wiped on every deploy).")
+        self.CRON_SECRET = os.environ.get("CRON_SECRET", "").strip()
+
         # Session cookies
         self.SESSION_COOKIE_HTTPONLY = True
         self.SESSION_COOKIE_SAMESITE = "Lax"
