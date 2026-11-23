@@ -44,6 +44,17 @@ def send_email(to, subject, text, html_body):
             s.login(cfg["MAIL_SENDER"], cfg["MAIL_PASSWORD"])
             s.send_message(msg)
         return True
+    except smtplib.SMTPAuthenticationError:
+        log.error("Email login refused: check EMAIL_SENDER and that EMAIL_PASSWORD is a Gmail App Password for it")
+        return False
+    except Exception:  # noqa: BLE001  try the other Gmail port once (some networks drop 465)
+        log.exception("Sending on port %s failed; trying 587 with STARTTLS", cfg["MAIL_PORT"])
+    try:
+        with smtplib.SMTP(cfg["MAIL_HOST"], 587, timeout=15) as s:
+            s.starttls()
+            s.login(cfg["MAIL_SENDER"], cfg["MAIL_PASSWORD"])
+            s.send_message(msg)
+        return True
     except Exception:  # never leak SMTP details to the user
         log.exception("Failed to send email to %s", to)
         return False

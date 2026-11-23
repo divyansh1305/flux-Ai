@@ -4,6 +4,7 @@ Production refuses to start without a real SECRET_KEY, so sessions can't be
 forged and don't reset on every restart.
 """
 import os
+import re
 from datetime import timedelta
 
 
@@ -58,8 +59,9 @@ class Config:
         self.MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5 MB uploads max (a year of PDF statement is usually under 2 MB)
 
         # Email (OTP login)
-        self.MAIL_SENDER = os.environ.get("EMAIL_SENDER", "")
-        self.MAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "").replace(" ", "")
+        # Pasted values often carry spaces, line breaks or non-breaking spaces: none belong in either.
+        self.MAIL_SENDER = re.sub(r"\s+", "", os.environ.get("EMAIL_SENDER", ""))
+        self.MAIL_PASSWORD = re.sub(r"\s+", "", os.environ.get("EMAIL_PASSWORD", "").replace("\u00a0", ""))
         self.MAIL_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
         self.MAIL_PORT = int(os.environ.get("SMTP_PORT", "465"))
 
