@@ -90,3 +90,8 @@ def test_admin_people_view_shows_setup_not_money(app, client, user, monkeypatch)
     assert csv.status_code == 200 and b"riya@example.com" in csv.data
     h = boss.get("/api/admin/help").json
     assert h["total_30d"] == 1 and h["recent"][0]["email"] == "riya@example.com"
+
+
+def test_gmail_auto_sync_without_account_is_quiet(client, user):
+    r = client.post("/api/gmail/sync", json={"auto": True})
+    assert r.status_code == 200 and r.json == {"connected": False}

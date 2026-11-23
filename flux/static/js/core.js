@@ -515,6 +515,37 @@
     } catch (e) { err(e); }
     track("screen_opened");
     if (window.FluxVoice && location.pathname !== "/onboarding") window.FluxVoice.init(USER, { fab: false });
+    if (location.pathname !== "/onboarding") {
+      setTimeout(autoSync, 800);
+      document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") autoSync(); });
+    }
+  }
+
+  // New bank emails show up on their own: whenever Kitna is opened or brought back to the front,
+  // quietly ask the server to check Gmail (at most once a minute), then redraw if anything was added.
+  let syncing = false;
+  async function autoSync() {
+    if (syncing || location.pathname.startsWith("/app/pay")) return;
+    let last = 0;
+    try { last = Number(sessionStorage.getItem("kitna-autosync") || 0); } catch (e) { /* ignore */ }
+    if (Date.now() - last < 60000) return;
+    syncing = true;
+    try {
+      try { sessionStorage.setItem("kitna-autosync", String(Date.now())); } catch (e) { /* ignore */ }
+      let added = 0;
+      for (let i = 0; i < 3; i++) {
+        const r = await api("/api/gmail/sync", { method: "POST", body: { auto: true }, allow401: true });
+        if (!r || !r.connected || r.error) break;
+        added += r.logged || 0;
+        if (!r.more) break;
+      }
+      if (added > 0) {
+        cacheClear();
+        cacheSet("/api/auth/me", CONFIG);
+        toast(added === 1 ? "1 new payment added from Gmail" : `${added} new payments added from Gmail`, "ok");
+        refresh();
+      }
+    } catch (e) { /* background check: stay quiet */ } finally { syncing = false; }
   }
 
   // Grey placeholder rows while the first data loads (never a blank screen).

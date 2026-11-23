@@ -55,10 +55,12 @@ def status():
 
 @bp.post("/api/gmail/sync")
 @login_required
-@rate_limit(20, 600, scope="gmail_sync")
+@rate_limit(40, 600, scope="gmail_sync")
 def sync_now():
-    force = bool((request.get_json(silent=True) or {}).get("force"))
-    return jsonify(gmail.sync(current_user(), force=force))
+    body = request.get_json(silent=True) or {}
+    if body.get("auto"):  # app opened / brought to front: check if the last look was over a minute ago
+        return jsonify(gmail.sync(current_user(), min_minutes=1))
+    return jsonify(gmail.sync(current_user(), force=bool(body.get("force"))))
 
 
 @bp.delete("/api/gmail")
