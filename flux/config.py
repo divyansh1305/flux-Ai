@@ -62,6 +62,9 @@ class Config:
         # Pasted values often carry spaces, line breaks or non-breaking spaces: none belong in either.
         self.MAIL_SENDER = re.sub(r"\s+", "", os.environ.get("EMAIL_SENDER", ""))
         self.MAIL_PASSWORD = re.sub(r"\s+", "", os.environ.get("EMAIL_PASSWORD", "").replace("\u00a0", ""))
+        # Optional: send through Brevo's email API instead of Gmail SMTP (free 300/day; needed on Vercel
+        # when Gmail refuses logins from cloud servers). EMAIL_SENDER must be a sender verified in Brevo.
+        self.BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "").strip()
         self.MAIL_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
         self.MAIL_PORT = int(os.environ.get("SMTP_PORT", "465"))
 
@@ -95,7 +98,7 @@ class Config:
 
     @property
     def mail_enabled(self):
-        return bool(self.MAIL_SENDER and self.MAIL_PASSWORD)
+        return bool(self.MAIL_SENDER and (self.MAIL_PASSWORD or self.BREVO_API_KEY))
 
     def as_flask_dict(self):
         return {k: getattr(self, k) for k in dir(self) if k.isupper()}

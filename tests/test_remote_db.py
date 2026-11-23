@@ -118,3 +118,21 @@ def test_copy_an_old_database_file_into_turso(app, client, user, rapp):
     with rapp.app_context():
         from flux.db import get_db
         assert get_db().execute("SELECT note FROM transactions").fetchone()["note"] == "Auto"
+
+
+def test_brevo_is_used_for_email_when_configured(app, monkeypatch):
+    import requests
+
+    from flux import emailer
+
+    sent = {}
+
+    class R:
+        status_code, text = 201, "{}"
+
+    monkeypatch.setattr(requests, "post", lambda url, **kw: sent.update(url=url, **kw) or R())
+    app.config.update(BREVO_API_KEY="xkeysib-test", MAIL_SENDER="flux.wealth.engine@gmail.com", MAIL_PASSWORD="")
+    with app.app_context():
+        assert emailer.send_email("a@b.in", "Your code", "123456", "<b>123456</b>")
+    assert sent["url"].endswith("/v3/smtp/email") and sent["headers"]["api-key"] == "xkeysib-test"
+    assert sent["json"]["sender"]["email"] == "flux.wealth.engine@gmail.com" and sent["json"]["to"] == [{"email": "a@b.in"}]

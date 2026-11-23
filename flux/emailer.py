@@ -29,8 +29,27 @@ def _template(title, body_html, code=None):
 </div></body></html>"""
 
 
+def _send_brevo(key, sender, to, subject, text, html_body):
+    """Send through Brevo's HTTPS API (works from Vercel, where Gmail often refuses SMTP logins)."""
+    import requests
+
+    try:
+        r = requests.post("https://api.brevo.com/v3/smtp/email", timeout=15,
+                          headers={"api-key": key, "Content-Type": "application/json", "Accept": "application/json"},
+                          json={"sender": {"name": "Kitna", "email": sender}, "to": [{"email": to}],
+                                "subject": subject, "htmlContent": html_body, "textContent": text})
+        if r.status_code in (200, 201, 202):
+            return True
+        log.error("Brevo refused the email to %s: HTTP %s %s", to, r.status_code, r.text[:200])
+    except Exception:  # noqa: BLE001
+        log.exception("Brevo request failed for %s", to)
+    return False
+
+
 def send_email(to, subject, text, html_body):
     cfg = current_app.config
+    if cfg.get("BREVO_API_KEY") and cfg["MAIL_SENDER"]:
+        return _send_brevo(cfg["BREVO_API_KEY"], cfg["MAIL_SENDER"], to, subject, text, html_body)
     if not (cfg["MAIL_SENDER"] and cfg["MAIL_PASSWORD"]):
         return False
     msg = EmailMessage()

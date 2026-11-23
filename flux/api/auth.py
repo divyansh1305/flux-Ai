@@ -82,7 +82,7 @@ def request_otp():
     db.commit()
 
     minutes = cfg["OTP_TTL_SECONDS"] // 60
-    if cfg["MAIL_SENDER"] and cfg["MAIL_PASSWORD"]:
+    if cfg["MAIL_SENDER"] and (cfg["MAIL_PASSWORD"] or cfg.get("BREVO_API_KEY")):
         if not emailer.send_otp(email, code, minutes):
             raise ApiError("We couldn't send the email right now. Please try again.", 502)
         return jsonify({"sent": True})
