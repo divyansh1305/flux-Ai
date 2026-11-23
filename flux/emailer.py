@@ -40,7 +40,8 @@ def _send_brevo(key, sender, to, subject, text, html_body):
                                 "subject": subject, "htmlContent": html_body, "textContent": text})
         if r.status_code in (200, 201, 202):
             return True
-        log.error("Brevo refused the email to %s: HTTP %s %s", to, r.status_code, r.text[:200])
+        log.error("Brevo refused the email to %s: HTTP %s %s (key starts like a Brevo API key: %s, %d chars)", to,
+                  r.status_code, r.text[:200], key.startswith("xkeysib-"), len(key))
     except Exception:  # noqa: BLE001
         log.exception("Brevo request failed for %s", to)
     return False

@@ -64,7 +64,7 @@ class Config:
         self.MAIL_PASSWORD = re.sub(r"\s+", "", os.environ.get("EMAIL_PASSWORD", "").replace("\u00a0", ""))
         # Optional: send through Brevo's email API instead of Gmail SMTP (free 300/day; needed on Vercel
         # when Gmail refuses logins from cloud servers). EMAIL_SENDER must be a sender verified in Brevo.
-        self.BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "").strip()
+        self.BREVO_API_KEY = re.sub(r"\s+", "", os.environ.get("BREVO_API_KEY", ""))
         self.MAIL_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
         self.MAIL_PORT = int(os.environ.get("SMTP_PORT", "465"))
 
