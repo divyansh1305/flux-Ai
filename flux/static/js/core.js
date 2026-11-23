@@ -28,6 +28,7 @@
 
   // Static, trusted SVG icons (no user data ever goes in here).
   const ICONS = {
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01"/>',
     person: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
     list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
@@ -410,13 +411,14 @@
   const MOBILE_NAV = [["/app", "home", "Today"], ["/app/transactions", "list", "Activity"], ["/app/pay", "qr", "Scan"],
     ["/app/plans", "calendar", "Upcoming"], ["#more", "person", "You"]];
   const MENU = [
+    ["#help", "help", "Help", "Ask the Kitna helper, in your language"],
     ["/app/friends", "users", "Friends", "Split bills, get paid back"],
     ["/app/coach", "chat", "Ask Kitna", "Questions about your money"],
     ["/app/import", "upload", "Add bank statement", "PDF or CSV from your bank"],
     ["/app/settings", "gear", "Settings", "Auto-log, reminders, account"],
   ];
   function moreMenu() {
-    const items = MENU.concat((CONFIG.features || {}).admin ? [["/app/admin", "trend", "Kitna numbers", "Only you can see this"]] : []);
+    const items = MENU.concat((CONFIG.features || {}).admin ? [["/app/admin", "trend", "Kitna admin", "People, questions, numbers"]] : []);
     const close = () => { bg.remove(); document.removeEventListener("keydown", onKey); };
     const onKey = (e) => { if (e.key === "Escape") close(); };
     const initials = USER.name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
@@ -424,7 +426,7 @@
       el("div", { class: "sheet-me" }, el("span", { class: "avatar" }, initials),
         el("div", { style: { minWidth: 0 } }, el("b", null, USER.name), el("div", { class: "tiny faint", style: { overflow: "hidden", textOverflow: "ellipsis" } }, USER.email || ""))),
       el("div", { class: "menu-list" }, items.map(([href, ic, label, sub]) =>
-        el("a", { href, class: "menu-item" }, el("span", { class: "menu-ic" }, icon(ic)),
+        el("a", { href, class: "menu-item", onclick: href === "#help" ? (e) => { e.preventDefault(); close(); window.Kitna.helpChat && window.Kitna.helpChat(); } : null }, el("span", { class: "menu-ic" }, icon(ic)),
           el("span", { class: "menu-text" }, el("b", null, label), el("span", null, sub)), icon("chev")))),
       el("button", { class: "menu-item plain", type: "button", onclick: () => { close(); feedbackModal(); } },
         el("span", { class: "menu-ic" }, icon("chat")), el("span", { class: "menu-text" }, el("b", null, "Tell us something"), el("span", null, "A bug, an idea, anything"))),
@@ -497,6 +499,7 @@
         el("a", { href: "/app", class: "logo", "aria-label": "Kitna home" }, wordmark()),
         nav,
         el("div", { class: "top-actions" },
+          el("a", { href: "#", class: "icon-link", title: "Help", "aria-label": "Help", onclick: (e) => { e.preventDefault(); if (window.Kitna.helpChat) window.Kitna.helpChat(); } }, icon("help")),
           bell,
           el("button", { type: "button", class: "avatar", title: USER.name, "aria-label": "More", onclick: moreMenu }, initials))));
       const tab = (href, ic, label, extra) => el("a", Object.assign({ href, class: (href === "/app/pay" ? "pay " : "") + (path === href || (href === "#more" && inMenu) ? "active" : ""),

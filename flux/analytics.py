@@ -45,6 +45,7 @@ EVENTS = {
     "upi_scanned": {""},
     "upi_paid": {"paid", "failed", "cancelled"},
     "feedback_sent": {"broken", "confusing", "idea", "love"},
+    "help_asked": {"en", "hi", "hinglish", "ta", "te", "bn", "mr", "gu", "kn", "ml", "pa"},
     "error_shown": {"home", "activity", "plans", "ask", "goals", "budgets", "settings", "import", "share",
                     "privacy-center", "onboarding", "admin", "friends", "pay", "other"},
 }

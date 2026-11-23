@@ -320,7 +320,9 @@ def export_account():
               for r in db.execute("SELECT * FROM payees WHERE user_id = ? ORDER BY times_paid DESC", (u["id"],))]
     payments = [{"upi_id": r["payee_vpa"], "name": r["payee_name"], "amount": r["amount"] / 100, "status": r["status"],
                  "created_at": r["created_at"]} for r in db.execute("SELECT * FROM payments WHERE user_id = ? ORDER BY id", (u["id"],))]
-    resp = jsonify({"feedback": feedback, "people_you_paid": payees, "scan_and_pay": payments, "profile": user_json(u), "transactions": tx, "budgets": budgets, "merchant_rules": rules,
+    help_qs = [{"question": r["question"], "lang": r["lang"], "created_at": r["created_at"]}
+               for r in db.execute("SELECT * FROM help_questions WHERE user_id = ? ORDER BY id", (u["id"],))]
+    resp = jsonify({"feedback": feedback, "helper_questions": help_qs, "people_you_paid": payees, "scan_and_pay": payments, "profile": user_json(u), "transactions": tx, "budgets": budgets, "merchant_rules": rules,
                     "masked_samples": samples, "plans": plans, "usage_events": events, "friends": owed,
                     "reminders": notes, "phones_with_reminders": phones,
                     "goals": goals_with_progress(u["id"], include_archived=True)})

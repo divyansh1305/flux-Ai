@@ -1052,3 +1052,34 @@ html[data-theme="dark"] .seg button.on { background: #636366; }
 .setup-card[open] > summary .link { visibility: hidden; }
 .auto-more > summary { cursor: pointer; color: var(--brand); font-weight: 600; font-size: 15px; padding: 8px 0; list-style: none; }
 .auto-more > summary::-webkit-details-marker { display: none; }
+
+/* Kitna helper (support chat) */
+.help-sheet { display: flex; flex-direction: column; height: min(640px, 86vh); padding: 14px 14px calc(10px + env(safe-area-inset-bottom)); }
+.help-head { display: flex; align-items: center; gap: 8px; padding: 4px 2px 10px; border-bottom: .5px solid var(--line-2); }
+.help-title { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.help-title b { font-size: 17px; }
+.help-title span { font-size: 12px; color: var(--muted); }
+.help-lang { background: var(--fill); border: 0; border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 13px; color: var(--text); max-width: 110px; }
+.help-speak { background: var(--fill); border: 0; border-radius: 8px; width: 34px; height: 32px; cursor: pointer; opacity: .55; }
+.help-speak.on { background: var(--brand-soft); opacity: 1; }
+.help-msgs { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 12px 2px; }
+.help-msg { display: flex; flex-direction: column; max-width: 86%; gap: 6px; }
+.help-msg.me { align-self: flex-end; align-items: flex-end; }
+.help-bubble { padding: 9px 13px; border-radius: 18px; font-size: 15.5px; line-height: 1.4; white-space: pre-wrap; background: var(--surface-2); color: var(--text); }
+.help-msg.me .help-bubble { background: var(--brand); color: var(--brand-ink); border-bottom-right-radius: 6px; }
+.help-msg.bot .help-bubble { border-bottom-left-radius: 6px; }
+.help-msg.typing .help-bubble { color: var(--muted); letter-spacing: .2em; }
+.help-links { display: flex; gap: 6px; flex-wrap: wrap; }
+.help-links .btn { background: var(--brand-soft); color: var(--brand); }
+.help-starters { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.help-starters .chip { background: var(--surface); border: .5px solid var(--line-2); border-radius: 16px; padding: 7px 12px; font: inherit; font-size: 13.5px; color: var(--brand); cursor: pointer; }
+.help-form { display: flex; gap: 6px; align-items: center; padding-top: 8px; }
+.help-input { flex: 1; border-radius: 20px; padding: 9px 14px; font-size: 16px; }
+.help-send, .help-mic { width: 40px; height: 40px; min-height: 40px; padding: 0; border-radius: 50%; flex-shrink: 0; }
+.help-mic.on { background: var(--red); color: #fff; }
+.help-foot { text-align: center; margin: 6px 0 0; }
+@media (min-width: 861px) { .help-sheet { width: min(460px, 100%); } }
+.how-row b { text-align: right; min-width: 0; overflow-wrap: anywhere; }
+.how-row span { flex-shrink: 0; }
+.modal { overflow-x: hidden; }
+.admin-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }

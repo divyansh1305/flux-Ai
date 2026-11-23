@@ -293,3 +293,16 @@ CREATE TABLE IF NOT EXISTS feedback (
     created_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_feedback_time ON feedback(created_at);
+
+-- Questions people ask the in-app helper (digits masked), so the team can see what confuses people.
+-- Deleted with the account.
+CREATE TABLE IF NOT EXISTS help_questions (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    question        TEXT NOT NULL,
+    lang            TEXT NOT NULL DEFAULT 'en',
+    answered        INTEGER NOT NULL DEFAULT 1,
+    screen          TEXT NOT NULL DEFAULT '',
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_help_time ON help_questions(created_at);

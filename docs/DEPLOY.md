@@ -21,9 +21,9 @@ Kitna runs at `https://fluxai.pythonanywhere.com` from the code in `~/flux-ai`.
 | `SECRET_KEY` | a long random string (already set; never change it, or everyone is signed out and Gmail links stop working) |
 | `FLUX_ENV` | `production` |
 | `EMAIL_SENDER`, `EMAIL_PASSWORD` | Gmail address + its App Password, for sign-in codes |
-| `GEMINI_API_KEY` | for Ask Kitna answers |
+| `GEMINI_API_KEY` | for Ask Kitna answers and the Kitna helper in 11 languages (without it the helper still answers in English from the guide) |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | for Google sign-in and Connect Gmail |
-| `ADMIN_EMAILS` | **your** sign-in email, so only you can open `/app/admin` (Kitna numbers) |
+| `ADMIN_EMAILS` | **your** sign-in email, so only you can open `/app/admin` (People, helper questions, feedback, numbers) |
 | `METRICS_TOKEN` | optional: a long password for `/metrics` |
 | `APP_TIMEZONE` | `Asia/Kolkata` |
 | `VAPID_PRIVATE_KEY` | optional. Leave empty: Kitna creates its reminder key in `instance/vapid_private.key` on first use. Back that file up; if it is lost, everyone has to turn reminders on again. |
@@ -112,3 +112,9 @@ After the app runs on the new account, add this line to the **old** site's `.env
     MOVED_TO=https://kitna.pythonanywhere.com
 
 Every visit to the old address (any page, any link) is sent to the same page on the new one.
+
+## Kitna helper (support chat)
+
+- What it knows lives in `flux/help/kitna_help.md`. When you add or change a feature, update that file: the helper only answers from it.
+- Links in the guide look like `[/app/plans]` and must be in `ALLOWED_LINKS` in `flux/api/help.py` (a test checks this).
+- What people ask, and what the helper couldn't answer, shows on `/app/admin` under Helper questions.

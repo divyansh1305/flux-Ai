@@ -61,3 +61,27 @@ Rules:
 def coach_reply(question, snapshot):
     prompt = f"User's financial data (JSON):\n{json.dumps(snapshot, ensure_ascii=False)}\n\nUser asks: {question}"
     return generate(prompt, system=COACH_SYSTEM)
+
+
+def chat(history, system, max_tokens=700, json_mode=False):
+    """Multi-turn Gemini call. history = [{"role": "user"|"model", "text": "..."}], newest last."""
+    key = _key()
+    if not key:
+        return None
+    body = {
+        "contents": [{"role": h["role"], "parts": [{"text": h["text"]}]} for h in history],
+        "systemInstruction": {"parts": [{"text": system}]},
+        "generationConfig": {"temperature": 0.2, "maxOutputTokens": max_tokens,
+                             "responseMimeType": "application/json" if json_mode else "text/plain"},
+    }
+    try:
+        r = _session.post(API.format(model=current_app.config["GEMINI_MODEL"]), json=body, timeout=25,
+                          headers={"x-goog-api-key": key, "Content-Type": "application/json"})
+        if r.status_code != 200:
+            raise RuntimeError(f"Gemini HTTP {r.status_code}: {r.text[:300]}")
+        parts = (r.json().get("candidates") or [{}])[0].get("content", {}).get("parts", [])
+        text = "".join(p.get("text", "") for p in parts).strip()
+        return json.loads(text) if json_mode else text
+    except Exception:
+        log.exception("Gemini chat failed")
+        return None

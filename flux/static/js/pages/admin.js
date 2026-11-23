@@ -14,15 +14,81 @@
   const section = (title, sub, ...kids) => el("section", { class: "card" }, el("h2", null, title),
     sub ? el("p", { class: "tiny faint", style: { margin: "4px 0 12px" } }, sub) : null, ...kids);
 
+  const yes = (b) => (b ? "✓" : "–");
+  const day = (t) => (t ? t.slice(0, 10) : "never");
+
+  // People: who uses Kitna and whether it works for them. No amounts or payment details, by design.
+  function usersCard() {
+    const list = el("div");
+    const q = el("input", { class: "input", placeholder: "Search name or email", style: { maxWidth: "320px" } });
+    let page = 1, timer = null;
+    async function draw() {
+      const r = await api(`/api/admin/users?page=${page}&q=${encodeURIComponent(q.value)}`);
+      const rows = r.users.map((u) => el("tr", { class: "tap", style: { cursor: "pointer" }, onclick: () => userSheet(u.id) },
+        el("td", { style: { padding: "8px 4px" } }, el("b", null, u.name), el("div", { class: "tiny faint" }, u.email)),
+        ...[day(u.joined), yes(u.setup_done), [u.gmail ? "Gmail" : "", u.phone ? "Phone" : ""].filter(Boolean).join(" + ") || "–",
+          `${u.auto_payments}/${u.payments}`, day(u.last_active)].map((c) => el("td", { style: { textAlign: "right", padding: "8px 4px", borderTop: "1px solid var(--line)" } }, c))));
+      list.replaceChildren(
+        el("div", { class: "admin-scroll" }, el("table", { class: "table", style: { width: "100%", minWidth: "560px", fontSize: "14px" } },
+          el("thead", null, el("tr", null, ["Person", "Joined", "Setup", "Connected", "Auto / all payments", "Last seen"].map((h, i) =>
+            el("th", { style: { textAlign: i ? "right" : "left", padding: "6px 4px" } }, h)))),
+          el("tbody", null, rows.length ? rows : el("tr", null, el("td", { colspan: 6, class: "muted", style: { padding: "8px 4px" } }, "No one found"))))),
+        el("div", { class: "row between", style: { marginTop: "10px" } },
+          el("span", { class: "tiny faint" }, `${r.total} people · page ${r.page}`),
+          el("div", { class: "row", style: { gap: "6px" } },
+            page > 1 ? el("button", { class: "btn sm", onclick: () => { page--; draw(); } }, "Previous") : null,
+            r.page * 50 < r.total ? el("button", { class: "btn sm", onclick: () => { page++; draw(); } }, "Next") : null)));
+    }
+    q.oninput = () => { clearTimeout(timer); timer = setTimeout(() => { page = 1; draw().catch(err); }, 250); };
+    draw().catch(err);
+    return section("People", "Everyone who signed up and whether Kitna works for them. Amounts and payment details are never shown here.",
+      el("div", { class: "row between wrap", style: { gap: "10px", marginBottom: "8px" } }, q,
+        el("a", { class: "btn sm", href: "/api/admin/users.csv" }, "Download CSV")), list);
+  }
+
+  async function userSheet(id) {
+    let u;
+    try { u = await api(`/api/admin/users/${id}`); } catch (e) { err(e); return; }
+    const kv = (k, v) => el("div", { class: "how-row" }, el("span", null, k), el("b", null, String(v)));
+    const g = u.gmail_detail, p = u.phone_detail;
+    window.Kitna.modal(u.name, el("div", { class: "how" },
+      kv("Email", u.email), kv("Joined", day(u.joined)), kv("Last seen", day(u.last_active)), kv("Language", u.lang),
+      kv("Setup finished", yes(u.setup_done)), kv("Money comes in", u.money_setup.income + (u.money_setup.pay_day ? ` (day ${u.money_setup.pay_day})` : "")),
+      kv("Gmail", g ? (g.needs_reconnect ? "needs reconnect" : `ok, last sync ${day(g.last_sync_at)}`) + (g.last_error ? " · error" : "") : "not connected"),
+      kv("Phone app / Shortcut", p ? `${p.uses} messages, last ${day(p.last_used_at)}` : "not linked"),
+      kv("Reminders on a phone", yes(u.reminders)),
+      kv("Payments by source", Object.entries(u.payments_by_source).map(([k, n]) => `${k} ${n}`).join(" · ") || "none"),
+      kv("Messages Kitna couldn't read (30 days)", u.unread_messages_30d),
+      u.errors_7d.length ? kv("Errors seen (7 days)", u.errors_7d.map((x) => `${x.screen} ${x.n}`).join(" · ")) : null,
+      u.helper_questions.length ? el("div", null, el("b", null, "Asked the helper"),
+        el("ul", { class: "small muted", style: { paddingLeft: "18px" } }, u.helper_questions.map((h) => el("li", null, `${h.question} (${h.lang}${h.answered ? "" : ", not answered"})`)))) : null,
+      u.feedback.length ? el("div", null, el("b", null, "Feedback"),
+        el("ul", { class: "small muted", style: { paddingLeft: "18px" } }, u.feedback.map((f) => el("li", null, `${f.kind}: ${f.message}`)))) : null,
+      el("div", null, el("b", null, "Recent activity"),
+        el("div", { class: "tiny muted" }, u.recent_activity.map((a) => `${a.created_at.slice(5, 16)} ${a.name}${a.prop ? " " + a.prop : ""}`).join(" · ") || "none"))));
+  }
+
+  // What people ask the helper: the unanswered ones are the next thing to explain better (or build).
+  function helpCard(h) {
+    if (!h) return null;
+    const langs = Object.entries(h.languages).map(([k, n]) => `${k} ${n}`).join(" · ") || "none yet";
+    return section(`Helper questions (${h.total_30d} in 30 days, ${h.unanswered_30d} not answered)`, `Languages: ${langs}. Digits are hidden.`,
+      h.recent.length ? el("div", { class: "tx-list" }, h.recent.slice(0, 40).map((x) => el("div", { class: "tx" },
+        el("div", { class: "tx-main" }, el("div", { class: "tx-title wrap" }, x.question),
+          el("div", { class: "tx-sub" }, `${x.email} · ${x.lang} · ${x.screen || "app"} · ${x.created_at.slice(0, 16)}`)),
+        x.answered ? null : el("span", { class: "badge" }, "not answered")))) : el("p", { class: "small muted" }, "No questions yet."));
+  }
+
   async function render(main) {
     const box = el("div", { class: "stack" });
-    main.replaceChildren(pageHead("Kitna numbers", "Totals about everyone using Kitna. Only you can see this page. No one's money is shown.",
+    main.replaceChildren(pageHead("Kitna admin", "People, questions, feedback and totals. Only admins can see this page. No one's money is shown.",
       el("button", { class: "btn", onclick: async () => {
         try { const r = await api("/api/admin/rollup", { method: "POST" }); ok(`Daily totals updated (${r.rolled_up.length} day${r.rolled_up.length === 1 ? "" : "s"}).`); load(); } catch (e) { err(e); }
       } }, "Update daily totals")), box);
 
     async function load() {
-      const [d, fb] = await Promise.all([api("/api/admin/overview"), api("/api/admin/feedback").catch(() => [])]);
+      const [d, fb, hq] = await Promise.all([api("/api/admin/overview"), api("/api/admin/feedback").catch(() => []),
+        api("/api/admin/help").catch(() => null)]);
       const KIND = { broken: "Broken", confusing: "Confusing", idea: "Idea", love: "Love it" };
       const fbCard = section(`Feedback (${fb.filter((f) => f.status === "new").length} new)`, "What people told you from inside the app. Their own words.",
         fb.length ? el("div", { class: "tx-list" }, fb.slice(0, 50).map((f) => el("div", { class: "tx-item" },
@@ -36,7 +102,7 @@
             } }, "Mark read") : el("span", { class: "tiny faint" }, "read"))))) : el("p", { class: "small muted" }, "No feedback yet."));
       const t = d.totals, r = d.retention;
       const maxDaily = Math.max(1, ...d.daily.map((x) => Math.max(x.signups, x.active_users)));
-      box.replaceChildren(fbCard,
+      box.replaceChildren(usersCard(), helpCard(hq), fbCard,
         el("div", { class: "grid g-3" },
           stat("People signed up", t.users, `${t.setup_done} finished setup`),
           stat("Active in the last 7 days", t.active_7d, `${t.active_30d} in the last 30 days`),

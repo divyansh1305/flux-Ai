@@ -56,9 +56,9 @@ def create_app(overrides=None):
 
     backup.init_app(app)
 
-    from .api import admin, auth, gmail, ingest, money, pay, plans, social, statement, voice
+    from .api import admin, auth, gmail, help, ingest, money, pay, plans, social, statement, voice
 
-    for bp in (auth.bp, money.bp, statement.bp, voice.bp, ingest.bp, gmail.bp, plans.bp, admin.bp, social.bp, pay.bp):
+    for bp in (auth.bp, money.bp, statement.bp, voice.bp, ingest.bp, gmail.bp, plans.bp, admin.bp, social.bp, pay.bp, help.bp):
         app.register_blueprint(bp)
     from . import reminders
 
