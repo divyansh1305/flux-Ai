@@ -78,6 +78,10 @@ def test_reconciliation_detects_missing_transaction(app, client, user):
     sms(app, t, "Rs.50.00 debited from A/c XX1234 on 10-11-26 to VPA chai@ybl (UPI Ref No 628800000013). Avl Bal Rs 9,400.00")
     rec = client.get("/api/ledger").json["reconcile"]
     assert rec["status"] == "drift" and rec["drift"] == -200.0 and "200" in rec["message"]
+    # One tap: log the gap, and the warning goes away for good.
+    assert client.post("/api/ledger/gap", json={"add": True}).json["status"] == "resolved"
+    assert client.get("/api/ledger").json["reconcile"]["status"] == "resolved"
+    assert client.get("/api/dashboard").json["recent"][0]["note"] == "Not tracked (bank balance)"
 
 
 # ─── Double-entry invariants ─────────────────────────────────

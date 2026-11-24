@@ -103,6 +103,24 @@ def list_checks():
     return jsonify(checks.all_checks(current_user()["id"]))
 
 
+@bp.post("/ledger/gap")
+@login_required
+def fix_gap():
+    """'A payment may be missing': log the gap as one entry (or just accept it), then stop asking."""
+    from .. import finance, ledger
+
+    u = current_user()
+    r = ledger.reconcile(u["id"])
+    if r.get("status") != "drift":
+        return jsonify({"ok": True, "status": r.get("status")})
+    if json_body().get("add"):
+        kind = r["kind"]
+        finance.add_transaction(u, kind, round(abs(r["drift"]) * 100), "Other" if kind == "expense" else "Other Income",
+                                "Not tracked (bank balance)", r["to"], source="manual", autosave=False, commit=False)
+    checks.dismiss(u["id"], r["key"])
+    return jsonify({"ok": True, "status": "resolved"})
+
+
 @bp.post("/checks/dismiss")
 @login_required
 def dismiss_check():

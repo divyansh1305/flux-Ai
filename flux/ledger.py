@@ -106,8 +106,11 @@ def reconcile(user_id):
               "expected": rupees(expected), "drift": rupees(drift), "account_last4": last["account_last4"]}
     if abs(drift) <= 100:  # ±₹1 tolerance for rounding
         return {**result, "status": "in_sync", "message": "Kitna matches your bank. Nothing is missing."}
+    key = f"drift:{prev['transaction_id']}:{last['transaction_id']}"
+    if db.execute("SELECT 1 FROM dismissed_checks WHERE user_id = ? AND check_key = ?", (user_id, key)).fetchone():
+        return {**result, "status": "resolved", "key": key, "message": "You've sorted this gap."}
     what = "money came in" if drift > 0 else "a payment"
-    return {**result, "status": "drift",
+    return {**result, "status": "drift", "key": key, "kind": "income" if drift > 0 else "expense",
             "message": f"Kitna is missing about ₹{abs(rupees(drift)):,.2f}: {what} between {prev['observed_date']} and "
                        f"{last['observed_date']} that Kitna didn't see. Add it or import that day's SMS."}
 

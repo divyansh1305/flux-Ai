@@ -54,6 +54,26 @@
     }
   }
 
+  // Bank balance and Kitna disagree: say it plainly, and let the user settle it in one tap.
+  function gapCard(r) {
+    const amt = inr0(Math.abs(r.drift));
+    const out = r.kind === "expense";
+    const send = async (add) => {
+      try {
+        await api("/api/ledger/gap", { method: "POST", body: { add } });
+        window.Kitna.ok(add ? `Added ${amt} so Kitna matches your bank.` : "Okay. Kitna won't ask about this again.");
+        window.Kitna.refresh();
+      } catch (e) { window.Kitna.err(e); }
+    };
+    return el("div", { class: "notice caution gap-card" }, icon("alert"),
+      el("div", { style: { flex: 1 } },
+        el("b", null, out ? `${amt} spent that Kitna didn't see` : `${amt} came in that Kitna didn't see`),
+        el("div", { class: "small" }, `Between ${shortDate(r.from)} and ${shortDate(r.to)}, your bank balance changed by ${amt} more than the payments Kitna has. Maybe cash, a card, or an alert that never came.`),
+        el("div", { class: "row", style: { gap: "8px", marginTop: "10px", flexWrap: "wrap" } },
+          el("button", { class: "btn sm", type: "button", onclick: () => send(true) }, `Add ${amt} as ${out ? "other spending" : "other income"}`),
+          el("button", { class: "btn sm ghost", type: "button", onclick: () => send(false) }, "Ignore"))));
+  }
+
   const section = (title, link, ...kids) => el("section", null,
     el("div", { class: "section-title" }, el("span", null, title), link || null), ...kids);
 
@@ -181,8 +201,7 @@
           el("div", { style: { flex: 1 } }, el("b", null, "Reconnect Gmail. "), "New payments from email won't show until you do."),
           el("a", { class: "btn sm", href: "/gmail/connect" }, "Reconnect"))
       : null;
-    const drift = d.reconcile.status === "drift"
-      ? el("div", { class: "notice caution" }, icon("alert"), el("div", null, el("b", null, "A payment may be missing. "), d.reconcile.message)) : null;
+    const drift = d.reconcile.status === "drift" ? gapCard(d.reconcile) : null;
     const checks = (d.checks || []).slice(0, 2).map(checkCard);
     const asks = ((d.friends || {}).suggestions || []).slice(0, 1).map((x) => el("div", { class: "notice info", style: { alignItems: "flex-start" } }, icon("users"),
       el("div", { style: { flex: 1 } }, el("b", null, `Was the ${inr0(x.amount)} ${onDay(x.tx_date)} from ${x.person.split(" ")[0]}?`),
