@@ -37,7 +37,7 @@ def test_helper_uses_ai_with_the_guide_and_language_and_keeps_links_safe(app, cl
     r = ask(client, "plan kaise add karu?", lang="hinglish",
             history=[{"role": "user", "text": "hi"}, {"role": "assistant", "text": "Hello!"}])
     assert r.json["reply"] == "Upcoming tab → Add."
-    assert r.json["links"] == [{"href": "/app/plans", "label": "Open Upcoming"}]   # outside links dropped
+    assert r.json["links"] == [{"href": "/app/plans", "label": "Open Plan"}]   # outside links dropped
     assert "Hinglish" in seen["system"] and "KITNA GUIDE" in seen["system"] and "Today's number" in seen["system"]
     assert [h["role"] for h in seen["history"]] == ["user", "model", "user"]
 
