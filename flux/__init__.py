@@ -23,12 +23,15 @@ APP_PAGES = {
     "/app/coach": "coach.html",
     "/app/plans": "plans.html",
     "/app/friends": "friends.html",
-    "/app/pay": "pay.html",
     "/app/privacy-center": "know.html",
     "/app/admin": "admin.html",
     "/app/share": "share.html",
     "/app/settings": "settings.html",
 }
+
+
+# Pages that no longer exist: old home-screen links and bookmarks land somewhere useful.
+RETIRED_PAGES = {"/app/pay": "/app"}
 
 
 def create_app(overrides=None):
@@ -56,9 +59,9 @@ def create_app(overrides=None):
 
     backup.init_app(app)
 
-    from .api import admin, auth, cron, gmail, help, ingest, money, pay, plans, social, statement, voice
+    from .api import admin, auth, cron, gmail, help, ingest, money, plans, social, statement, voice
 
-    for bp in (auth.bp, money.bp, statement.bp, voice.bp, ingest.bp, gmail.bp, plans.bp, admin.bp, social.bp, pay.bp, help.bp, cron.bp):
+    for bp in (auth.bp, money.bp, statement.bp, voice.bp, ingest.bp, gmail.bp, plans.bp, admin.bp, social.bp, help.bp, cron.bp):
         app.register_blueprint(bp)
     from . import reminders
 
@@ -135,6 +138,9 @@ def create_app(overrides=None):
             return page(name)
 
         app.add_url_rule(path, f"page_{name}", app_view)
+
+    for old, new in RETIRED_PAGES.items():
+        app.add_url_rule(old, f"retired_{old}", lambda new=new: redirect(new, code=301))
 
     @app.get("/healthz")
     def healthz():

@@ -18,16 +18,18 @@
     "Date": "Tareekh", "Amount (₹)": "Kitne (₹)", "Note (optional)": "Note (optional)", "Expense": "Kharcha", "Income": "Aamdani",
     "Something went wrong.": "Kuch gadbad ho gayi.", "You seem to be offline. Check your connection.": "Internet nahi chal raha. Connection check karo.",
     // Home
-    "Safe to spend today, about": "Aaj safe kharcha, lagbhag", "Scan & Pay": "Scan & Pay", "Split": "Baanto", "Plan": "Plan",
+    "Safe to spend today, about": "Aaj safe kharcha, lagbhag", "Split": "Baanto", "Plan": "Plan",
     "Pay": "Pay", "More": "Aur", "Finish setting up": "Setup poora karo", "So today's number is exactly right": "Taaki aaj ka number bilkul sahi ho",
     "Hide for now": "Abhi chhupao", "Spent": "Kharcha", "Received": "Aaya", "Set aside": "Alag rakha", "Search": "Dhoondo",
     "They owe you": "Unhe dena hai", "You owe": "Aapko dena hai", "Split a bill": "Bill baanto", "Paid me": "Mil gaya", "I paid": "Maine de diya",
     "Ask Kitna": "Kitna se poocho", "Ask anything": "Kuch bhi poocho", "Ask about your money": "Apne paise ke baare mein poocho",
     "Point at any UPI QR": "Kisi bhi UPI QR par camera rakho", "QR from photo": "Photo se QR", "Pay again": "Phir se pay karo",
     "Paid in cash? Add it": "Cash diya? Jod do", "Did it go through?": "Payment ho gaya?", "Yes, it's paid": "Haan, ho gaya",
-    "Open UPI app": "UPI app kholo", "Scan another code": "Doosra code scan karo", "Edit payment": "Payment badlo",
+    "Open UPI app": "UPI app kholo", "Edit payment": "Payment badlo",
     "Tell us something": "Humein batao", "Nothing coming up": "Kuch aane wala nahi",
-    "No payments yet": "Abhi koi payment nahi", "Scan & Pay, or tap Add.": "Scan & Pay karo, ya Jodo dabao.",
+    "No payments yet": "Abhi koi payment nahi", "Pay in GPay or PhonePe as usual. They'll show up here.": "GPay ya PhonePe se pay karo, jaise hamesha. Yahan apne aap aa jayega.",
+    "Looks right": "Sab theek hai", "Who was it? (optional)": "Kisko diya? (optional)", "Cash payment": "Cash kharcha",
+    "Split a bill": "Bill baanto", "You": "Aap", "Auto-tracking": "Apne aap hisaab", "More": "Aur",
     "You can spend today": "Aaj itna kharch kar sakte ho", "Add payment": "Payment jodo", "Split bill": "Bill baanto", "Upcoming": "Aane wale",
     "Recent payments": "Haal ke payments", "Money out": "Gaya", "Money in": "Aaya", "How?": "Kaise?", "How Kitna works it out": "Kitna kaise nikalta hai",
     "Got it": "Samajh gaya", "What was it?": "Kis cheez par?", "Where did it come from?": "Kahan se aaya?", "Add a payment": "Payment jodo",
@@ -104,6 +106,7 @@
 
   // Sentences with numbers or names in them: [pattern, replacement].
   const P = [
+    [/^Just paid · (\d+) to sort$/, (m, n) => `Abhi pay kiya · ${n} sort karne hain`],
     [/^Good (morning|afternoon|evening), (.+)$/, (m, part, n) => ({ morning: "Good morning", afternoon: "Namaste", evening: "Good evening" }[part]) + ", " + n],
     [/^Until (\d+ \w+), your next payday\.(.*)$/, (m, d, rest) => `${d} tak, agle payday tak.` + aside(rest)],
     [/^Until (\d+ \w+), the end of the month\.(.*)$/, (m, d, rest) => `${d} tak, mahine ke end tak.` + aside(rest)],

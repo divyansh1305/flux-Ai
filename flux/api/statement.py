@@ -145,7 +145,7 @@ def commit():
                 dupes += 1
                 continue
             dup = ledger.find_duplicate(u["id"], kind, amount, row["date"], ref, source, window_days=0 if source == "import" else 1)
-            if dup:  # already logged via Scan & Pay / SMS / notification
+            if dup:  # already logged via SMS / email / notification
                 if ref:
                     db.execute("UPDATE transactions SET ref = COALESCE(ref, ?) WHERE id = ?", (ref, dup))
                 dupes += 1

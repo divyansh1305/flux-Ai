@@ -67,7 +67,7 @@ The load test also caught three production bugs before any user did: worker recy
 ## Architecture
 
 ```
- Android companion ─┐   iPhone Shortcut ─┐   Browser (vanilla JS, voice, QR)
+ Android companion ─┐   iPhone Shortcut ─┐   Browser (vanilla JS, voice)
   notification text │     bank SMS text  │        │ cookie session + CSRF
                     ▼                    ▼        ▼
             POST /api/ingest/*  (bearer token, per-token rate limit)

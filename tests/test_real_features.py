@@ -1,10 +1,11 @@
 """Only real, working features are shown; iPhone one-link auto-logging."""
 
 
-def test_invest_is_gone_and_pay_is_back(app, client, user):
+def test_invest_and_scan_and_pay_are_gone(app, client, user):
     assert client.get("/app/invest").status_code == 404
-    assert client.get("/app/pay").status_code == 200
-    assert client.get("/api/pay/pending").status_code == 200
+    r = client.get("/app/pay")  # old home-screen links land on Today
+    assert r.status_code == 301 and r.headers["Location"].endswith("/app")
+    assert client.get("/api/pay/pending").status_code == 404
 
 
 def test_iphone_one_link_accepts_raw_form_and_json(app, client, user):

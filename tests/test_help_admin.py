@@ -45,8 +45,8 @@ def test_helper_uses_ai_with_the_guide_and_language_and_keeps_links_safe(app, cl
 def test_helper_falls_back_when_ai_fails(app, client, user, monkeypatch):
     monkeypatch.setattr(ai, "available", lambda: True)
     monkeypatch.setattr(ai, "chat", lambda *a, **k: None)
-    r = ask(client, "scan camera not opening on iphone")
-    assert r.json["fallback"] is True and "Camera" in r.json["reply"]
+    r = ask(client, "how do I sort a new payment from just paid")
+    assert r.json["fallback"] is True and "Just paid" in r.json["reply"]
 
 
 def test_helper_rejects_bad_input_and_unknown_language_becomes_english(app, client, user):
@@ -102,3 +102,8 @@ def test_masked_payee_gets_a_plain_label():
     assert friendly_note("******3484") == "UPI payment ••3484"
     assert friendly_note("Zomato") == "Zomato"
     assert friendly_note("XXXX12", "income") == "UPI received ••12"
+
+
+def test_helper_explains_there_is_no_scanner(app, client, user):
+    r = ask(client, "how do I scan a QR and pay someone")
+    assert r.json["answered"] and "Paying someone" in r.json["reply"]

@@ -37,7 +37,7 @@ The app had grown 19 screens. The new navigation keeps only what supports the on
 
 | Kept, in the tab bar | Moved under "You" | Removed from navigation |
 |---|---|---|
-| Today, Activity, Scan, Upcoming | Friends (split and get paid back), Ask Kitna, add a bank statement, settings | Monthly limits and savings goals: they compete with the one number and confused testers. The code stays so nobody's data is lost. |
+| Today (safe-to-spend + Just paid), Activity, Plan, You | Friends (split and get paid back), Ask Kitna, add a bank statement, settings | Monthly limits and savings goals: they compete with the one number and confused testers. The code stays so nobody's data is lost. |
 
 ## Business model (later, once people use it daily)
 

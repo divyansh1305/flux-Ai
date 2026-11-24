@@ -122,3 +122,46 @@ def test_token_stored_hashed(app, client, user):
     assert token not in h and len(h) == 64
 
 
+
+
+def test_auto_payment_waits_on_today_then_one_tap_teaches_kitna(app, client, user):
+    from flux.api.ingest import ingest_row
+    from flux.clock import today
+    from flux.db import get_db
+
+    def bank(amount, raw):
+        with app.app_context():
+            u = get_db().execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone()
+            r = ingest_row(u, {"kind": "expense", "amount": amount, "date": today().isoformat(), "note": "UPI payment ••3484",
+                               "category": "Other", "raw": raw}, "email")
+            get_db().commit()
+            return r
+
+    first = bank(40.0, "debited 40 a")
+    d = client.get("/api/dashboard").json
+    assert d["to_sort_count"] == 1 and d["to_sort"][0]["id"] == first["transaction_id"]
+    assert first["transaction_id"] not in [t["id"] for t in d["recent"]]  # shown once, under Just paid
+    r = client.post(f"/api/transactions/{first['transaction_id']}/sort", json={"category": "Food & Dining", "name": "Sharma Chai"})
+    assert r.status_code == 200
+    assert client.get("/api/dashboard").json["to_sort_count"] == 0
+    second = bank(25.0, "debited 25 b")  # same hidden payee: arrives named and filed
+    assert second["category"] == "Food & Dining"
+    d = client.get("/api/dashboard").json
+    assert d["to_sort_count"] == 0 and d["recent"][0]["note"] == "Sharma Chai"
+    assert len([t for t in d["recent"] if t["note"] == "Sharma Chai"]) == 2
+
+
+def test_looks_right_clears_the_list(app, client, user):
+    from flux.api.ingest import ingest_row
+    from flux.clock import today
+    from flux.db import get_db
+
+    with app.app_context():
+        u = get_db().execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone()
+        for i, amt in enumerate((10.0, 20.0)):
+            ingest_row(u, {"kind": "expense", "amount": amt, "date": today().isoformat(), "note": f"Shop{i}",
+                           "category": "Other", "raw": f"r{i}"}, "email")
+        get_db().commit()
+    assert client.get("/api/dashboard").json["to_sort_count"] == 2
+    assert client.post("/api/transactions/sort-all").json["sorted"] == 2
+    assert client.get("/api/dashboard").json["to_sort_count"] == 0

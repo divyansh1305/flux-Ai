@@ -45,7 +45,6 @@
     download: '<path d="M12 4v12M6 10l6 6 6-6M4 20h16"/>',
     x: '<path d="M6 6l12 12M18 6L6 18"/>',
     send: '<path d="M4 12l16-8-6 16-2-7z"/>',
-    qr: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/>',
     trend: '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
     msg: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
     camera: '<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="4"/>',
@@ -239,7 +238,7 @@
   const SCREENS = { "/app": "home", "/app/transactions": "activity", "/app/plans": "plans", "/app/coach": "ask",
     "/app/goals": "goals", "/app/budgets": "budgets", "/app/settings": "settings", "/app/import": "import",
     "/app/share": "share", "/app/privacy-center": "privacy-center", "/onboarding": "onboarding", "/app/admin": "admin",
-    "/app/friends": "friends", "/app/pay": "pay" };
+    "/app/friends": "friends" };
   function track(name, value) {
     if (!USER) return;
     const prop = value || SCREENS[location.pathname.replace(/\/$/, "") || "/app"] || "other";
@@ -417,7 +416,6 @@
     ["/app/friends", "users", "Friends", "Split bills, get paid back"],
     ["/app/coach", "chat", "Ask Kitna", "Questions about your money"],
     ["/app/import", "upload", "Add bank statement", "PDF or CSV from your bank"],
-    ["/app/pay", "qr", "Scan a QR", "See your budget before paying a shop"],
     ["/app/settings", "gear", "Settings", "Auto-log, reminders, account"],
   ];
   function moreMenu() {
@@ -504,9 +502,9 @@
         el("div", { class: "top-actions" },
           bell,
           el("button", { type: "button", class: "avatar", title: USER.name, "aria-label": "More", onclick: moreMenu }, initials))));
-      const tab = (href, ic, label, extra) => el("a", Object.assign({ href, class: (href === "/app/pay" ? "pay " : "") + (path === href || (href === "#more" && inMenu) ? "active" : ""),
+      const tab = (href, ic, label, extra) => el("a", Object.assign({ href, class: (path === href || (href === "#more" && inMenu) ? "active" : ""),
         "aria-current": path === href ? "page" : null }, extra || {}),
-        el("span", { class: "ni" }, href === "/app/pay" ? el("span", { class: "pay-dot" }, icon(ic)) : icon(ic)), el("span", { class: "nl" }, label));
+        el("span", { class: "ni" }, icon(ic)), el("span", { class: "nl" }, label));
       const bottom = el("nav", { class: "bottom-nav", "aria-label": "Main" }, MOBILE_NAV.map(([href, ic, label]) =>
         href === "#more" ? tab(href, ic, label, { href: "#", onclick: (e) => { e.preventDefault(); moreMenu(); }, "aria-haspopup": "dialog" }) : tab(href, ic, label)));
       document.body.append(top, main, bottom);
@@ -528,7 +526,7 @@
   // quietly ask the server to check Gmail (at most once a minute), then redraw if anything was added.
   let syncing = false;
   async function autoSync() {
-    if (syncing || location.pathname.startsWith("/app/pay")) return;
+    if (syncing) return;
     let last = 0;
     try { last = Number(sessionStorage.getItem("kitna-autosync") || 0); } catch (e) { /* ignore */ }
     if (Date.now() - last < 60000) return;

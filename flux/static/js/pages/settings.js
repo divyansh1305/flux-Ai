@@ -221,7 +221,7 @@
     async function drawRules() {
       const rules = await api("/api/rules");
       rulesBox.replaceChildren(...(rules.length ? rules.map((r) => el("div", { class: "row", style: { justifyContent: "space-between" } },
-        el("span", { class: "small" }, el("b", null, r.merchant_key), " → ", r.category),
+        el("span", { class: "small" }, el("b", null, r.display_name ? `${r.display_name} (••${r.merchant_key})` : r.merchant_key), " → ", r.category),
         el("button", { class: "btn sm ghost", onclick: async () => { await api(`/api/rules/${r.id}`, { method: "DELETE" }); ok("Rule removed."); drawRules(); } }, "Remove")))
         : [el("p", { class: "small muted", style: { margin: 0 } }, "None yet. Tap a transaction, fix its category and tick “Always use this category”.")]));
     }

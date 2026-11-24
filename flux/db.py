@@ -32,6 +32,14 @@ ADDED_COLUMNS = [
     ("merchant_rules", "display_name", "TEXT"),
 ]
 
+# Features that were removed: their tables are deleted, with whatever they held.
+RETIRED_TABLES = ["payments", "payees"]   # Scan & Pay (removed: users pay in their own UPI app)
+
+
+def _drop_retired(conn):
+    for t in RETIRED_TABLES:
+        conn.execute(f"DROP TABLE IF EXISTS {t}")
+
 
 def _remote():
     from .remote_db import RemoteConnection
@@ -78,6 +86,7 @@ def init_db(app):
             for table, column, decl in ADDED_COLUMNS:
                 if column not in _columns(conn, table):
                     conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
+            _drop_retired(conn)
             conn.commit()
         app.teardown_appcontext(close_db)
         return
@@ -103,6 +112,7 @@ def init_db(app):
             cols = ", ".join(c for c in _columns(conn, "transactions") if c in old_cols)
             conn.execute(f"INSERT INTO transactions ({cols}) SELECT {cols} FROM transactions_old")
             conn.execute("DROP TABLE transactions_old")
+        _drop_retired(conn)
         if version < SCHEMA_VERSION:
             conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
         conn.commit()

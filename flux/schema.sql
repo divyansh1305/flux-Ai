@@ -68,31 +68,6 @@ CREATE TABLE IF NOT EXISTS budgets (
     PRIMARY KEY (user_id, category)
 );
 
--- UPI payments started from Scan & Pay (money moves in the user's own UPI app).
-CREATE TABLE IF NOT EXISTS payments (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    ref             TEXT NOT NULL UNIQUE,
-    payee_vpa       TEXT NOT NULL,
-    payee_name      TEXT NOT NULL DEFAULT '',
-    amount          INTEGER NOT NULL CHECK (amount > 0),
-    category        TEXT NOT NULL,
-    note            TEXT NOT NULL DEFAULT '',
-    status          TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','paid','failed','cancelled')),
-    transaction_id  INTEGER REFERENCES transactions(id) ON DELETE SET NULL,
-    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
--- Remembers how the user categorises each payee, so the next payment is auto-filled.
-CREATE TABLE IF NOT EXISTS payees (
-    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    vpa             TEXT NOT NULL,
-    name            TEXT NOT NULL DEFAULT '',
-    category        TEXT NOT NULL,
-    times_paid      INTEGER NOT NULL DEFAULT 0,
-    PRIMARY KEY (user_id, vpa)
-);
-
 -- Investments bought from goal savings (in the user's own Zerodha account, or practice mode).
 CREATE TABLE IF NOT EXISTS investments (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -1,7 +1,7 @@
 """Ledger integrity: cross-source de-duplication, bank-balance reconciliation, double-entry check.
 
 1. De-duplication
-   The same payment can reach Kitna up to four ways: Scan & Pay, the bank's SMS, the UPI app's
+   The same payment can reach Kitna up to four ways: the bank's SMS, its email, the UPI app's
    notification, and later the bank statement. `find_duplicate` recognises it:
      • exact:  same bank/UPI reference number (UTR/RRN)
      • fuzzy:  same direction + amount, logged from a *different* source within a short window
@@ -25,7 +25,7 @@ AUTO_SOURCES = ("sms", "upi", "notification", "import")
 
 
 # UPI apps the payer uses. A payment appears in exactly one of these, plus the bank's channels
-# (SMS, bank app, statement) and possibly Kitna itself (Scan & Pay, voice, manual).
+# (SMS, bank app, statement) and possibly Kitna itself (voice, manual).
 PAYMENT_APPS = frozenset({
     "com.google.android.apps.nbu.paisa.user", "com.phonepe.app", "net.one97.paytm", "in.org.npci.upiapp",
     "in.amazon.mShop.android.shopping", "com.dreamplug.androidapp", "money.super.payments", "com.whatsapp",

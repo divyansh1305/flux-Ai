@@ -66,7 +66,7 @@ SQLite in WAL mode handles this load on one box, and it keeps the system simple.
 - Turn ingest into a queue (SQS or Kafka) so parsing is async and retries are idempotent. Dedupe is already idempotent.
 
 **"Can Kitna move money?"**
-No, by design. Moving money needs NPCI/RBI licences and it would pull Kitna towards lending, which is what users told us they don't want. I had a Scan & Pay prototype but removed it: anything in the app has to really work.
+No, by design. Moving money needs NPCI/RBI licences and it would pull Kitna towards lending, which is what users told us they don't want. I built a Scan & Pay prototype, tested it with real payments, and removed it: UPI apps block payments started by other apps, and scanning twice is worse than paying normally. Users keep paying in GPay; Kitna works around the payment instead.
 
 **"How does voice work?"**
 - Web Speech API → text → a rule parser in English, Hindi and Hinglish, taking about 1 ms.

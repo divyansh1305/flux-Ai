@@ -208,7 +208,7 @@ def sort_all():
 @bp.get("/rules")
 @login_required
 def list_rules():
-    rows = get_db().execute("SELECT id, merchant_key, category, created_at FROM merchant_rules WHERE user_id = ?"
+    rows = get_db().execute("SELECT id, merchant_key, display_name, category, created_at FROM merchant_rules WHERE user_id = ?"
                             " ORDER BY merchant_key", (current_user()["id"],)).fetchall()
     return jsonify([dict(r) for r in rows])
 
@@ -311,7 +311,7 @@ def dashboard():
     u = current_user()
     uid = u["id"]
     recent = get_db().execute(
-        "SELECT * FROM transactions WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT 6", (uid,)
+        "SELECT * FROM transactions WHERE user_id = ? AND needs_review = 0 ORDER BY date DESC, id DESC LIMIT 6", (uid,)
     ).fetchall()
     from .. import checks, friends, gmail, insights, ledger
 

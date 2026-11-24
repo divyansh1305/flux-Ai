@@ -22,7 +22,7 @@ EVENTS = {
     "auto_payment": {"sms", "notification", "email"},
     "message_unread": {"sms", "notification", "email"},
     "screen_opened": {"home", "activity", "plans", "ask", "goals", "budgets", "settings", "import", "share",
-                      "privacy-center", "onboarding", "admin", "friends", "pay"},
+                      "privacy-center", "onboarding", "admin", "friends"},
     "plan_added": {"spend", "income"},
     "cushion_set": {""},
     "category_fixed": {""},
@@ -42,12 +42,11 @@ EVENTS = {
     "weekly_opened": {""},
     "lang_set": {"en", "hinglish"},
     "statement_import": {"csv", "pdf"},
-    "upi_scanned": {""},
-    "upi_paid": {"paid", "failed", "cancelled"},
+    "tx_sorted": {"", "named"},
     "feedback_sent": {"broken", "confusing", "idea", "love"},
     "help_asked": {"en", "hi", "hinglish", "ta", "te", "bn", "mr", "gu", "kn", "ml", "pa"},
     "error_shown": {"home", "activity", "plans", "ask", "goals", "budgets", "settings", "import", "share",
-                    "privacy-center", "onboarding", "admin", "friends", "pay", "other"},
+                    "privacy-center", "onboarding", "admin", "friends", "other"},
 }
 CLIENT_EVENTS = {"screen_opened", "error_shown", "push_opened"}  # the only ones a browser may send
 

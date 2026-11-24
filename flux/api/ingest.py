@@ -110,7 +110,7 @@ def ingest_row(user, row, source):
     origin = row.get("origin") or source
     dup = ledger.find_duplicate(user["id"], row["kind"], amount, row["date"], row.get("ref"), source, origin=origin)
     if dup:
-        # Same payment seen another way (e.g. Scan & Pay, then the bank SMS). Keep one record,
+        # Same payment seen another way (e.g. the bank SMS, then the same payment's email). Keep one record,
         # but enrich it with the bank reference and the balance the bank reported.
         if row.get("ref"):
             db.execute("UPDATE transactions SET ref = COALESCE(ref, ?) WHERE id = ? AND user_id = ?", (row["ref"], dup, user["id"]))
@@ -118,23 +118,11 @@ def ingest_row(user, row, source):
             ledger.record_snapshot(user["id"], round(row["balance"] * 100), row["date"], source, row.get("account_last4"), dup)
         count_ingest(source, "duplicate")
         return {"logged": False, "reason": "Already logged from another source (matched and enriched).", "transaction_id": dup}
-    pending = None
-    if row["kind"] == "expense":
-        # Paid through Kitna's Scan & Pay, then in the UPI app? The bank alert completes that payment:
-        # keep the shop's real name and the category the user picked.
-        pending = db.execute(
-            "SELECT * FROM payments WHERE user_id = ? AND status = 'pending' AND amount = ?"
-            " AND created_at >= datetime('now','-1 day') ORDER BY id DESC LIMIT 1", (user["id"], amount)).fetchone()
-    if pending:
-        row["note"] = f"{pending['payee_name'] or pending['payee_vpa']} · UPI"[:140]
-        row["category"] = pending["category"]
-    learned = None
-    if not pending:
-        learned, known_name = finance.learned_payee(user["id"], row["note"], row["kind"])
-        if learned:
-            row["category"] = learned
-            if known_name:
-                row["note"] = known_name
+    learned, known_name = finance.learned_payee(user["id"], row["note"], row["kind"])
+    if learned:
+        row["category"] = learned
+        if known_name:
+            row["note"] = known_name
     res = finance.add_transaction(user, row["kind"], amount, row["category"], row["note"], row["date"],
                                   source=source, import_hash=h, ref=row.get("ref"), origin=origin, commit=False,
                                   auto_category=row["category"])
@@ -143,14 +131,8 @@ def ingest_row(user, row, source):
 
         db.execute("INSERT INTO parse_samples (user_id, transaction_id, source, masked_text) VALUES (?,?,?,?)",
                    (user["id"], res["id"], source, mask_text(row["sample_text"])[:600]))
-    if not pending and not learned:
+    if not learned:
         db.execute("UPDATE transactions SET needs_review = 1 WHERE id = ?", (res["id"],))
-    if pending:
-        db.execute("UPDATE payments SET status='paid', transaction_id=? WHERE id=?", (res["id"], pending["id"]))
-        db.execute("INSERT INTO payees (user_id, vpa, name, category, times_paid) VALUES (?,?,?,?,1)"
-                   " ON CONFLICT(user_id, vpa) DO UPDATE SET name=excluded.name, category=excluded.category,"
-                   " times_paid = times_paid + 1",
-                   (user["id"], pending["payee_vpa"], pending["payee_name"], pending["category"]))
     if row.get("balance") is not None:
         ledger.record_snapshot(user["id"], round(row["balance"] * 100), row["date"], source, row.get("account_last4"), res["id"])
     if row["kind"] == "income" and (row.get("category") == "Refund" or re.search(r"refund|revers", row.get("raw", ""), re.I)):

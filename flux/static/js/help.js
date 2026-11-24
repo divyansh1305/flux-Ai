@@ -28,9 +28,9 @@
     pa: "ਸਤ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ Kitna helper ਹਾਂ। Kitna ਵਰਤਣ ਬਾਰੇ ਕੁਝ ਵੀ ਪੁੱਛੋ।",
   };
   const STARTERS = {
-    en: ["How is today's number worked out?", "How do I track payments automatically?", "Scan isn't opening", "How do I split a bill?"],
+    en: ["How is today's number worked out?", "How do I track payments automatically?", "How do I sort a new payment?", "How do I split a bill?"],
     hi: ["आज का नंबर कैसे बनता है?", "पेमेंट अपने-आप कैसे जुड़ें?", "स्कैन नहीं खुल रहा", "बिल कैसे बाँटें?"],
-    hinglish: ["Aaj ka number kaise banta hai?", "Payments automatic kaise track karu?", "Scan nahi khul raha", "Bill split kaise karu?"],
+    hinglish: ["Aaj ka number kaise banta hai?", "Payments automatic kaise track karu?", "Naya payment kaise sort karu?", "Bill split kaise karu?"],
   };
 
   const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
@@ -148,11 +148,10 @@
 
   K.helpChat = openHelp;
 
-  // The floating helper button, bottom right on every screen (like a chat companion). Hidden on Scan,
-  // where the camera needs the whole screen, and during setup.
+  // The floating helper button, bottom right on every app screen (like a chat companion).
   function addFab() {
     const path = location.pathname;
-    if (!path.startsWith("/app") || path === "/app/pay" || document.querySelector(".help-fab")) return;
+    if (!path.startsWith("/app") || document.querySelector(".help-fab")) return;
     const fab = el("button", { class: "help-fab", type: "button", "aria-label": "Ask the Kitna helper", title: "Ask the Kitna helper",
       onclick: () => { fab.classList.add("seen"); store("kitna_help_seen", "1"); openHelp(); } },
       el("svg", null), el("span", { class: "help-fab-dot", "aria-hidden": "true" }));

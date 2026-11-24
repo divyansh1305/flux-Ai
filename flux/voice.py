@@ -200,8 +200,6 @@ def parse(text):
     if m and m.group(1) in PAGES:
         return {"intent": "navigate", "page": PAGES[m.group(1)], "page_name": m.group(1)}
 
-    if _has(t, r"^(scan|scan and pay|scan karo|qr|scan qr|open scanner)\b"):
-        return {"intent": "pay", "amount": None}
 
     amount, rest = extract_amount(t)
 
