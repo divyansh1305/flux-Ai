@@ -150,7 +150,7 @@
     Subscriptions: "c-repeat", "Bills & Utilities": "c-bolt", Rent: "c-house", Entertainment: "c-film", Health: "c-heart",
     Education: "c-book", "Personal Care": "c-scissors", Investments: "c-chartup", Transfers: "c-arrows", Other: "c-dots",
     Salary: "c-briefcase", Freelance: "c-laptop", "Pocket Money": "c-coins", Refund: "c-undo", Cashback: "c-percent",
-    Interest: "bank", "Investment Returns": "c-chartup", Gift: "c-gift", "Other Income": "plus", "Paid back": "users",
+    Interest: "bank", "Investment Returns": "c-chartup", Gift: "c-gift", "Other Income": "plus", "Paid back": "users", "Rent received": "bank",
   };
   const CAT_SHORT = { "Food & Dining": "Food", "Bills & Utilities": "Bills", Entertainment: "Fun", "Personal Care": "Self care",
     Subscriptions: "Subscriptions", "Investment Returns": "Returns", "Other Income": "Other", "Pocket Money": "Pocket money" };
