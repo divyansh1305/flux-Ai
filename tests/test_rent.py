@@ -115,9 +115,16 @@ def test_tenant_link_shows_only_their_own_dues_and_a_upi_qr(app, client, owner):
     assert outsider.get("/api/r/not-a-real-token-123").status_code == 404
 
 
+def test_no_limit_while_payments_are_off(client, owner):
+    for i in range(7):
+        add(client, name=f"Tenant {i}", room=str(i))
+    assert client.get("/api/rent").json["plan"]["at_limit"] is False
+
+
 def test_free_plan_limit_and_pro_lifts_it(app, client, owner):
     from flux.db import get_db
 
+    app.config.update(RAZORPAY_KEY_ID="rzp_test_x", RAZORPAY_KEY_SECRET="s")
     for i in range(5):
         add(client, name=f"Tenant {i}", room=str(i))
     r = client.post("/api/rent/tenants", json={"name": "Sixth", "rent": 5000})

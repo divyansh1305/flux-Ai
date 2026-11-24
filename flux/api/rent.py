@@ -73,7 +73,7 @@ def add_tenant():
         raise ApiError("Add up to 200 tenants at a time.")
     u = current_user()
     payloads = [_tenant_payload(r) for r in rows]
-    if not rent.is_pro(u) and rent.active_count(u["id"]) + len(payloads) > rent.FREE_TENANTS:
+    if rent.limited(u) and rent.active_count(u["id"]) + len(payloads) > rent.FREE_TENANTS:
         raise ApiError(f"The free plan covers {rent.FREE_TENANTS} tenants. Upgrade to Kitna Rent Pro to add more.", 402)
     ids = [rent.add_tenant(u, p, commit=False) for p in payloads]
     get_db().commit()
@@ -92,7 +92,7 @@ def edit_tenant(tenant_id):
         fields["status"] = "left"
         fields["left_month"] = rent.valid_month(data.get("left_month") or rent.month_of(clock.today()), "Last month")
     elif data.get("left") is False:
-        if t["status"] == "left" and not rent.is_pro(u) and rent.active_count(u["id"]) >= rent.FREE_TENANTS:
+        if t["status"] == "left" and rent.limited(u) and rent.active_count(u["id"]) >= rent.FREE_TENANTS:
             raise ApiError(f"The free plan covers {rent.FREE_TENANTS} tenants. Upgrade to bring this tenant back.", 402)
         fields["status"], fields["left_month"] = "active", None
     if not fields:

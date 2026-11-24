@@ -67,7 +67,7 @@
         d.counts.paid ? pill("paid", d.counts.paid, "paid") : null));
 
     const plan = d.plan;
-    const banner = !plan.pro && plan.tenants >= plan.free_tenants - 1
+    const banner = plan.limited && plan.tenants >= plan.free_tenants - 1
       ? el("button", { class: "notice info plan-banner", type: "button", onclick: () => upgrade(plan.at_limit ? "limit" : "banner") }, icon("spark"),
           el("div", { style: { flex: 1, textAlign: "left" } }, el("b", null, plan.at_limit ? "You've used all 5 free tenants" : "1 free tenant left"),
             el("div", { class: "small" }, "Kitna Rent Pro: up to 100 tenants for ₹299 a month.")), icon("chev"))

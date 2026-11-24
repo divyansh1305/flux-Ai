@@ -67,6 +67,13 @@ def is_pro(user):
     return bool(until) and until >= clock.today().isoformat()
 
 
+def limited(user):
+    """The free limit only applies once payments are switched on; until then nobody hits a wall."""
+    from . import billing
+
+    return billing.enabled() and not is_pro(user)
+
+
 # ─── property ────────────────────────────────────────────────
 def get_property(user_id):
     return get_db().execute("SELECT * FROM rent_properties WHERE user_id = ? ORDER BY id LIMIT 1", (user_id,)).fetchone()
@@ -96,7 +103,7 @@ def add_tenant(user, data, commit=True):
     p = get_property(user["id"])
     if not p:
         raise ApiError("Set up your PG or flat first.")
-    if not is_pro(user) and active_count(user["id"]) >= FREE_TENANTS:
+    if limited(user) and active_count(user["id"]) >= FREE_TENANTS:
         raise ApiError(f"The free plan covers {FREE_TENANTS} tenants. Upgrade to Kitna Rent Pro to add more.", 402)
     db = get_db()
     cur = db.execute(
@@ -199,8 +206,9 @@ def overview(user, base_url=""):
 def plan_json(user):
     pro = is_pro(user)
     used = active_count(user["id"])
+    lim = limited(user)
     return {"pro": pro, "until": user["plan_until"] if pro else None, "free_tenants": FREE_TENANTS,
-            "tenants": used, "at_limit": (not pro) and used >= FREE_TENANTS}
+            "tenants": used, "limited": lim, "at_limit": lim and used >= FREE_TENANTS}
 
 
 # ─── matching money in to tenants ────────────────────────────
