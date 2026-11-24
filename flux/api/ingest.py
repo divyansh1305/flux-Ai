@@ -128,10 +128,13 @@ def ingest_row(user, row, source):
     if pending:
         row["note"] = f"{pending['payee_name'] or pending['payee_vpa']} · UPI"[:140]
         row["category"] = pending["category"]
-    else:
-        learned = finance.rule_category(user["id"], row["note"], row["kind"])
+    learned = None
+    if not pending:
+        learned, known_name = finance.learned_payee(user["id"], row["note"], row["kind"])
         if learned:
             row["category"] = learned
+            if known_name:
+                row["note"] = known_name
     res = finance.add_transaction(user, row["kind"], amount, row["category"], row["note"], row["date"],
                                   source=source, import_hash=h, ref=row.get("ref"), origin=origin, commit=False,
                                   auto_category=row["category"])
@@ -140,6 +143,8 @@ def ingest_row(user, row, source):
 
         db.execute("INSERT INTO parse_samples (user_id, transaction_id, source, masked_text) VALUES (?,?,?,?)",
                    (user["id"], res["id"], source, mask_text(row["sample_text"])[:600]))
+    if not pending and not learned:
+        db.execute("UPDATE transactions SET needs_review = 1 WHERE id = ?", (res["id"],))
     if pending:
         db.execute("UPDATE payments SET status='paid', transaction_id=? WHERE id=?", (res["id"], pending["id"]))
         db.execute("INSERT INTO payees (user_id, vpa, name, category, times_paid) VALUES (?,?,?,?,1)"

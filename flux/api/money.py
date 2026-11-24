@@ -23,6 +23,7 @@ def tx_json(r):
         "note": friendly_note(r["note"], r["kind"]), "date": r["date"], "goal_id": r["goal_id"], "source": r["source"],
         "parent_id": r["parent_id"],
         "auto_category": r["auto_category"] if "auto_category" in r.keys() else None,
+        "needs_review": bool(r["needs_review"]) if "needs_review" in r.keys() else False,
     }
 
 
@@ -132,6 +133,7 @@ def edit_transaction(tx_id):
         fields["note"] = clean_text(data["note"], "Note", 140)
     if not fields:
         raise ApiError("Nothing to change.")
+    fields["needs_review"] = 0
     cols = ", ".join(f"{k} = ?" for k in fields)  # keys whitelisted above
     db.execute(f"UPDATE transactions SET {cols} WHERE id = ? AND user_id = ?", (*fields.values(), tx_id, u["id"]))
     refiled = 0
@@ -153,6 +155,54 @@ def edit_transaction(tx_id):
     db.commit()
     fresh = db.execute("SELECT * FROM transactions WHERE id = ?", (tx_id,)).fetchone()
     return jsonify({"transaction": tx_json(fresh), "refiled": refiled})
+
+
+@bp.post("/transactions/<int:tx_id>/sort")
+@login_required
+@rate_limit(120, 60, scope="tx_sort")
+def sort_tx(tx_id):
+    """'Just paid' on Today: one tap files a payment, and Kitna remembers it for this payee."""
+    u = current_user()
+    db = get_db()
+    row = owned_or_404("transactions", tx_id, u["id"])
+    if row["kind"] not in ("income", "expense"):
+        raise ApiError("Only income and expenses can be sorted.")
+    data = json_body()
+    category = finance.validate_category(row["kind"], clean_text(data.get("category"), "Category", 40, required=True))
+    name = clean_text(data.get("name"), "Name", 60)
+    key = finance.merchant_key(row["note"])
+    note = name or row["note"]
+    db.execute("UPDATE transactions SET category = ?, note = ?, needs_review = 0 WHERE id = ? AND user_id = ?",
+               (category, note, tx_id, u["id"]))
+    also = 0
+    if key:
+        db.execute("INSERT INTO merchant_rules (user_id, merchant_key, category, display_name) VALUES (?,?,?,?)"
+                   " ON CONFLICT(user_id, merchant_key) DO UPDATE SET category = excluded.category,"
+                   " display_name = COALESCE(excluded.display_name, merchant_rules.display_name)",
+                   (u["id"], key, category, name or None))
+        # Other unsorted payments to the same payee: file them too.
+        for r in db.execute("SELECT id, note FROM transactions WHERE user_id = ? AND kind = ? AND id != ? AND needs_review = 1",
+                            (u["id"], row["kind"], tx_id)).fetchall():
+            if finance.merchant_key(r["note"]) == key:
+                db.execute("UPDATE transactions SET category = ?, note = ?, needs_review = 0 WHERE id = ?",
+                           (category, name or r["note"], r["id"]))
+                also += 1
+    from .. import analytics
+
+    analytics.track(u["id"], "tx_sorted", "named" if name else "")
+    db.commit()
+    return jsonify({"ok": True, "also": also})
+
+
+@bp.post("/transactions/sort-all")
+@login_required
+def sort_all():
+    """'Looks right': keep Kitna's guesses for everything waiting."""
+    u = current_user()
+    db = get_db()
+    n = db.execute("UPDATE transactions SET needs_review = 0 WHERE user_id = ? AND needs_review = 1", (u["id"],)).rowcount
+    db.commit()
+    return jsonify({"ok": True, "sorted": n})
 
 
 @bp.get("/rules")
@@ -279,6 +329,11 @@ def dashboard():
         "forecast": finance.month_forecast(uid),
         "series": finance.daily_series(uid, 30),
         "recent": [tx_json(r) for r in recent],
+        "to_sort": [tx_json(r) for r in get_db().execute(
+            "SELECT * FROM transactions WHERE user_id = ? AND needs_review = 1 ORDER BY date DESC, id DESC LIMIT 6",
+            (uid,)).fetchall()],
+        "to_sort_count": get_db().execute("SELECT COUNT(*) FROM transactions WHERE user_id = ? AND needs_review = 1",
+                                          (uid,)).fetchone()[0],
         "setup": setup_status(uid),
         "checks": checks.all_checks(uid),
         "gmail": gmail.status(uid),

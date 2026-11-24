@@ -168,13 +168,11 @@
       setup ? el("a", { class: "btn primary block", href: "/onboarding" }, "Start (takes 1 minute)")
         : el("div", { class: "today-foot" }, asOfEl, el("button", { type: "button", class: "today-how", onclick: () => howSheet(sf) }, "How?")));
 
-    // ── 2. Four big buttons
-    const big = (ic, label, fn, main) => el("button", { class: "big-act" + (main ? " main" : ""), type: "button", onclick: fn },
-      el("span", { class: "big-ic" }, icon(ic)), el("span", { class: "big-label" }, label));
-    const actions = el("div", { class: "big-acts three" },
-      big("qr", "Scan & pay", () => { location.href = "/app/pay"; }, true),
-      big("plus", "Add", () => addTransactionModal("expense")),
-      big("split", "Split", () => window.Kitna.splitModal()));
+    // ── 2. Just paid: auto-logged payments, sorted with one tap
+    const sortBox = justPaid(d);
+    const actions = el("div", { class: "quick-row" },
+      el("button", { class: "chip-btn", type: "button", onclick: () => addTransactionModal("expense") }, icon("plus"), "Cash payment"),
+      el("button", { class: "chip-btn", type: "button", onclick: () => window.Kitna.splitModal() }, icon("split"), "Split a bill"));
 
     // ── Only things that truly need you
     const g = d.gmail || {};
@@ -196,7 +194,7 @@
     const recent = section("Recent", el("a", { class: "link", href: "/app/transactions" }, "See all"),
       el("div", { class: "card list-card" }, d.recent.length
         ? el("div", { class: "tx-list" }, d.recent.slice(0, 5).map((t) => txRow(t)))
-        : el("div", { class: "empty" }, el("b", null, "No payments yet"), "Scan a QR to pay, or tap Add.")));
+        : el("div", { class: "empty" }, el("b", null, "No payments yet"), "Pay in GPay or PhonePe as usual. They'll show up here.")));
 
     // ── Coming up (only if something is)
     const upcoming = [
@@ -212,7 +210,49 @@
     // Only what matters: today's number, the four actions, anything that needs you, recent payments
     const dateLine = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
     return [el("header", { class: "large-title" }, el("div", { class: "lt-date" }, dateLine), el("h1", null, greeting(user.name))),
-      today, actions, reconnect, drift, ...checks, ...asks, nextStep(d.setup), coming, recent];
+      today, reconnect, nextStep(d.setup), sortBox, drift, ...checks, ...asks, coming, recent, actions];
+  }
+
+  // Payments Kitna added by itself and you haven't looked at. One tap files it and teaches Kitna that payee.
+  const QUICK = { expense: ["Food & Dining", "Groceries", "Transport", "Shopping", "Bills & Utilities", "Transfers"],
+    income: ["Salary", "Paid back", "Refund", "Gift", "Other Income"] };
+  function justPaid(d) {
+    const items = d.to_sort || [];
+    if (!items.length) return null;
+    const n = d.to_sort_count || items.length;
+    const list = el("div", { class: "card sort-card" });
+    const done = () => window.Kitna.refresh();
+    items.forEach((t) => {
+      const hidden = /^UPI (payment|received)/.test(t.note || "");
+      const name = el("input", { class: "input sort-name", maxlength: "60", placeholder: hidden ? "Who was it? (optional)" : "",
+        value: hidden ? "" : (t.note || "").split(" · ")[0], "aria-label": "Name" });
+      const pick = async (c) => {
+        row.classList.add("sorting");
+        try {
+          const r = await api(`/api/transactions/${t.id}/sort`, { method: "POST", body: { category: c, name: name.value.trim() || null } });
+          window.Kitna.ok(r.also ? `Filed. ${r.also} more from them filed too. Kitna will remember.` : "Filed. Kitna will remember this one.");
+          done();
+        } catch (e) { row.classList.remove("sorting"); window.Kitna.err(e); }
+      };
+      const chips = el("div", { class: "sort-chips" }, QUICK[t.kind].map((c) =>
+        el("button", { class: "sort-chip" + (c === t.category ? " on" : ""), type: "button", onclick: () => pick(c) }, window.Kitna.catIcon(c), window.Kitna.catShort(c))),
+        el("button", { class: "sort-chip", type: "button", onclick: async () => {
+          const m = await window.Kitna.meta();
+          chips.replaceChildren(window.Kitna.catGrid(t.kind === "expense" ? m.expense_categories : m.income_categories, t.category, pick));
+        } }, "More"));
+      const row = el("div", { class: "sort-row" },
+        el("div", { class: "sort-top" },
+          el("div", { style: { minWidth: 0, flex: 1 } },
+            el("div", { class: "tx-title" }, (t.note || "Payment").split(" · ")[0]),
+            el("div", { class: "tx-sub" }, dateFmt(t.date), " · ", t.kind === "expense" ? "paid" : "received")),
+          el("div", { class: "tx-amt num" + (t.kind === "income" ? " in" : "") }, (t.kind === "income" ? "+" : "") + inr0(t.amount))),
+        hidden ? name : null, chips);
+      list.append(row);
+    });
+    const keep = el("button", { class: "link", type: "button", onclick: async () => {
+      try { await api("/api/transactions/sort-all", { method: "POST" }); done(); } catch (e) { window.Kitna.err(e); }
+    } }, "Looks right");
+    return section(n === 1 ? "Just paid · 1 to sort" : `Just paid · ${n} to sort`, keep, list);
   }
 
   document.addEventListener("DOMContentLoaded", () => window.Kitna.boot(render));

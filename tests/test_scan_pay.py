@@ -129,3 +129,30 @@ def test_bank_email_completes_a_pending_scan_and_pay(app, client, user):
         assert p["status"] == "paid" and p["transaction_id"] == out["transaction_id"]
         t = get_db().execute("SELECT note FROM transactions WHERE id = ?", (out["transaction_id"],)).fetchone()
         assert t["note"].startswith("Sharma Chai")
+
+
+def test_auto_payment_waits_on_today_then_one_tap_teaches_kitna(app, client, user):
+    from flux.api.ingest import ingest_row
+    from flux.clock import today
+    from flux.db import get_db
+
+    def bank(amount, raw):
+        with app.app_context():
+            u = get_db().execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone()
+            r = ingest_row(u, {"kind": "expense", "amount": amount, "date": today().isoformat(), "note": "UPI payment ••3484",
+                               "category": "Other", "raw": raw}, "email")
+            get_db().commit()
+            return r
+
+    first = bank(40.0, "debited 40 a")
+    d = client.get("/api/dashboard").json
+    assert d["to_sort_count"] == 1 and d["to_sort"][0]["id"] == first["transaction_id"]
+    r = client.post(f"/api/transactions/{first['transaction_id']}/sort", json={"category": "Food & Dining", "name": "Sharma Chai"})
+    assert r.status_code == 200
+    assert client.get("/api/dashboard").json["to_sort_count"] == 0
+    # Next payment to the same hidden payee arrives already named and filed, nothing to sort.
+    second = bank(25.0, "debited 25 b")
+    assert second["category"] == "Food & Dining"
+    d = client.get("/api/dashboard").json
+    assert d["to_sort_count"] == 0
+    assert d["recent"][0]["note"] == "Sharma Chai"

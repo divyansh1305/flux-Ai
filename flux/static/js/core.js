@@ -30,6 +30,7 @@
   const ICONS = {
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01"/>',
     person: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    bolt: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
     home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
     list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
     pie: '<path d="M21 12A9 9 0 1 1 12 3v9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/>',
@@ -402,19 +403,21 @@
 
   // ─── Shell ────────────────────────────────────────────────
   // Four tabs for what people do every day; everything else sits under "You".
+  // Pay in GPay/PhonePe as always; Kitna works around the payment, not in it.
   const NAV = [
     ["/app", "home", "Today"],
     ["/app/transactions", "list", "Activity"],
-    ["/app/pay", "qr", "Scan"],
-    ["/app/plans", "calendar", "Upcoming"],
+    ["/app/plans", "calendar", "Plan"],
   ];
-  const MOBILE_NAV = [["/app", "home", "Today"], ["/app/transactions", "list", "Activity"], ["/app/pay", "qr", "Scan"],
-    ["/app/plans", "calendar", "Upcoming"], ["#more", "person", "You"]];
+  const MOBILE_NAV = [["/app", "home", "Today"], ["/app/transactions", "list", "Activity"],
+    ["/app/plans", "calendar", "Plan"], ["#more", "person", "You"]];
   const MENU = [
+    ["/app/settings#auto", "bolt", "Auto-tracking", "Gmail or SMS: how payments arrive on their own"],
     ["#help", "help", "Help", "Ask the Kitna helper, in your language"],
     ["/app/friends", "users", "Friends", "Split bills, get paid back"],
     ["/app/coach", "chat", "Ask Kitna", "Questions about your money"],
     ["/app/import", "upload", "Add bank statement", "PDF or CSV from your bank"],
+    ["/app/pay", "qr", "Scan a QR", "See your budget before paying a shop"],
     ["/app/settings", "gear", "Settings", "Auto-log, reminders, account"],
   ];
   function moreMenu() {

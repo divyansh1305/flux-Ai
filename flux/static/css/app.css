@@ -472,7 +472,7 @@ button.avatar { border: 0; cursor: pointer; padding: 0; }
 
 /* Bottom tabs: Home · Activity · Pay · Friends · More */
 @media (max-width: 860px) {
-  .bottom-nav { display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); }
+  .bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); }
   .bottom-nav a { gap: 4px; font-size: 11px; font-weight: 600; color: var(--muted); padding: 4px 0; min-width: 0; }
   .bottom-nav a svg { width: 22px; height: 22px; padding: 0; }
   .bottom-nav a:not(.pay) svg { box-sizing: content-box; padding: 3px 16px; border-radius: 999px; }
@@ -1099,3 +1099,26 @@ html[data-theme="dark"] .seg button.on { background: #636366; }
 /* Scan & Pay: how to finish in the UPI app */
 .pay-steps { margin: 4px 0 6px; padding-left: 20px; color: var(--muted, #6b6b70); line-height: 1.6; }
 .pay-steps b { color: var(--text, inherit); }
+
+/* ── Today: "Just paid" — sort auto-logged payments with one tap ── */
+.sort-card { padding: 0; overflow: hidden; }
+.sort-row { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; transition: opacity .2s; }
+.sort-row + .sort-row { border-top: 0.5px solid var(--line, rgba(60,60,67,.18)); }
+.sort-row.sorting { opacity: .4; pointer-events: none; }
+.sort-top { display: flex; align-items: center; gap: 12px; }
+.sort-top .tx-amt { font-weight: 600; font-size: 17px; }
+.sort-top .tx-amt.in { color: var(--good, #34C759); }
+.sort-name { height: 38px; font-size: 15px; }
+.sort-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px 2px; }
+.sort-chips::-webkit-scrollbar { display: none; }
+.sort-chips .cat-grid { width: 100%; }
+.sort-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px 0 6px;
+  border-radius: 17px; border: 0; background: var(--fill, rgba(118,118,128,.12)); color: inherit; font: inherit; font-size: 14px; cursor: pointer; }
+.sort-chip:last-child { padding-left: 12px; }
+.sort-chip .cat-ic { width: 24px; height: 24px; }
+.sort-chip.on { box-shadow: inset 0 0 0 1.5px var(--brand, #4F46E5); }
+.sort-chip:active { transform: scale(.97); }
+.quick-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
+.chip-btn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 18px; border: 0;
+  background: var(--card, #fff); color: var(--brand, #4F46E5); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+.chip-btn svg { width: 16px; height: 16px; }

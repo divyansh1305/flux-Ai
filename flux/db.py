@@ -26,6 +26,10 @@ ADDED_COLUMNS = [
     ("users", "reminders", "TEXT NOT NULL DEFAULT 'refunds,checks,bills,friends,weekly,morning'"),
     ("users", "lang", "TEXT NOT NULL DEFAULT 'en'"),
     ("users", "upi_id", "TEXT"),                                    # shown in "please pay me back" messages
+    # Auto-logged payments the user hasn't looked at yet ("Just paid" on Today).
+    ("transactions", "needs_review", "INTEGER NOT NULL DEFAULT 0"),
+    # The name the user gave a payee the bank hides ("••3484" -> "Sharma Chai").
+    ("merchant_rules", "display_name", "TEXT"),
 ]
 
 

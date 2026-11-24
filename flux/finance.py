@@ -503,6 +503,18 @@ def merchant_key(note):
     return re.sub(r"[^a-z0-9]+", " ", text).strip()[:60]
 
 
+def learned_payee(user_id, note, kind):
+    """(category, display_name) the user taught Kitna for this payee, or (None, None)."""
+    key = merchant_key(note)
+    if not key:
+        return None, None
+    row = get_db().execute("SELECT category, display_name FROM merchant_rules WHERE user_id = ? AND merchant_key = ?",
+                           (user_id, key)).fetchone()
+    if not row or row["category"] not in (EXPENSE_CATEGORIES if kind == "expense" else INCOME_CATEGORIES):
+        return None, None
+    return row["category"], row["display_name"]
+
+
 def rule_category(user_id, note, kind):
     """The category this user told Kitna to always use for this merchant, if any (and valid for `kind`)."""
     key = merchant_key(note)

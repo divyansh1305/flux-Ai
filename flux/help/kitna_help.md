@@ -5,11 +5,14 @@ This is everything the Kitna helper knows. It answers only from this guide.
 Kitna ("how much?") tells you how much you can safely spend today, and logs your UPI and bank payments by itself. Tagline: "Pehle Kitna, phir kharcha." Kitna never moves money, never sees your UPI PIN or bank password, never offers loans, never shows ads and never sells data. It is only for people aged 18 and over.
 
 ## The tabs
-- Today [/app]: today's number, Scan & pay, Add, Split, anything that needs you, recent payments.
+Pay in GPay, PhonePe or Paytm exactly as you always do. Kitna works around the payment: it adds it by itself and keeps today's number right.
+- Today [/app]: today's number, "Just paid" (new payments to sort with one tap), anything that needs you, coming up, recent payments, and "Cash payment" / "Split a bill".
 - Activity [/app/transactions]: every payment, search, filter money in or money out, tap one to edit or delete it.
-- Scan [/app/pay]: scan any UPI QR before paying.
-- Upcoming [/app/plans]: plans and bills coming up, and your money setup (payday and safety cushion).
-- You: Friends, Ask Kitna, Add bank statement, Settings, Tell us something.
+- Plan [/app/plans]: plans and bills coming up, and your money setup (payday and safety cushion).
+- You: Auto-tracking, Help, Friends, Ask Kitna, Add bank statement, Scan a QR, Settings.
+
+## Just paid (sorting new payments)
+Payments Kitna adds by itself wait under "Just paid" on Today [/app]. Tap a category chip (Food, Groceries, Transport…) to file one, or "More" for every category. If the bank hid the name ("UPI payment ••3484"), type who it was first. Kitna remembers: the next payment to the same person or shop is named and filed by itself and won't ask again. "Looks right" keeps all of Kitna's guesses.
 
 ## Today's number (safe to spend)
 Kitna takes the money you have, adds money you are sure is coming, takes away bills due, your plans, and your safety cushion, then shares what is left over the days until your next payday (or month end if your income varies). Tap "How?" on Today to see every line. Money you don't spend today is added to tomorrow. If the number shows in amber, you are spending faster than your money allows.
@@ -30,8 +33,8 @@ Settings → Automatic tracking [/app/settings#auto].
 - If you block notifications for your SMS app or UPI app in phone settings, Kitna cannot see those payments. Turn them back on.
 - If Kitna says "A payment may be missing", its balance doesn't match your bank's. Add the missing payment, or tap the step to match your bank.
 
-## Scan & pay
-Scan tab [/app/pay]. Point the camera at any UPI QR. Kitna shows what the payment does to today's number, then opens your own UPI app (GPay, PhonePe, Paytm…) to pay with your PIN. Kitna logs it.
+## Scan a QR (optional)
+You → Scan a QR [/app/pay]. Most people never need this: just pay in your UPI app. Use it to see what a shop payment does to today's number before paying. Kitna then opens your UPI app; pay there with your PIN (UPI apps don't accept payments started by other apps, so you scan or pay inside the UPI app). When the bank email arrives, Kitna files it with the shop's name.
 - No camera? Tap "QR from photo", or type a UPI ID.
 - Camera not starting on iPhone: Settings app → Safari → Camera → Allow, then reopen Kitna. Or tap "Start camera".
 - Camera blocked on Android Chrome: tap the lock icon in the address bar → Permissions → Camera → Allow.
