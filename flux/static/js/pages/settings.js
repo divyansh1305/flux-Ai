@@ -180,7 +180,7 @@
         const apk = (window.Kitna.config.features || {}).android_apk;
         if (!apk) {
           kids.push(el("div", { class: "notice info" }, icon("info"), el("div", null,
-            el("b", null, "Android app: coming soon. "), "Until then, ",
+            el("b", null, "Android app: coming soon. "), "Until then, connect Gmail above (works on Android too), ",
             el("a", { class: "link", href: "/app/share" }, "paste bank SMS"), " or ",
             el("a", { class: "link", href: "/app/import" }, "upload your statement"), ".")));
         } else {
