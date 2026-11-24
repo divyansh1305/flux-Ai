@@ -17,7 +17,7 @@ from . import clock
 from upi_parse import EXPENSE_CATEGORIES as _EXP, INCOME_CATEGORIES as _INC  # noqa: E402
 
 EXPENSE_CATEGORIES = list(_EXP)
-INCOME_CATEGORIES = list(_INC) + ["Paid back"]  # a friend returning their share (see friends.py)
+INCOME_CATEGORIES = list(_INC) + ["Paid back", "Rent received"]  # friends.py; rent.py (PG / flat owners)
 SAVING_CATEGORY = "Goal Saving"
 
 
@@ -194,6 +194,12 @@ def add_transaction(user, kind, amount, category, note="", day=None, source="man
                     "kind": "friends", "key": f"paid-back:{closed['id']}", "url": "/app/friends",
                     "title": f"{first} ne {amt} wapas kar diye" if hi else f"{first} paid you back {amt}",
                     "body": "Kitna ne list se hata diya." if hi else "Ticked off your list. Nothing to do."})
+        if kind == "income" and closed is None:
+            from . import rent
+
+            tenant = rent.match_payment(user["id"], tx_id, amount, note, day)
+            if tenant is not None:
+                result["rent"] = {"tenant": tenant["name"], "amount": rupees(amount)}
 
     if kind == "expense" and autosave:
         goal_id_auto = user["autosave_goal_id"]

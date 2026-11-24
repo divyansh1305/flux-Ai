@@ -8,7 +8,7 @@ import time
 
 from flask import Blueprint, current_app, jsonify, session
 
-from .. import emailer
+from .. import clock, emailer
 from ..db import get_db
 from ..finance import goals_with_progress
 from ..security import (ApiError, clean_text, current_user, json_body, limiter, login_required,
@@ -48,6 +48,8 @@ def user_json(u):
         "income_pattern": u["income_pattern"], "pay_day": u["pay_day"],
         "expected_income": u["expected_income"] / 100, "cushion": u["cushion"] / 100,
         "lang": u["lang"], "upi_id": u["upi_id"] or "",
+        "has_rent": get_db().execute("SELECT 1 FROM rent_properties WHERE user_id = ?", (u["id"],)).fetchone() is not None,
+        "pro_until": u["plan_until"] if u["plan_until"] and u["plan_until"] >= clock.today().isoformat() else None,
     }
 
 

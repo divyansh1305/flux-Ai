@@ -71,6 +71,8 @@ def check_csrf():
     if request.path in ("/api/ingest/sms", "/api/ingest/notification") or request.path.startswith("/api/ingest/sms/"):
         # token-authenticated (header or personal link), no cookies -> no CSRF
         return
+    if request.path == "/api/billing/webhook":  # Razorpay's server; authenticated by its HMAC signature instead
+        return
     sent = request.headers.get(CSRF_HEADER, "")
     expected = session.get("csrf", "")
     if not expected or not secrets.compare_digest(sent, expected):
@@ -168,12 +170,12 @@ def rate_limit(limit, window, scope=None, by="ip"):
 CSP = "; ".join(
     [
         "default-src 'self'",
-        "script-src 'self' https://accounts.google.com/gsi/client",
+        "script-src 'self' https://accounts.google.com/gsi/client https://checkout.razorpay.com",
         "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style",
         "img-src 'self' data: blob: https://*.googleusercontent.com",
         "font-src 'self'",
-        "connect-src 'self' https://accounts.google.com/gsi/",
-        "frame-src https://accounts.google.com/gsi/",
+        "connect-src 'self' https://accounts.google.com/gsi/ https://lumberjack.razorpay.com",
+        "frame-src https://accounts.google.com/gsi/ https://api.razorpay.com https://checkout.razorpay.com",
         "frame-ancestors 'none'",
         "base-uri 'self'",
         "form-action 'self'",
@@ -190,7 +192,7 @@ def apply_security_headers(response):
     h["X-Content-Type-Options"] = "nosniff"
     h["X-Frame-Options"] = "DENY"
     h["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    h["Permissions-Policy"] = "microphone=(self), camera=(self), geolocation=(), payment=()"
+    h["Permissions-Policy"] = "microphone=(self), camera=(), geolocation=(), payment=(self \"https://api.razorpay.com\")"
     h["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
     if current_app.config.get("IS_PRODUCTION"):
         h["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"

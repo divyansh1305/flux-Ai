@@ -281,3 +281,77 @@ CREATE TABLE IF NOT EXISTS help_questions (
     created_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_help_time ON help_questions(created_at);
+
+-- ─── Kitna Rent: for PG, hostel and flat owners ─────────────────────────────
+-- Tenants pay the owner's own UPI ID as they always do (no gateway, no fee). Kitna reads the owner's bank
+-- alerts, works out whose rent each payment is, and keeps every tenant's balance.
+CREATE TABLE IF NOT EXISTS rent_properties (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name            TEXT NOT NULL,
+    upi_id          TEXT NOT NULL DEFAULT '',
+    due_day         INTEGER NOT NULL DEFAULT 5 CHECK (due_day BETWEEN 1 AND 28),
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_rent_prop_user ON rent_properties(user_id);
+
+CREATE TABLE IF NOT EXISTS rent_tenants (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    property_id     INTEGER NOT NULL REFERENCES rent_properties(id) ON DELETE CASCADE,
+    name            TEXT NOT NULL,
+    phone           TEXT NOT NULL DEFAULT '',
+    room            TEXT NOT NULL DEFAULT '',
+    rent            INTEGER NOT NULL CHECK (rent > 0),          -- paise per month
+    payer_names     TEXT NOT NULL DEFAULT '',                   -- who else pays for them, e.g. "Suresh Sharma" (father)
+    start_month     TEXT NOT NULL,                              -- YYYY-MM: first month rent is due
+    opening_due     INTEGER NOT NULL DEFAULT 0,                 -- paise owed before Kitna (old dues)
+    status          TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','left')),
+    left_month      TEXT,                                       -- YYYY-MM: last month rent was due
+    token           TEXT NOT NULL UNIQUE,                       -- the tenant's own link (/r/<token>)
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_rent_tenants_user ON rent_tenants(user_id, status);
+
+CREATE TABLE IF NOT EXISTS rent_payments (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    tenant_id       INTEGER NOT NULL REFERENCES rent_tenants(id) ON DELETE CASCADE,
+    amount          INTEGER NOT NULL CHECK (amount > 0),
+    date            TEXT NOT NULL,
+    method          TEXT NOT NULL DEFAULT 'upi' CHECK (method IN ('upi','cash','bank')),
+    how             TEXT NOT NULL DEFAULT 'auto' CHECK (how IN ('auto','tapped','manual')),
+    transaction_id  INTEGER UNIQUE REFERENCES transactions(id) ON DELETE SET NULL,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_rent_pay_tenant ON rent_payments(tenant_id, date);
+
+-- "Payments from R K SHARMA are Rahul's rent": learned when the owner taps once.
+CREATE TABLE IF NOT EXISTS rent_payers (
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    payer_key       TEXT NOT NULL,
+    tenant_id       INTEGER NOT NULL REFERENCES rent_tenants(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, payer_key)
+);
+
+-- Money in that the owner said is NOT rent (so Kitna stops asking).
+CREATE TABLE IF NOT EXISTS rent_not_rent (
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    transaction_id  INTEGER NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, transaction_id)
+);
+
+-- ─── Billing (Razorpay) ─────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS billing_orders (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    order_id        TEXT NOT NULL UNIQUE,                       -- Razorpay order_xxx
+    plan            TEXT NOT NULL,
+    amount          INTEGER NOT NULL,                           -- paise
+    months          INTEGER NOT NULL,
+    status          TEXT NOT NULL DEFAULT 'created' CHECK (status IN ('created','paid','failed')),
+    payment_id      TEXT,
+    paid_at         TEXT,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_billing_user ON billing_orders(user_id);

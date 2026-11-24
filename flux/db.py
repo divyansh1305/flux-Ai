@@ -30,6 +30,8 @@ ADDED_COLUMNS = [
     ("transactions", "needs_review", "INTEGER NOT NULL DEFAULT 0"),
     # The name the user gave a payee the bank hides ("••3484" -> "Sharma Chai").
     ("merchant_rules", "display_name", "TEXT"),
+    # Paid plan (Kitna Rent Pro): valid until this date (inclusive). NULL = free.
+    ("users", "plan_until", "TEXT"),
 ]
 
 # Features that were removed: their tables are deleted, with whatever they held.

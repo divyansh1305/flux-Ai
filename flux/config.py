@@ -88,6 +88,11 @@ class Config:
         # Who may open the private numbers page (/app/admin): comma-separated sign-in emails.
         self.ADMIN_EMAILS = os.environ.get("ADMIN_EMAILS", "")
 
+        # Payments for Kitna Rent Pro (Razorpay). Without keys the upgrade screen says payments open soon.
+        self.RAZORPAY_KEY_ID = re.sub(r"\s+", "", os.environ.get("RAZORPAY_KEY_ID", ""))
+        self.RAZORPAY_KEY_SECRET = re.sub(r"\s+", "", os.environ.get("RAZORPAY_KEY_SECRET", ""))
+        self.RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "").strip()
+
         # OTP policy
         self.OTP_TTL_SECONDS = 600
         self.OTP_MAX_ATTEMPTS = 5

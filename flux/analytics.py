@@ -22,7 +22,7 @@ EVENTS = {
     "auto_payment": {"sms", "notification", "email"},
     "message_unread": {"sms", "notification", "email"},
     "screen_opened": {"home", "activity", "plans", "ask", "goals", "budgets", "settings", "import", "share",
-                      "privacy-center", "onboarding", "admin", "friends"},
+                      "privacy-center", "onboarding", "admin", "friends", "rent"},
     "plan_added": {"spend", "income"},
     "cushion_set": {""},
     "category_fixed": {""},
@@ -43,10 +43,16 @@ EVENTS = {
     "lang_set": {"en", "hinglish"},
     "statement_import": {"csv", "pdf"},
     "tx_sorted": {"", "named"},
+    "rent_setup": {""},
+    "tenant_added": {"one", "bulk"},
+    "rent_marked": {"auto", "tapped", "cash", "bank", "upi"},
+    "rent_reminded": {""},
+    "upgrade_opened": {"limit", "menu", "banner"},
+    "plan_bought": {"rent_month", "rent_year"},
     "feedback_sent": {"broken", "confusing", "idea", "love"},
     "help_asked": {"en", "hi", "hinglish", "ta", "te", "bn", "mr", "gu", "kn", "ml", "pa"},
     "error_shown": {"home", "activity", "plans", "ask", "goals", "budgets", "settings", "import", "share",
-                    "privacy-center", "onboarding", "admin", "friends", "other"},
+                    "privacy-center", "onboarding", "admin", "friends", "rent", "other"},
 }
 CLIENT_EVENTS = {"screen_opened", "error_shown", "push_opened"}  # the only ones a browser may send
 

@@ -23,6 +23,7 @@ APP_PAGES = {
     "/app/coach": "coach.html",
     "/app/plans": "plans.html",
     "/app/friends": "friends.html",
+    "/app/rent": "rent.html",
     "/app/privacy-center": "know.html",
     "/app/admin": "admin.html",
     "/app/share": "share.html",
@@ -59,9 +60,9 @@ def create_app(overrides=None):
 
     backup.init_app(app)
 
-    from .api import admin, auth, cron, gmail, help, ingest, money, plans, social, statement, voice
+    from .api import admin, auth, billing, cron, gmail, help, ingest, money, plans, rent, social, statement, voice
 
-    for bp in (auth.bp, money.bp, statement.bp, voice.bp, ingest.bp, gmail.bp, plans.bp, admin.bp, social.bp, help.bp, cron.bp):
+    for bp in (auth.bp, money.bp, statement.bp, voice.bp, ingest.bp, gmail.bp, plans.bp, admin.bp, social.bp, rent.bp, billing.bp, help.bp, cron.bp):
         app.register_blueprint(bp)
     from . import reminders
 
@@ -138,6 +139,19 @@ def create_app(overrides=None):
             return page(name)
 
         app.add_url_rule(path, f"page_{name}", app_view)
+
+    # A tenant's own rent page: no sign-in, one secret link each (see rent.py).
+    @app.get("/r/<token>")
+    def tenant_page(token):
+        from . import rent as rent_mod
+
+        if rent_mod.by_token(token) is None:
+            return send_from_directory(PAGES_DIR, "404.html"), 404
+        resp = page("tenant.html")
+        resp.headers["Cache-Control"] = "no-store"
+        resp.headers["Referrer-Policy"] = "no-referrer"
+        resp.headers["X-Robots-Tag"] = "noindex"
+        return resp
 
     for old, new in RETIRED_PAGES.items():
         app.add_url_rule(old, f"retired_{old}", lambda new=new: redirect(new, code=301))

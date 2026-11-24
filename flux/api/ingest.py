@@ -131,7 +131,7 @@ def ingest_row(user, row, source):
 
         db.execute("INSERT INTO parse_samples (user_id, transaction_id, source, masked_text) VALUES (?,?,?,?)",
                    (user["id"], res["id"], source, mask_text(row["sample_text"])[:600]))
-    if not learned:
+    if not learned and not res.get("rent"):
         db.execute("UPDATE transactions SET needs_review = 1 WHERE id = ?", (res["id"],))
     if row.get("balance") is not None:
         ledger.record_snapshot(user["id"], round(row["balance"] * 100), row["date"], source, row.get("account_last4"), res["id"])
