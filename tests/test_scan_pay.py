@@ -109,3 +109,23 @@ def test_voice_pay_opens_scan_and_pay(client, user):
 def test_pay_page_needs_sign_in(app):
     r = app.test_client().get("/app/pay")
     assert r.status_code == 302 and "/login" in r.headers["Location"]
+
+
+def test_bank_email_completes_a_pending_scan_and_pay(app, client, user):
+    from flux.api.ingest import ingest_row
+    from flux.db import get_db
+
+    client.post("/api/transactions", json={"kind": "income", "amount": 5000, "category": "Salary"})
+    prep = client.post("/api/pay/prepare", json={"vpa": "chai@ybl", "name": "Sharma Chai", "amount": 30,
+                                                 "category": "Food & Dining"}).json
+    assert prep["links"]["apps"][0]["open_ios"] == "gpay://"
+    with app.app_context():
+        u = get_db().execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone()
+        from flux.clock import today
+        out = ingest_row(u, {"kind": "expense", "amount": 30.0, "date": today().isoformat(), "note": "******3484",
+                             "category": "Other", "raw": "debited Rs 30", "ref": "123456789012"}, "email")
+        assert out["logged"] and out["category"] == "Food & Dining"
+        p = get_db().execute("SELECT status, transaction_id FROM payments WHERE id = ?", (prep["payment_id"],)).fetchone()
+        assert p["status"] == "paid" and p["transaction_id"] == out["transaction_id"]
+        t = get_db().execute("SELECT note FROM transactions WHERE id = ?", (out["transaction_id"],)).fetchone()
+        assert t["note"].startswith("Sharma Chai")

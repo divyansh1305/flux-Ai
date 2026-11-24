@@ -1095,3 +1095,7 @@ html[data-theme="dark"] .seg button.on { background: #636366; }
 .help-fab.seen .help-fab-dot { display: none; }
 @media (max-width: 860px) { .help-fab { right: 14px; bottom: calc(76px + env(safe-area-inset-bottom)); width: 52px; height: 52px; } }
 @media (prefers-color-scheme: dark) { .help-fab { box-shadow: 0 8px 24px rgba(0, 0, 0, .5); } }
+
+/* Scan & Pay: how to finish in the UPI app */
+.pay-steps { margin: 4px 0 6px; padding-left: 20px; color: var(--muted, #6b6b70); line-height: 1.6; }
+.pay-steps b { color: var(--text, inherit); }

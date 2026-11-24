@@ -32,10 +32,10 @@ MCC_CATEGORIES = {
 
 # How to open a specific UPI app with the same request.
 APPS = {
-    "gpay": {"name": "Google Pay", "ios": "gpay://upi/pay?", "android": "com.google.android.apps.nbu.paisa.user"},
-    "phonepe": {"name": "PhonePe", "ios": "phonepe://pay?", "android": "com.phonepe.app"},
-    "paytm": {"name": "Paytm", "ios": "paytmmp://pay?", "android": "net.one97.paytm"},
-    "bhim": {"name": "BHIM", "ios": "bhim://upi/pay?", "android": "in.org.npci.upiapp"},
+    "gpay": {"name": "Google Pay", "ios": "gpay://upi/pay?", "open_ios": "gpay://", "android": "com.google.android.apps.nbu.paisa.user"},
+    "phonepe": {"name": "PhonePe", "ios": "phonepe://pay?", "open_ios": "phonepe://", "android": "com.phonepe.app"},
+    "paytm": {"name": "Paytm", "ios": "paytmmp://pay?", "open_ios": "paytmmp://", "android": "net.one97.paytm"},
+    "bhim": {"name": "BHIM", "ios": "bhim://upi/pay?", "open_ios": "bhim://", "android": "in.org.npci.upiapp"},
 }
 
 
@@ -149,5 +149,8 @@ def build_links(pa, pn, amount, raw_code=None):
             "name": app["name"],
             "android": f"intent://pay?{query}#Intent;scheme=upi;package={app['android']};end",
             "ios": app["ios"] + query,
+            # Just opens the app (its own scanner / home). The payment is made there, the normal way.
+            "open_android": f"intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package={app['android']};end",
+            "open_ios": app["open_ios"],
         })
     return links

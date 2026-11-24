@@ -225,21 +225,31 @@
       const opened = { at: 0 };
       const markOpened = () => { opened.at = Date.now(); };
       const copy = () => navigator.clipboard && navigator.clipboard.writeText(r.vpa).then(() => ok("UPI ID copied. Paste it in your UPI app."));
+      // UPI apps now refuse most payments started by another app, so Kitna doesn't try to pay for you.
+      // It opens your UPI app; you scan / pay there the normal way. The bank email then completes this entry.
+      const openKey = IS_ANDROID ? "open_android" : "open_ios";
+      const quickKey = IS_ANDROID ? "android" : "ios";
       let openers;
-      if (IS_ANDROID) {
+      if (IS_MOBILE) {
+        const gpay = r.links.apps.find((a) => a.id === "gpay");
         openers = el("div", { class: "stack", style: { gap: "8px" } },
-          el("a", { class: "btn primary lg block", href: r.links.generic, onclick: markOpened }, `Pay ${inr(r.amount)} in your UPI app`),
-          el("div", { class: "app-grid" }, r.links.apps.map((a) => el("a", { class: "app-btn", href: a.android, onclick: markOpened }, a.name))));
-      } else if (IS_IOS) {
-        openers = el("div", { class: "stack", style: { gap: "8px" } }, el("div", { class: "tiny faint", style: { textAlign: "center" } }, "Choose your UPI app"),
-          el("div", { class: "app-grid" }, r.links.apps.map((a) => el("a", { class: "app-btn", href: a.ios, onclick: markOpened }, a.name))));
+          el("ol", { class: "pay-steps small" },
+            el("li", null, "Open your UPI app below"),
+            el("li", null, "Scan the same QR (or pay ", el("b", null, r.vpa), ")"),
+            el("li", null, "Pay ", el("b", null, inr(r.amount)), " with your PIN, then come back")),
+          el("a", { class: "btn primary lg block", href: gpay[openKey], onclick: markOpened }, "Open Google Pay"),
+          el("div", { class: "app-grid" }, r.links.apps.filter((a) => a.id !== "gpay").map((a) =>
+            el("a", { class: "app-btn", href: a[openKey], onclick: markOpened }, a.name))),
+          el("details", { class: "auto-more" }, el("summary", null, "Try one-tap pay (works with some shops)"),
+            el("div", { class: "app-grid", style: { marginTop: "8px" } }, r.links.apps.map((a) =>
+              el("a", { class: "app-btn", href: a[quickKey], onclick: markOpened }, a.name)))));
       } else {
-        openers = el("div", { class: "notice info" }, el("div", null, "UPI apps open on phones. Pay ", el("b", null, r.vpa), " from your phone, then come back and tap Yes.",
+        openers = el("div", { class: "notice info" }, el("div", null, "Pay ", el("b", null, r.vpa), " from your phone's UPI app, then come back and tap Yes.",
           el("div", { style: { marginTop: "8px" } }, el("button", { class: "btn sm", type: "button", onclick: copy }, "Copy UPI ID"))));
       }
       const yes = el("button", { class: "btn primary block", onclick: () => finish("paid") }, icon("check"), "Yes, it's paid");
       const confirmBox = el("div", { class: "pay-confirm" },
-        el("div", { class: "pay-q" }, "Did it go through?"),
+        el("div", { class: "pay-q" }, "Paid? Tell Kitna now, or let the bank email do it"),
         el("div", { class: "grid g-2", style: { gap: "8px" } }, yes, el("button", { class: "btn block", onclick: () => finish("failed") }, "No")));
       async function finish(status) {
         try {
@@ -259,8 +269,8 @@
           el("div", { class: "small muted" }, r.name, " · ", r.vpa)),
         openers,
         IS_MOBILE ? el("p", { class: "tiny faint", style: { textAlign: "center", margin: "10px 0 0" } },
-          d && !d.is_merchant ? "Some apps don't allow paying a person from a link. " : "App didn't open? ",
-          el("button", { class: "link-inline", type: "button", onclick: copy }, "Copy the UPI ID"), " and pay in the app.") : null,
+          "Gmail connected? Kitna fills this in by itself once your bank's email arrives. ",
+          el("button", { class: "link-inline", type: "button", onclick: copy }, "Copy UPI ID")) : null,
         confirmBox,
         el("button", { class: "btn ghost block", style: { marginTop: "8px" }, onclick: () => finish("cancelled") }, "Cancel"));
     }
