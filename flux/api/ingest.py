@@ -143,6 +143,8 @@ def ingest_row(user, row, source):
     from .. import analytics
 
     analytics.track(user["id"], "auto_payment", source)
+    if res.get("rent"):
+        row["category"], row["note"] = "Rent received", f"{res['rent']['tenant']}'s rent"
     sign = "-" if row["kind"] == "expense" else "+"
     msg = f"Kitna logged {sign}₹{row['amount']:,.2f} · {row['note']} ({row['category']})"
     if res["autosaved"]:

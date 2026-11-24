@@ -43,7 +43,7 @@ def test_new_tenant_is_late_after_due_day_and_named_bank_alert_clears_it(app, cl
     t_ = tok(client)
     # Tenant pays from GPay; the owner's bank SMS names them → counted as Rahul's rent automatically.
     out = sms(app, t_, "Rs.8500.00 credited to A/c XX1234 on 18-11-26 from VPA rahulverma@okhdfc (UPI Ref No 628811110001)")
-    assert out["logged"]
+    assert out["logged"] and out["category"] == "Rent received" and "Rahul Verma's rent" in out["message"]
     t = tenant(client, tid)
     assert t["money"] == "paid" and t["balance"] == 0
     ov = client.get("/api/rent").json
@@ -51,6 +51,7 @@ def test_new_tenant_is_late_after_due_day_and_named_bank_alert_clears_it(app, cl
     # The money also shows in the owner's own Activity as rent, not as something to sort.
     d = client.get("/api/dashboard").json
     assert d["to_sort_count"] == 0 and d["recent"][0]["category"] == "Rent received"
+    assert d["recent"][0]["note"] == "Rahul Verma · Rent"
 
 
 def test_parent_paying_is_matched_by_the_payer_names_the_owner_gave(app, client, owner):

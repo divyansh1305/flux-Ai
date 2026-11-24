@@ -262,7 +262,10 @@ def _record(user_id, tenant_id, amount, day, method, how, tx_id=None):
     db.execute("INSERT INTO rent_payments (user_id, tenant_id, amount, date, method, how, transaction_id) VALUES (?,?,?,?,?,?,?)",
                (user_id, tenant_id, amount, day, method, how, tx_id))
     if tx_id:
-        db.execute("UPDATE transactions SET category = ?, needs_review = 0 WHERE id = ? AND user_id = ?", (RENT_CATEGORY, tx_id, user_id))
+        # In the owner's Activity it reads "Rahul Verma · Rent", not the bank's "Rahulverma99".
+        name = db.execute("SELECT name FROM rent_tenants WHERE id = ?", (tenant_id,)).fetchone()["name"]
+        db.execute("UPDATE transactions SET category = ?, note = ?, needs_review = 0 WHERE id = ? AND user_id = ?",
+                   (RENT_CATEGORY, f"{name} · Rent"[:140], tx_id, user_id))
 
 
 def unmatched(user_id, tenant_rows):
