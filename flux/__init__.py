@@ -12,7 +12,8 @@ from .security import (ApiError, apply_security_headers, check_csrf, current_use
 
 PAGES_DIR = os.path.join(os.path.dirname(__file__), "pages")
 
-PUBLIC_PAGES = {"/": "landing.html", "/login": "login.html", "/privacy": "privacy.html", "/terms": "terms.html"}
+PUBLIC_PAGES = {"/": "landing.html", "/login": "login.html", "/privacy": "privacy.html", "/terms": "terms.html",
+                "/refunds": "refunds.html", "/contact": "contact.html"}
 APP_PAGES = {
     "/onboarding": "onboarding.html",
     "/app": "dashboard.html",

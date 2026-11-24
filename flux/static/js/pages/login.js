@@ -1,6 +1,10 @@
 /* Signing in starts fresh: forget numbers this browser kept from any earlier session. */
 try { Object.keys(localStorage).filter((k) => k.startsWith("fluxc:")).forEach((k) => localStorage.removeItem(k)); } catch (e) { /* ignore */ }
 (function () {
+  // "Start collecting rent" on the home page: come back to that screen after signing in.
+  const NEXT = (() => { const n = new URLSearchParams(location.search).get("next") || ""; return /^\/app\/[a-z-]+$/.test(n) ? n : null; })();
+  if (NEXT) { try { sessionStorage.setItem("kitna_next", NEXT); } catch (e) { /* ignore */ } }
+  const afterLogin = (redirect) => (NEXT && redirect === "/app" ? NEXT : redirect);
   "use strict";
   const $ = (id) => document.getElementById(id);
   let email = "";
@@ -64,7 +68,7 @@ try { Object.keys(localStorage).filter((k) => k.startsWith("fluxc:")).forEach((k
     busy($("code-btn"), true, "Verifying…");
     try {
       const r = await post("/api/auth/otp/verify", { email, code: $("code").value });
-      location.href = r.redirect;
+      location.href = afterLogin(r.redirect);
     } catch (err) {
       showError(err.message);
       $("code").value = "";
@@ -83,7 +87,7 @@ try { Object.keys(localStorage).filter((k) => k.startsWith("fluxc:")).forEach((k
 
   // Google Sign-In (only shown when the server has a client ID configured)
   fetch("/api/auth/me", { credentials: "same-origin" }).then((r) => r.json()).then((me) => {
-    if (me.user) { location.href = "/app"; return; }
+    if (me.user) { location.href = afterLogin("/app"); return; }
     if (!me.google_client_id) return;
     const s = document.createElement("script");
     s.src = "https://accounts.google.com/gsi/client";
@@ -92,7 +96,7 @@ try { Object.keys(localStorage).filter((k) => k.startsWith("fluxc:")).forEach((k
       window.google.accounts.id.initialize({
         client_id: me.google_client_id,
         callback: async (resp) => {
-          try { const r = await post("/api/auth/google", { credential: resp.credential }); location.href = r.redirect; }
+          try { const r = await post("/api/auth/google", { credential: resp.credential }); location.href = afterLogin(r.redirect); }
           catch (e) { showError(e.message); }
         },
       });

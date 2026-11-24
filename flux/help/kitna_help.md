@@ -11,6 +11,15 @@ Pay in GPay, PhonePe or Paytm exactly as you always do. Kitna works around the p
 - Plan [/app/plans]: plans and bills coming up, and your money setup (payday and safety cushion).
 - You: Auto-tracking, Help, Friends, Ask Kitna, Add bank statement, Settings.
 
+## Collecting rent (PG, hostel and flat owners)
+You → Collect rent [/app/rent]. Add your PG or flat name, your UPI ID and the rent due day, then add tenants one by one or paste a list ("name, room, rent, phone" per line). Tenants keep paying your UPI ID as usual; there is no gateway and no fee.
+- Kitna reads your bank alerts (connect Gmail on iPhone or the Android app [/app/settings#auto]) and ticks off whose rent arrived. If a parent pays, add their name under "Who else pays for them?".
+- A payment Kitna can't place waits under "Whose rent is this?": tap the tenant once and Kitna remembers that payer. Tap "Not rent" for anything else.
+- Cash? Open the tenant and tap "Got cash".
+- Late tenants: open them and tap Remind. WhatsApp opens with the exact amount and their link.
+- Each tenant's link shows only their dues, your UPI ID and QR, and receipts. No sign-in for them.
+- Free for up to 5 tenants. Kitna Rent Pro is ₹299 a month or ₹2,999 a year (up to 100 tenants), paid on Razorpay, no auto-renewal. Refunds within 7 days [/refunds].
+
 ## Paying someone
 Kitna does not make payments and has no scanner. Pay in GPay, PhonePe, Paytm or BHIM exactly as you always do. Kitna adds the payment by itself from your bank's email or SMS. Paid in cash? Tap "Cash payment" at the bottom of Today [/app].
 

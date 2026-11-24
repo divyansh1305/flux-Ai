@@ -155,6 +155,14 @@ def overview():
         "payments_auto_30d": q("SELECT COUNT(*) FROM events WHERE name='auto_payment' AND created_at >= ?", since(30)),
         "refunds_back": q("SELECT COUNT(*) FROM refund_watch WHERE status='back'"),
         "kept_rupees": q("SELECT COALESCE(SUM(amount),0) FROM refund_watch WHERE status='back'") / 100,
+        # Kitna Rent (owners) and money in
+        "owners": q("SELECT COUNT(*) FROM rent_properties"),
+        "tenants": q("SELECT COUNT(*) FROM rent_tenants WHERE status='active'"),
+        "rent_matched_auto": q("SELECT COUNT(*) FROM rent_payments WHERE how='auto'"),
+        "rent_matched_tapped": q("SELECT COUNT(*) FROM rent_payments WHERE how='tapped'"),
+        "pro_users": q("SELECT COUNT(*) FROM users WHERE plan_until >= ?", clock.today().isoformat()),
+        "revenue_rupees": q("SELECT COALESCE(SUM(amount),0) FROM billing_orders WHERE status='paid'") / 100,
+        "revenue_30d_rupees": q("SELECT COALESCE(SUM(amount),0) FROM billing_orders WHERE status='paid' AND paid_at >= ?", since(30)) / 100,
     }
 
     # Setup funnel for people who signed up in the last 30 days.

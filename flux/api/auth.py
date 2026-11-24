@@ -318,9 +318,18 @@ def export_account():
     phones = db.execute("SELECT COUNT(*) FROM push_subscriptions WHERE user_id = ?", (u["id"],)).fetchone()[0]
     feedback = [{"kind": r["kind"], "message": r["message"], "screen": r["screen"], "created_at": r["created_at"]}
                 for r in db.execute("SELECT * FROM feedback WHERE user_id = ? ORDER BY id", (u["id"],))]
+    rent_data = {
+        "property": [dict(r) for r in db.execute("SELECT name, upi_id, due_day, created_at FROM rent_properties WHERE user_id = ?", (u["id"],))],
+        "tenants": [dict(r) for r in db.execute("SELECT id, name, phone, room, rent / 100.0 AS rent, payer_names, start_month,"
+                                                " opening_due / 100.0 AS opening_due, status, left_month FROM rent_tenants WHERE user_id = ?", (u["id"],))],
+        "payments": [dict(r) for r in db.execute("SELECT tenant_id, amount / 100.0 AS amount, date, method, how FROM rent_payments"
+                                                 " WHERE user_id = ? ORDER BY date", (u["id"],))],
+    }
+    billing_rows = [dict(r) for r in db.execute("SELECT plan, amount / 100.0 AS amount, status, payment_id, paid_at FROM billing_orders"
+                                                " WHERE user_id = ? ORDER BY id", (u["id"],))]
     help_qs = [{"question": r["question"], "lang": r["lang"], "created_at": r["created_at"]}
                for r in db.execute("SELECT * FROM help_questions WHERE user_id = ? ORDER BY id", (u["id"],))]
-    resp = jsonify({"feedback": feedback, "helper_questions": help_qs, "profile": user_json(u), "transactions": tx, "budgets": budgets, "merchant_rules": rules,
+    resp = jsonify({"feedback": feedback, "helper_questions": help_qs, "rent": rent_data, "kitna_payments": billing_rows, "profile": user_json(u), "transactions": tx, "budgets": budgets, "merchant_rules": rules,
                     "masked_samples": samples, "plans": plans, "usage_events": events, "friends": owed,
                     "reminders": notes, "phones_with_reminders": phones,
                     "goals": goals_with_progress(u["id"], include_archived=True)})
@@ -371,6 +380,7 @@ def what_flux_knows():
             "reminders": count("SELECT COUNT(*) FROM notifications WHERE user_id = ?"),
             "phones_with_reminders": count("SELECT COUNT(*) FROM push_subscriptions WHERE user_id = ?"),
             "feedback": count("SELECT COUNT(*) FROM feedback WHERE user_id = ?"),
+            "tenants": count("SELECT COUNT(*) FROM rent_tenants WHERE user_id = ?"),
         },
         "contribute_samples": bool(u["contribute_samples"]),
     })

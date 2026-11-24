@@ -215,3 +215,16 @@ def test_webhook_alone_activates_a_paid_order(app, client, owner, monkeypatch):
     app.test_client().post("/api/billing/webhook", data=body, content_type="application/json", headers={"X-Razorpay-Signature": sig})
     b = client.get("/api/billing").json
     assert b["pro"] is True and b["until"] == "2026-12-20" and b["history"][0]["payment_id"] == "pay_9"
+
+
+def test_public_policy_pages_razorpay_needs(app):
+    c = app.test_client()
+    for path, words in (("/refunds", "7 days"), ("/contact", "Contact"), ("/terms", "Kitna Rent Pro"), ("/privacy", "collect rent")):
+        r = c.get(path)
+        assert r.status_code == 200 and words.encode() in r.data, path
+
+
+def test_owner_sees_rent_tab_flag_and_helper_knows_rent(client, owner):
+    assert client.get("/api/auth/me").json["user"]["has_rent"] is True
+    from flux.api.help import fallback_answer
+    assert "/app/rent" in fallback_answer("how do I collect rent from my PG tenants")["links"]

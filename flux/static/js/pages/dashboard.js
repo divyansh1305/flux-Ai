@@ -23,7 +23,7 @@
       const pre = early;
       early = null;
       try {
-        await window.Kitna.live("/api/dashboard", (d) => content.replaceChildren(...build(d, user).filter(Boolean)), pre);
+        await window.Kitna.live("/api/dashboard", (d) => { content.replaceChildren(...build(d, user).filter(Boolean)); if (user.has_rent) rentCard(content); }, pre);
         markFresh(true);
       } catch (e) { markFresh(false); throw e; }
     };
@@ -52,6 +52,21 @@
         if (added) { window.Kitna.ok(`${added} new payment${added === 1 ? "" : "s"} added from Gmail.`); load(); }
       })();
     }
+  }
+
+  // Owners: one line about rent, right under today's number.
+  async function rentCard(content) {
+    let r;
+    try { r = await api("/api/rent"); } catch (e) { return; }
+    if (!r.property || !r.tenants.length) return;
+    const need = r.unmatched.length;
+    const line = need ? `${need} payment${need === 1 ? "" : "s"} to match · ${r.counts.late} late`
+      : r.counts.late ? `${r.counts.late} late · ${inr0(r.pending)} to collect` : r.pending > 0 ? `${inr0(r.pending)} to collect` : "Everyone has paid";
+    const card = el("a", { class: "notice " + (r.counts.late || need ? "caution" : "info") + " rent-home", href: "/app/rent" }, icon("bank"),
+      el("div", { style: { flex: 1 } }, el("b", null, `Rent · ${inr0(r.collected)} of ${inr0(r.expected)}`), el("div", { class: "small" }, line)), icon("chev"));
+    const old = content.querySelector(".rent-home");
+    if (old) old.replaceWith(card);
+    else { const t = content.querySelector(".today"); if (t) t.after(card); }
   }
 
   // Bank balance and Kitna disagree: say it plainly, and let the user settle it in one tap.

@@ -19,7 +19,9 @@
       try {
         await api("/api/account", { method: "PATCH", body: { onboarded: true } });
         window.Kitna.cacheClear();
-        location.href = next;
+        let after = null;
+        try { after = sessionStorage.getItem("kitna_next"); sessionStorage.removeItem("kitna_next"); } catch (e) { /* ignore */ }
+        location.href = after && next === "/app" ? after : next;
       } catch (e) { err(e); }
     }
 

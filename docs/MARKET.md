@@ -49,3 +49,19 @@ The app had grown 19 screens. The new navigation keeps only what supports the on
 - Day-7 retention: are they still opening it a week later?
 - Capture rate: what share of their real payments did Kitna log by itself?
 - "Did today's number change what you spent?" (yes/no, in-app, once a week)
+
+
+## November 2026: who pays (research)
+- **Students won't pay for tracking.** Google Pay India already has free bill splitting for groups, and Splitwise's
+  paywall (daily entry caps, 10-second waits, Pro ≈ $4.99/month) is driving users away. Personal Kitna stays free.
+- **PG, hostel and flat owners already pay.** Rent-collection software is an established paid category in India:
+  RentOk ₹30 per tenant per month (20,000+ owners), TrackMyPG from ₹299/month, Kipinn ₹30/bed, Room Rover ₹26–35/bed.
+  Their core pain is reconciliation: tenants pay by different UPI apps, from parents' accounts or in cash, and owners
+  match bank-statement lines to names by hand. Delhi students alone spend about ₹45,000 crore a year on rented rooms.
+- **Kitna's edge:** competitors put a payment gateway in the middle (fees, tenants must use their link) or ask owners
+  to mark payments by hand. Kitna reads the owner's own bank alerts and matches them, so tenants keep paying the
+  owner's UPI ID directly with zero fees, and the student side of Kitna brings the tenants.
+- **Pricing:** Free up to 5 tenants; Pro ₹299/month or ₹2,999/year up to 100 tenants (in line with TrackMyPG, cheaper
+  than per-tenant pricing for 15+ tenants). One-time payments, no auto-renewal, 7-day refund.
+- **First customers:** small PGs and student flats near colleges in Haryana (Sonipat, Kurukshetra, Rohtak, Hisar),
+  many still on notebooks and WhatsApp.

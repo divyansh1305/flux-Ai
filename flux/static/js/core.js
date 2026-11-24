@@ -183,7 +183,7 @@
     }
     const type = res.headers.get("Content-Type") || "";
     const data = opts.raw && res.ok ? await res.blob() : type.includes("application/json") ? await res.json() : await res.blob();
-    if (!res.ok) throw new Error((data && data.error) || "Something went wrong.");
+    if (!res.ok) { const e = new Error((data && data.error) || "Something went wrong."); e.status = res.status; throw e; }
     if (init.method !== "GET" && path.startsWith("/api/account")) cacheDrop("/api/auth/me");  // settings changed
     return data;
   }
@@ -238,7 +238,7 @@
   const SCREENS = { "/app": "home", "/app/transactions": "activity", "/app/plans": "plans", "/app/coach": "ask",
     "/app/goals": "goals", "/app/budgets": "budgets", "/app/settings": "settings", "/app/import": "import",
     "/app/share": "share", "/app/privacy-center": "privacy-center", "/onboarding": "onboarding", "/app/admin": "admin",
-    "/app/friends": "friends" };
+    "/app/friends": "friends", "/app/rent": "rent" };
   function track(name, value) {
     if (!USER) return;
     const prop = value || SCREENS[location.pathname.replace(/\/$/, "") || "/app"] || "other";
@@ -403,23 +403,25 @@
   // ─── Shell ────────────────────────────────────────────────
   // Four tabs for what people do every day; everything else sits under "You".
   // Pay in GPay/PhonePe as always; Kitna works around the payment, not in it.
-  const NAV = [
-    ["/app", "home", "Today"],
-    ["/app/transactions", "list", "Activity"],
-    ["/app/plans", "calendar", "Plan"],
-  ];
-  const MOBILE_NAV = [["/app", "home", "Today"], ["/app/transactions", "list", "Activity"],
-    ["/app/plans", "calendar", "Plan"], ["#more", "person", "You"]];
+  // Owners collecting rent get a Rent tab in place of Plan (Plan moves under You).
+  const tabsFor = (u) => (u && u.has_rent
+    ? [["/app", "home", "Today"], ["/app/rent", "bank", "Rent"], ["/app/transactions", "list", "Activity"]]
+    : [["/app", "home", "Today"], ["/app/transactions", "list", "Activity"], ["/app/plans", "calendar", "Plan"]]);
+  let NAV = tabsFor(null);
+  let MOBILE_NAV = [...NAV, ["#more", "person", "You"]];
   const MENU = [
     ["/app/settings#auto", "bolt", "Auto-tracking", "Gmail or SMS: how payments arrive on their own"],
     ["#help", "help", "Help", "Ask the Kitna helper, in your language"],
     ["/app/friends", "users", "Friends", "Split bills, get paid back"],
     ["/app/coach", "chat", "Ask Kitna", "Questions about your money"],
     ["/app/import", "upload", "Add bank statement", "PDF or CSV from your bank"],
+    ["/app/rent", "bank", "Collect rent", "For PG, hostel and flat owners"],
+    ["/app/plans", "calendar", "Plan", "Bills and plans coming up"],
     ["/app/settings", "gear", "Settings", "Auto-log, reminders, account"],
   ];
   function moreMenu() {
-    const items = MENU.concat((CONFIG.features || {}).admin ? [["/app/admin", "trend", "Kitna admin", "People, questions, numbers"]] : []);
+    const tabs = NAV.map(([h]) => h);
+    const items = MENU.filter(([h]) => !tabs.includes(h)).concat((CONFIG.features || {}).admin ? [["/app/admin", "trend", "Kitna admin", "People, questions, numbers"]] : []);
     const close = () => { bg.remove(); document.removeEventListener("keydown", onKey); };
     const onKey = (e) => { if (e.key === "Escape") close(); };
     const initials = USER.name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
@@ -462,7 +464,7 @@
         if (!fresh || fresh.error) return;
         if (!fresh.user) { cacheClear(); location.href = "/login"; return; }
         cacheSet("/api/auth/me", fresh);
-        if (fresh.user.id !== cachedMe.user.id || fresh.user.onboarded !== cachedMe.user.onboarded || fresh.user.lang !== cachedMe.user.lang) { location.reload(); return; }
+        if (fresh.user.id !== cachedMe.user.id || fresh.user.onboarded !== cachedMe.user.onboarded || fresh.user.lang !== cachedMe.user.lang || fresh.user.has_rent !== cachedMe.user.has_rent) { location.reload(); return; }
         USER = fresh.user; CONFIG = fresh;
       });
     } else {
@@ -475,6 +477,8 @@
       try { navigator.serviceWorker.register("/sw.js").catch(() => {}); } catch (e) { /* not supported */ }
     }
     USER = me.user;
+    NAV = tabsFor(USER);
+    MOBILE_NAV = [...NAV, ["#more", "person", "You"]];
     CONFIG = me;
     if (!USER.onboarded && location.pathname !== "/onboarding") { location.href = "/onboarding"; return; }
     if (window.FluxI18n) window.FluxI18n.start(USER.lang);
@@ -493,7 +497,7 @@
       const showDot = (r) => { dot.hidden = !(r && r.unread); };
       showDot(cacheGet("/api/reminders"));
       setTimeout(() => api("/api/reminders").then((r) => { cacheSet("/api/reminders", r); showDot(r); }).catch(() => {}), 1500);
-      const inMenu = MENU.some(([h]) => h === path) || path === "/app/admin";
+      const inMenu = (MENU.some(([h]) => h === path) && !NAV.some(([h]) => h === path)) || path === "/app/admin";
       const nav = el("nav", { class: "nav", "aria-label": "Main" }, NAV.map(([href, ic, label]) =>
         el("a", { href, class: path === href ? "active" : null, "aria-current": path === href ? "page" : null }, icon(ic), el("span", null, label))));
       const top = el("header", { class: "topbar" }, el("div", { class: "topbar-in" },

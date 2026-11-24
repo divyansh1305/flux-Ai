@@ -22,10 +22,10 @@ LANGS = {
 }
 _GUIDE_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "help", "kitna_help.md")
 _LINK_RE = re.compile(r"\[(/[a-z0-9/_#?=.-]*)\]")
-ALLOWED_LINKS = {"/app", "/app/transactions", "/app/plans", "/app/friends", "/app/coach", "/app/import",
+ALLOWED_LINKS = {"/app", "/app/transactions", "/app/plans", "/app/rent", "/refunds", "/contact", "/app/friends", "/app/coach", "/app/import",
                  "/app/settings", "/app/settings#auto", "/app/settings#reminders", "/app/settings#data",
                  "/app/settings#look", "/app/settings#upi", "/privacy", "/terms"}
-LINK_LABELS = {"/app": "Open Today", "/app/transactions": "Open Activity", "/app/plans": "Open Plan",
+LINK_LABELS = {"/app": "Open Today", "/app/transactions": "Open Activity", "/app/plans": "Open Plan", "/app/rent": "Open Rent", "/refunds": "Refunds", "/contact": "Contact",
                "/app/friends": "Open Friends", "/app/coach": "Open Ask Kitna", "/app/import": "Add a statement",
                "/app/settings": "Open Settings", "/app/settings#auto": "Set up auto-tracking", "/app/settings#reminders": "Open Reminders",
                "/app/settings#data": "Your data", "/app/settings#look": "Appearance", "/app/settings#upi": "Language and UPI ID",

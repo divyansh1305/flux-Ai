@@ -17,6 +17,12 @@ from ..sms import friendly_note
 bp = Blueprint("money", __name__, url_prefix="/api")
 
 
+# Owners: money in that may be a tenant's rent waits under Rent → "Whose rent is this?", not under Just paid.
+NOT_RENT_WAITING = ("NOT (t.kind = 'income' AND t.amount >= 10000"
+                    " AND EXISTS (SELECT 1 FROM rent_tenants r WHERE r.user_id = t.user_id AND r.status = 'active')"
+                    " AND NOT EXISTS (SELECT 1 FROM rent_not_rent n WHERE n.transaction_id = t.id))")
+
+
 def tx_json(r):
     return {
         "id": r["id"], "kind": r["kind"], "amount": rupees(r["amount"]), "category": r["category"],
@@ -330,9 +336,9 @@ def dashboard():
         "series": finance.daily_series(uid, 30),
         "recent": [tx_json(r) for r in recent],
         "to_sort": [tx_json(r) for r in get_db().execute(
-            "SELECT * FROM transactions WHERE user_id = ? AND needs_review = 1 ORDER BY date DESC, id DESC LIMIT 6",
+            f"SELECT * FROM transactions t WHERE user_id = ? AND needs_review = 1 AND {NOT_RENT_WAITING} ORDER BY date DESC, id DESC LIMIT 6",
             (uid,)).fetchall()],
-        "to_sort_count": get_db().execute("SELECT COUNT(*) FROM transactions WHERE user_id = ? AND needs_review = 1",
+        "to_sort_count": get_db().execute(f"SELECT COUNT(*) FROM transactions t WHERE user_id = ? AND needs_review = 1 AND {NOT_RENT_WAITING}",
                                           (uid,)).fetchone()[0],
         "setup": setup_status(uid),
         "checks": checks.all_checks(uid),
